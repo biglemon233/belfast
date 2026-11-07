@@ -442,8 +442,13 @@ func (tx *Tx) buyGoods(id, count uint32, now time.Time) ([]*protobuf.DROPINFO, e
 		err = tx.AddShopGroupPurchase(tx.ctx, db.AddShopGroupPurchaseParams{CommanderID: tx.commanderID, GroupID: goods.Group, ExpiresAt: goods.groupResetAt(now), Count: goods.GroupBuyCount})
 	}
 	// the commander manual counts gift package purchases
+	logger.WithFields("Shop", logger.FieldValue("id", id), logger.FieldValue("genre", goods.Genre)).Debug("purchase")
 	if goods.Genre == genreGiftPackage {
 		tx.event(TaskEvent{SubType: TaskSubGiftShop, Count: 1})
+	}
+	// …and the 军火 tab of the supply shop (the street shop)
+	if goods.Genre == genreShoppingStreet {
+		tx.event(TaskEvent{SubType: TaskSubArmoryShop, Count: 1})
 	}
 	return drops, err
 }
