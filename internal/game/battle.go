@@ -426,8 +426,11 @@ func scenarioDrops(template *chapterTemplate, expedition expeditionTemplate) []*
 	}
 	var techPacks, parts, ships []dropRef
 	for _, award := range template.awards {
-		pool := dropPools[award]
+		pool := dropPools[award[1]]
 		if len(pool) == 0 {
+			// not a virtual item: the data lists the item itself, which is
+			// how a hard mode chapter gives its core data and equipment
+			drops = mergeDrop(drops, award[0], award[1], 1)
 			continue
 		}
 		switch {
