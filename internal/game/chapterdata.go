@@ -62,7 +62,10 @@ type chapterTemplate struct {
 	ambushRatios  []ambushRatio
 	avoidRatio    uint32 // how hard ambushes are to evade
 	winConditions []chapterWinCondition
-	awards        []uint32 // award virtual items, see dropPools
+	// award [type, id]: a virtual item id (drawn from its dropPools) or, when
+	// there is no such pool, the item itself — hard mode chapters list their
+	// core data and equipment directly
+	awards [][2]uint32
 
 	// how the fleets are picked (chapter_template.type): chapterSelectFleet
 	// or chapterCustomFleet
@@ -282,7 +285,7 @@ func loadChapterData() error {
 			template.winConditions = append(template.winConditions, chapterWinCondition{uint32(kind), uint32(param)})
 		}
 		for _, award := range row.Awards {
-			template.awards = append(template.awards, award[1])
+			template.awards = append(template.awards, award)
 		}
 		template.fleetType, template.formation = row.Type, row.Formation
 		// hard mode chapters share the normal chapters' ids times 100 and
