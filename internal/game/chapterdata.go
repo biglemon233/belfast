@@ -74,6 +74,9 @@ type chapterTemplate struct {
 	// normal chapter's map (10101 is 1-1's hard map 201). The client lists
 	// them separately and the commander manual's daily 7205 counts them.
 	hard bool
+	// coreData is what a win of a hard chapter pays (items.go itemCoreData),
+	// the chapter's amount from the wiki's 核心兑换 table
+	coreData uint32
 	// the elite fleet set the chapter shares with the others of its
 	// formation (ChapterProxy.mapEliteFleetCache, SC_13001 fleet_list)
 	formation uint32
@@ -289,8 +292,20 @@ func loadChapterData() error {
 		}
 		template.fleetType, template.formation = row.Type, row.Formation
 		// hard mode chapters share the normal chapters' ids times 100 and
-		// live on the maps after 200 (10101 is 1-1's hard map 201)
+		// live on the maps after 200 (10101 is 1-1's hard map 201); every
+		// win pays the chapter's core data (wiki 核心兑换: chapter 1 gives 4,
+		// 2 gives 8, then 2 more per chapter, up to 32 at 14-4)
 		template.hard = row.Map >= 200 && row.Map < 300
+		if chapter := row.Map - 200; template.hard {
+			switch {
+			case chapter <= 1:
+				template.coreData = 4
+			case chapter == 2:
+				template.coreData = 8
+			default:
+				template.coreData = 2*chapter + 4
+			}
+		}
 		template.groupNum, template.submarineNum, template.supportNum = row.GroupNum, row.SubmarineNum, row.SupportGroupNum
 		for _, fleet := range row.Limitation {
 			var limits [2][]shipLimit

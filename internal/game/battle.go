@@ -430,7 +430,14 @@ func scenarioDrops(template *chapterTemplate, expedition expeditionTemplate) []*
 		if len(pool) == 0 {
 			// not a virtual item: the data lists the item itself, which is
 			// how a hard mode chapter gives its core data and equipment
-			drops = mergeDrop(drops, award[0], award[1], 1)
+			count := uint32(1)
+			if award[1] == itemCoreData {
+				// the amount per chapter is the wiki's 核心兑换 table
+				count = template.coreData
+			}
+			if count > 0 {
+				drops = mergeDrop(drops, award[0], award[1], count)
+			}
 			continue
 		}
 		switch {
