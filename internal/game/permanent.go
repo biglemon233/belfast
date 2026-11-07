@@ -172,6 +172,8 @@ func (game *Game) handlePermanentStart(client *connection.Client, req *protobuf.
 		if err := tx.StartPermanentActivity(ctx, db.StartPermanentActivityParams{CommanderID: client.CommanderID, ActivityID: id}); err != nil {
 			return err
 		}
+		// the commander manual's "open the Activity Archive" task counts it
+		tx.event(TaskEvent{SubType: TaskSubPermanentActivity, Count: 1})
 		state := newActivityStateAt(config, now)
 		state.CommanderID = client.CommanderID
 		if err := tx.SaveActivity(ctx, db.SaveActivityParams(state)); err != nil {

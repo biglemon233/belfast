@@ -115,6 +115,10 @@ func (game *Game) handleHandbookGetTasks(client *connection.Client, req *protobu
 	if err != nil {
 		return err
 	}
+	// the page's state tasks start from what the commander already has
+	if err := game.tx(ctx, client, func(tx *Tx) error { return tx.syncStateTasks() }); err != nil {
+		return err
+	}
 	if added != nil {
 		if err := client.Push(added); err != nil {
 			return err

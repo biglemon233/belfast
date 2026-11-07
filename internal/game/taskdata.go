@@ -16,6 +16,9 @@ type taskConfig struct {
 	IsHead       uint32          `json:"is_head"` // first task of its chain
 	SubType      uint32          `json:"sub_type"`
 	TargetID     json.RawMessage `json:"target_id"`
+	// the second target: some sub types keep their threshold here as a string
+	// (task 22012's "10" for "own a ship at level 10 or above")
+	TargetID2    json.RawMessage `json:"target_id_2"`
 	TargetNum    uint32          `json:"target_num"`
 	AwardDisplay json.RawMessage `json:"award_display"`
 	AwardChoice  json.RawMessage `json:"award_choice"`
@@ -32,6 +35,30 @@ type taskConfig struct {
 	awards [][]uint32 // award_display
 	target taskTarget // target_id
 	next   []uint32   // next_task
+}
+
+// targetID2Value is task_data_template.target_id_2 as a number: the table
+// stores it as a string ("10") or a number (0).
+func (config taskConfig) targetID2Value() uint32 {
+	if len(config.TargetID2) == 0 {
+		return 0
+	}
+	var n uint32
+	if json.Unmarshal(config.TargetID2, &n) == nil {
+		return n
+	}
+	var s string
+	if json.Unmarshal(config.TargetID2, &s) != nil {
+		return 0
+	}
+	var v uint32
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return v
+		}
+		v = v*10 + uint32(r-'0')
+	}
+	return v
 }
 
 // weekly_task_template row (WeekPtTask)
