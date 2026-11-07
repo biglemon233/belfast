@@ -374,6 +374,10 @@ func (game *Game) handleBuildResults(client *connection.Client, req *protobuf.CS
 
 // handleCollectBuilds turns finished builds into ships (GetShipCommand,
 // CS_12025). A ship of a new group first pushes the archive medal (SC_17002).
+// A build of a META ship the commander already has still names that ship: the
+// client's launch screen turns it into the broken crystals a duplicate gives,
+// so the slot clears as usual, and the crystals are stored on this side too
+// (the ship itself never is).
 func (game *Game) handleCollectBuilds(client *connection.Client, req *protobuf.CS_12025) error {
 	ctx := context.Background()
 	now := time.Now().Unix()
@@ -387,6 +391,31 @@ func (game *Game) handleCollectBuilds(client *connection.Client, req *protobuf.C
 		for _, build := range picked {
 			if build.FinishTime > now {
 				continue
+			}
+			if broken := metaBrokenCrystals(build.TemplateID); broken != 0 {
+				owned, err := tx.ownsMetaShipGroup(build.TemplateID)
+				if err != nil {
+					return err
+				}
+				if owned {
+					if err := tx.AddItem(itemMetaBrokenCrystal, broken); err != nil {
+						return err
+					}
+					// the ship is the screen the client converts; it is not
+					// the commander's afterwards
+					ship, err := tx.AddShip(build.TemplateID)
+					if err != nil {
+						return err
+					}
+					if err := tx.DeleteShip(ctx, db.DeleteShipParams{ID: ship.GetId(), CommanderID: client.CommanderID}); err != nil {
+						return err
+					}
+					if err := tx.DeleteBuild(ctx, build.ID); err != nil {
+						return err
+					}
+					ships = append(ships, ship)
+					continue
+				}
 			}
 			ship, err := tx.AddShip(build.TemplateID)
 			if err != nil {
