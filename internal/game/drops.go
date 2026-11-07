@@ -24,6 +24,10 @@ const (
 	dropTypeMeowfficer    = 25 // DROP_TYPE_COMMANDER_CAT, commander_data_template
 )
 
+// itemCoreData is 核心数据, what a hard mode chapter's clear pays and the
+// core exchange (核心兑换) spends.
+const itemCoreData = 59900
+
 // grantDrops stores rewards: resources, bag items, equipment, ships (with
 // their default equipment, skills and archive entry, pushed in SC_12042), and
 // backyard furniture, virtual items (the Specialized Core is stored as its
