@@ -46,6 +46,13 @@ const (
 	TaskSubStars         = 1026 // main campaign stars (absolute)
 	TaskSubSortieExp     = 1041 // ship EXP earned from sorties
 	TaskSubTechPoints    = 1050 // Fleet Technology points (absolute), target: nation id, 0 for all
+	// the commander manual's "what the commander already has" tasks: their
+	// progress is a value read off the save, not an event (see syncStateTasks)
+	TaskSubShipLevel    = 1013 // a ship at level target_num or above
+	TaskSubShipLevel2   = 1017 // a ship at level target_id_2 or above
+	TaskSubBreakoutStar = 1027 // the furthest breakout a ship has reached
+	// a permanent activity started (活动档案), the only task counting it
+	TaskSubPermanentActivity = 420
 )
 
 // Sub types whose event carries the current value (a level, a total) rather
@@ -60,6 +67,9 @@ var taskAbsoluteSubTypes = map[uint32]bool{
 	TaskSubCruisePt:     true,
 	TaskSubStars:        true,
 	TaskSubTechPoints:   true,
+	TaskSubShipLevel:    true,
+	TaskSubShipLevel2:   true,
+	TaskSubBreakoutStar: true,
 	TaskSubCityDPS:      true,
 	TaskSubCityWave:     true,
 	// the auction's: its best lot and its coins
@@ -962,4 +972,74 @@ func (game *Game) openActivityTask(ctx context.Context, commanderID, actID, task
 		}
 	}
 	return activityTask{}, false, nil
+}
+
+// syncStateTasks gives the commander manual's state tasks their current
+// values: the engine only counts events, so a task about what the commander
+// already has ("own a ship at level 10", "12 stars", "a ship broken out once")
+// sits at 0 forever without this. Run at login and when the manual opens; it
+// only ever raises progress, because the engine takes the event's value as the
+// new progress for these sub types.
+func (tx *Tx) syncStateTasks() error {
+	tasks, err := tx.ListTasks(tx.ctx, tx.commanderID)
+	if err != nil {
+		return err
+	}
+	if len(tasks) == 0 {
+		return nil
+	}
+	ships, err := tx.ListShipsByCommander(tx.ctx, tx.commanderID)
+	if err != nil {
+		return err
+	}
+	var topLevel, topBreakout uint32
+	for _, ship := range ships {
+		topLevel = max(topLevel, ship.Level)
+		// a limit break moves the ship to template group*10+n: n-1 breakouts
+		if n := ship.TemplateID % 10; n > 1 {
+			topBreakout = max(topBreakout, n-1)
+		}
+	}
+	progress, err := tx.ListChapterProgress(tx.ctx, tx.commanderID)
+	if err != nil {
+		return err
+	}
+	var stars uint32
+	for _, row := range progress {
+		if row.Progress >= 100 {
+			stars++
+		}
+		if row.KillBossCount > 0 {
+			stars++
+		}
+		if row.TakeBoxCount > 0 {
+			stars++
+		}
+	}
+	for _, task := range tasks {
+		config, ok := taskConfigs[task.TaskID]
+		if !ok {
+			continue
+		}
+		var value uint32
+		switch config.SubType {
+		case TaskSubShipLevel:
+			value = min(topLevel, config.TargetNum)
+		case TaskSubShipLevel2:
+			if need := config.targetID2Value(); need > 0 && topLevel >= need {
+				value = 1
+			}
+		case TaskSubBreakoutStar:
+			value = min(topBreakout, config.TargetNum)
+		case TaskSubStars:
+			value = min(stars, config.TargetNum)
+		default:
+			continue
+		}
+		if value == 0 || value <= task.Progress {
+			continue
+		}
+		tx.event(TaskEvent{SubType: config.SubType, Count: value})
+	}
+	return nil
 }

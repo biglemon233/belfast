@@ -801,6 +801,11 @@ func (game *Game) handleLoadPlayerData(client *connection.Client, req *protobuf.
 	if err := game.syncTechPoints(ctx, commander.ID); err != nil {
 		return err
 	}
+	// the manual's "what the commander already has" tasks, before its pages
+	// are pushed
+	if err := game.tx(ctx, client, func(tx *Tx) error { return tx.syncStateTasks() }); err != nil {
+		return err
+	}
 	if _, err := game.resetWeekIfDue(ctx, commander.ID, now); err != nil {
 		return err
 	}
