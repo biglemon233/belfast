@@ -450,6 +450,10 @@ func (tx *Tx) buyGoods(id, count uint32, now time.Time) ([]*protobuf.DROPINFO, e
 	if goods.Genre == genreShoppingStreet {
 		tx.event(TaskEvent{SubType: TaskSubArmoryShop, Count: 1})
 	}
+	// …and its 军需 tab, which buys through the arena shop
+	if goods.Genre == genreArenaShop {
+		tx.event(TaskEvent{SubType: TaskSubNavyShop, Count: 1})
+	}
 	return drops, err
 }
 
