@@ -117,7 +117,14 @@ func (game *Game) handleShipEquipSkin(client *connection.Client, req *protobuf.C
 				return err
 			}
 		}
-		return tx.SetShipEquipment(ctx, db.SetShipEquipmentParams{ShipID: ship.ID, Pos: pos, EquipID: slot.EquipID, SkinID: skinID})
+		if err := tx.SetShipEquipment(ctx, db.SetShipEquipmentParams{ShipID: ship.ID, Pos: pos, EquipID: slot.EquipID, SkinID: skinID}); err != nil {
+			return err
+		}
+		// the commander manual counts a gear skin worn
+		if skinID != 0 {
+			tx.event(TaskEvent{SubType: TaskSubGearSkin, Count: 1})
+		}
+		return nil
 	})
 	if err != nil && !refused(err) {
 		return err
