@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -20,6 +21,12 @@ import (
 // (serverlogincommand.lua): it shows the generic server login failure.
 const serverLoginRejected = 1
 
+// trustClientAccount accepts the account id a client presents without a
+// ticket belfast issued. Only the bilibili (CN) client needs it: its login is
+// signed by bilibili's account service, which belfast can't verify. Local
+// single-player use only — never expose such a server to other machines.
+var trustClientAccount = os.Getenv("BELFAST_TRUST_CLIENT_ACCOUNT") == "1"
+
 // handleServerLogin is the game server side of the login: the client presents
 // the ticket from SC_10021 (or the one from a previous SC_10023 when it
 // reconnects) and gets a fresh one back.
@@ -29,12 +36,16 @@ const serverLoginRejected = 1
 func (gateway *Gateway) handleServerLogin(client *connection.Client, req *protobuf.CS_10022) error {
 	account, ok := gateway.account(req.GetServerTicket())
 	if !ok || account != req.GetAccountId() {
-		logger.LogEvent("Gateway", "ServerLogin", fmt.Sprintf("rejected account %d from %s: unknown ticket", req.GetAccountId(), client.IP), logger.LOG_LEVEL_WARN)
-		return client.Send(&protobuf.SC_10023{
-			Result:       proto.Uint32(serverLoginRejected),
-			UserId:       proto.Uint32(0),
-			ServerTicket: proto.String(""),
-		})
+		if !trustClientAccount || req.GetAccountId() == 0 {
+			logger.LogEvent("Gateway", "ServerLogin", fmt.Sprintf("rejected account %d from %s: unknown ticket", req.GetAccountId(), client.IP), logger.LOG_LEVEL_WARN)
+			return client.Send(&protobuf.SC_10023{
+				Result:       proto.Uint32(serverLoginRejected),
+				UserId:       proto.Uint32(0),
+				ServerTicket: proto.String(""),
+			})
+		}
+		logger.LogEvent("Gateway", "ServerLogin", fmt.Sprintf("trusting client account %d from %s (BELFAST_TRUST_CLIENT_ACCOUNT=1)", req.GetAccountId(), client.IP), logger.LOG_LEVEL_WARN)
+		account = req.GetAccountId()
 	}
 	commander, err := gateway.DB.GetCommanderByAccount(context.Background(), account)
 	switch {

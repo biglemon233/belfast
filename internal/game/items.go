@@ -37,6 +37,8 @@ const (
 	usageGuildDonate    = "usage_guild_donate"
 	usageGuildOperation = "usage_guild_operation"
 	usageBlueprint      = "usage_blueprint"
+	// the cat box quick finisher (20010), used on a training box
+	usageReduceCommanderTime = "usage_reduce_commander_time"
 )
 
 // itemUseConfig is what item_data_statistics says about using an item.
@@ -507,6 +509,9 @@ func (tx *Tx) useItem(id, count uint32, arg []uint32) ([]*protobuf.DROPINFO, err
 		return nil, tx.useSkinTrial(id, count, arg, use)
 	case usageGuildDonate, usageGuildOperation:
 		return nil, tx.useGuildOrders(id, count, use.usage)
+	case usageReduceCommanderTime:
+		// the cat box quick finisher: arg is the box it shortens
+		return nil, tx.quickFinishMeowfficerBox(arg, count)
 	default:
 		return nil, errRefused
 	}

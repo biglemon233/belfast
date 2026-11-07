@@ -15,6 +15,7 @@ import (
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
 	"github.com/ggmolly/belfast/internal/gamedata"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -167,6 +168,56 @@ func (game *Game) activityList(ctx context.Context, commander db.Commander) (*pr
 			state = monthSignState(state, now)
 		}
 		info := activityInfo(config, state, stopTime, fleets[config.ID])
+		if config.Type == activityTypeCruise {
+			// the pass page's points are the counter, not the stored data1
+			pt, err := taskCounter(ctx, game.DB.Queries, commander.ID, TaskSubCruisePt, 0)
+			if err != nil {
+				return nil, err
+			}
+			cruiseInfo(info, state, pt)
+		}
+		if config.Type == activityTypePtShop {
+			// the shop page's currency is the event's pt, not the stored data1
+			pt, err := shopCurrency(ctx, game.DB.Queries, commander.ID, config)
+			if err != nil {
+				return nil, err
+			}
+			info.Data1 = proto.Uint32(pt)
+			if info.Data1List, err = shopRecords(ctx, game.DB.Queries, commander.ID, config.ID); err != nil {
+				return nil, err
+			}
+			// the page reads the bought counts from a record list; the
+			// client's own field isn't pinned down yet, so every channel
+			// carries the same [goods id, count] pairs
+			info.Data2List = info.Data1List
+			if info.Date1KeyValueList, err = shopRecordList(ctx, game.DB.Queries, commander.ID, config.ID); err != nil {
+				return nil, err
+			}
+		}
+		if config.Type == activityTypeEventPt {
+			// an event's point page counts its pt item, like the cruise pass'
+			pt, err := eventPtBalance(ctx, game.DB.Queries, commander.ID, config.ConfigID)
+			if err != nil {
+				return nil, err
+			}
+			info.Data1 = proto.Uint32(pt)
+		}
+		if config.Type == activityTypeEventPtExchange {
+			// the pt exchange activity names its pt item in config_id
+			pt, err := virtualItemBalance(ctx, game.DB.Queries, commander.ID, config.ConfigID)
+			if err != nil {
+				return nil, err
+			}
+			info.Data1 = proto.Uint32(pt)
+		}
+		if config.Type == activityTypeEventPt || config.Type == activityTypeEventPtExchange {
+			// the pt page's counters: the client reads data3/data4 for the
+			// shop's currency, data1/data2 keep the same total for its page
+			pt := info.GetData1()
+			info.Data2 = proto.Uint32(pt)
+			info.Data3 = proto.Uint32(pt)
+			info.Data4 = proto.Uint32(pt)
+		}
 		if config.Type == activityTypeCityRebuild {
 			if info.Date1KeyValueList, err = cityRebuildBag(ctx, game.DB.Queries, commander.ID, config.ID); err != nil {
 				return nil, err
@@ -259,6 +310,10 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 			return game.islandOperation(client, config, req)
 		case activityTypeFlowerField:
 			return game.flowerFieldOperation(client, config, req)
+		case activityTypeCruise:
+			return game.cruiseOperation(client, config, req)
+		case activityTypePtShop:
+			return game.activityShopOperation(client, config, req)
 		}
 	}
 	activityType := config.Type
@@ -311,6 +366,14 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 			return tx.openTaskListDays(config, now)
 		})
 	default:
+		logger.WithFields("Activity",
+			logger.FieldValue("id", config.ID),
+			logger.FieldValue("type", config.Type),
+			logger.FieldValue("cmd", req.GetCmd()),
+			logger.FieldValue("arg1", req.GetArg1()),
+			logger.FieldValue("arg2", req.GetArg2()),
+			logger.FieldValue("args", len(req.GetArgList())),
+		).Warn("operation not handled")
 		err = errRefused
 	}
 	if refused(err) {
