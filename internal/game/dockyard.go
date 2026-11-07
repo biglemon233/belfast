@@ -344,7 +344,15 @@ func (game *Game) handleUpgradeStar(client *connection.Client, req *protobuf.CS_
 		if err := tx.consumeShips(materials); err != nil {
 			return err
 		}
-		return tx.limitBreak(ship, breakout.BreakoutID)
+		if err := tx.limitBreak(ship, breakout.BreakoutID); err != nil {
+			return err
+		}
+		// the commander manual counts breakouts, and how far one went
+		tx.event(TaskEvent{SubType: TaskSubBreakout, Count: 1})
+		if n := breakout.BreakoutID % 10; n > 1 {
+			tx.event(TaskEvent{SubType: TaskSubBreakoutStar, Count: n - 1})
+		}
+		return nil
 	})
 	if err != nil && !refused(err) {
 		return err
