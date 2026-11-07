@@ -136,6 +136,9 @@ func (game *Game) handleRequisition(client *connection.Client, req *protobuf.CS_
 	if count >= 1 && count <= maxBuilds {
 		err = game.tx(ctx, client, func(tx *Tx) (err error) {
 			ships, err = tx.requisition(count, time.Now())
+			if err == nil {
+				tx.event(TaskEvent{SubType: TaskSubNavyShop, Count: 1})
+			}
 			return err
 		})
 	}

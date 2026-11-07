@@ -258,6 +258,9 @@ func (game *Game) handleGuildShopPurchase(client *connection.Client, req *protob
 	var drops []*protobuf.DROPINFO
 	err := game.tx(context.Background(), client, func(tx *Tx) (err error) {
 		drops, err = tx.buyGuildGoods(req.GetGoodsid(), req.GetIndex(), req.GetSelected(), time.Now())
+		if err == nil {
+			tx.event(TaskEvent{SubType: TaskSubFleetShop, Count: 1})
+		}
 		return err
 	})
 	if err != nil && !refused(err) {
