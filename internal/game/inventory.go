@@ -157,6 +157,15 @@ func bag(ctx context.Context, queries *db.Queries, commanderID uint32) (*protobu
 	for i, row := range rows {
 		msg.ItemList[i] = &protobuf.ITEMINFO{Id: proto.Uint32(row.ItemID), Count: proto.Uint32(row.Count)}
 	}
+	// the virtual items (an event's pt, the weekly mission points...) the
+	// shop pages read their currency from
+	virtual, err := queries.AdminListVirtualItems(ctx, commanderID)
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range virtual {
+		msg.ItemMiscList = append(msg.ItemMiscList, &protobuf.ITEMMISC{Id: proto.Uint32(row.ItemID), Data: proto.Uint32(row.Amount)})
+	}
 	return msg, nil
 }
 

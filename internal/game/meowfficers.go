@@ -397,6 +397,51 @@ func (game *Game) handleQuickFinishMeowfficerBoxes(client *connection.Client, re
 	return client.Send(&protobuf.SC_25038{Result: result(err)})
 }
 
+// quickFinishMeowfficerBox spends cat box quick finishers on one box, the
+// per-box "accelerate" button (CS_15002 on item 20010,
+// CommanderBoxes:useItem): arg names the box, or the one training when it
+// names none. count of the item takes count x its usage_arg seconds off
+// (CommanderProxy:CalcQuickItemUsageCnt), never more than the box still
+// needs, and the boxes queued behind it move up (rescheduleBoxes). A box
+// with nothing left to shorten refuses, so the items stay.
+func (tx *Tx) quickFinishMeowfficerBox(arg []uint32, count uint32) error {
+	now := time.Now().Unix()
+	boxes, err := tx.ListMeowfficerBoxes(tx.ctx, tx.commanderID)
+	if err != nil {
+		return err
+	}
+	queue := boxQueue(boxes)
+	var i int
+	if len(arg) > 0 {
+		i = slices.IndexFunc(queue, func(box db.MeowfficerBox) bool { return box.BoxID == arg[0] })
+	} else {
+		i = slices.IndexFunc(queue, func(box db.MeowfficerBox) bool { return box.FinishTime > now })
+	}
+	if i < 0 {
+		return errRefused
+	}
+	box := queue[i]
+	step := int64(catBoxQuickFinisherSeconds)
+	remaining := box.FinishTime - max(box.BeginTime, now)
+	if remaining <= 0 {
+		return errRefused
+	}
+	used := min(uint32((remaining+step-1)/step), count)
+	if used == 0 {
+		return errRefused
+	}
+	if err := tx.SpendItem(itemCatBoxQuickFinisher, used); err != nil {
+		return err
+	}
+	queue[i].FinishTime = max(box.BeginTime, box.FinishTime-int64(used)*step)
+	if box.BeginTime > now && queue[i].FinishTime == box.BeginTime {
+		// a queued box finished outright is done now
+		queue[i].BeginTime, queue[i].FinishTime = now, now
+	}
+	logger.WithFields("Meowfficer", logger.FieldValue("box", box.BoxID), logger.FieldValue("used", used)).Info("quick finish")
+	return rescheduleBoxes(tx, queue, now)
+}
+
 // handleBuyMeowfficerBoxes buys cat boxes from Akashi
 // (ReserveCommanderBoxCommand, CS_25018, NG006): type is how many. The nth
 // box of the day costs commander_get_cost's gold (the first is free) less
