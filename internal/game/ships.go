@@ -367,6 +367,34 @@ func energyTick(commander db.Commander, now int64) *protobuf.SC_12031 {
 	return &protobuf.SC_12031{EnergyAutoIncreaseTime: proto.Uint32(uint32(last))}
 }
 
+// restoreMorale refills the morale of every ship below the cap when the
+// commander logs in. The client only counts the morale tick itself (SC_12031)
+// and never writes the recovered morale back, so without this a ship that
+// spent its morale never recovers it.
+func restoreMorale(ctx context.Context, queries *db.Queries, commanderID uint32) error {
+	ships, err := queries.ListShipsByCommander(ctx, commanderID)
+	if err != nil {
+		return err
+	}
+	top := energyMax()
+	for _, ship := range ships {
+		if ship.Energy >= top {
+			continue
+		}
+		if err := queries.UpdateShipBattleState(ctx, db.UpdateShipBattleStateParams{
+			Level:       ship.Level,
+			Exp:         ship.Exp,
+			Intimacy:    ship.Intimacy,
+			Energy:      top,
+			ID:          ship.ID,
+			CommanderID: commanderID,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // handleShipLock locks or unlocks ships (UpdateShipLockCommand, CS_12022).
 func (game *Game) handleShipLock(client *connection.Client, req *protobuf.CS_12022) error {
 	ctx := context.Background()

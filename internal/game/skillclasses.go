@@ -180,12 +180,26 @@ func quickFinishesUsed(commander db.Commander, now time.Time) uint32 {
 	return commander.QuickFinishes
 }
 
-// quickFinishesAllowed is how many lessons a day the running buff activities
-// finish instantly.
-func quickFinishesAllowed(now time.Time) uint32 {
-	var n uint32
+// quickFinishesAllowed is how many lessons a day the buff activities the
+// commander sees finish instantly: the globally open ones plus the ones that
+// run on the commander's own clock (newUserActivities — Window.Open always
+// refuses newuser activities), deduplicated by activity.
+func quickFinishesAllowed(ctx context.Context, queries *db.Queries, commanderID uint32, now time.Time) (uint32, error) {
+	active := map[uint32]bool{}
 	for _, config := range openActivities(now) {
-		if config.Type != activityTypeBuff {
+		active[config.ID] = true
+	}
+	own, err := commanderActivities(ctx, queries, commanderID, now)
+	if err != nil {
+		return 0, err
+	}
+	for id := range own {
+		active[id] = true
+	}
+	var n uint32
+	for id := range active {
+		config, ok := activityConfigs[id]
+		if !ok || config.Type != activityTypeBuff {
 			continue
 		}
 		buffs := []uint32{config.ConfigID}
@@ -196,7 +210,7 @@ func quickFinishesAllowed(now time.Time) uint32 {
 			n += skillLearnBuffs[buff]
 		}
 	}
-	return n
+	return n, nil
 }
 
 // navalAcademy is SC_22001, NavalAcademyProxy's state: the levels of the
@@ -353,7 +367,11 @@ func (game *Game) handleQuickFinishLesson(client *connection.Client, req *protob
 		}
 		now := time.Now()
 		used := quickFinishesUsed(commander, now)
-		if used >= quickFinishesAllowed(now) {
+		allowed, err := quickFinishesAllowed(ctx, tx.Queries, commander.ID, now)
+		if err != nil {
+			return err
+		}
+		if used >= allowed {
 			return errRefused
 		}
 		class, err := tx.GetSkillClass(ctx, db.GetSkillClassParams{CommanderID: client.CommanderID, RoomID: req.GetRoomid()})

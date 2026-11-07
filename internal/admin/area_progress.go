@@ -163,7 +163,9 @@ func (server *Server) handleTimers(r *http.Request) (any, error) {
 		Builds: []progBuildTimer{}, Commissions: []progCommissionTimer{}, Lessons: []progLessonTimer{}, Fields: []progFieldTimer{},
 		AutoTickets: []progAutoTicket{}, AutoBattles: []progAutoTimer{}, Research: []progResearchTimer{}, FleetTech: []progFleetTechTimer{}, Cooldowns: []progUntilTimer{},
 	}
-	out.QuickUsed, out.QuickAllowed = game.QuickFinishes(commander, now)
+	if out.QuickUsed, out.QuickAllowed, err = server.Game.QuickFinishes(ctx, commander, now); err != nil {
+		return nil, err
+	}
 
 	builds, err := server.Store.ListBuilds(ctx, id)
 	if err != nil {
