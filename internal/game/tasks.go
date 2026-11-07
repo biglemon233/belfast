@@ -66,6 +66,10 @@ const (
 	TaskSubFleetShop  = 151
 	TaskSubCoreShop   = 152
 	TaskSubNavyShop   = 155
+	// a daily challenge cleared (FinishDailyCommand)
+	TaskSubDailyClear = 186
+	// a gear skin worn (ShipEquipSkinCommand)
+	TaskSubGearSkin = 47
 )
 
 // Sub types whose event carries the current value (a level, a total) rather

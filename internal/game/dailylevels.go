@@ -496,6 +496,8 @@ func (game *Game) finishDaily(client *connection.Client, req *protobuf.CS_40003)
 			}
 		}
 		reply.DropInfo = stage.roll(score)
+		// the commander manual counts a cleared daily challenge
+		tx.event(TaskEvent{SubType: TaskSubDailyClear, Count: 1})
 		return tx.grantDrops(reply.DropInfo)
 	})
 	if err != nil {
