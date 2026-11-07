@@ -561,6 +561,8 @@ func (game *Game) handleDailyQuickBattle(client *connection.Client, req *protobu
 				return err
 			}
 		}
+		// a quick battle clears the challenge like a fought one
+		tx.event(TaskEvent{SubType: TaskSubDailyClear, Count: req.GetCnt()})
 		return nil
 	})
 	if refused(err) {
