@@ -58,6 +58,44 @@ var (
 	metaLessonBooks map[uint32]uint32
 )
 
+// A duplicate META ship becomes broken crystals instead of a second copy: the
+// game's own reward for it ("已获得破碎的结晶 ×10", as its ship launch screen
+// shows). The ship's own crystal (ship_meta_breakout item1) is a different
+// item, spent by Somatic Activation.
+const (
+	// itemMetaBrokenCrystal is 破碎的结晶, item_data_statistics 21000
+	itemMetaBrokenCrystal = 21000
+	// metaBrokenCrystalsPerShip is how many a duplicate gives
+	metaBrokenCrystalsPerShip = 10
+)
+
+// metaBrokenCrystals is how many broken crystals a duplicate of the META ship
+// template gives, 0 for a ship that isn't a META.
+func metaBrokenCrystals(templateID uint32) uint32 {
+	if _, ok := metaBreakouts[templateID]; ok {
+		return metaBrokenCrystalsPerShip
+	}
+	return 0
+}
+
+// ownsMetaShipGroup is whether the commander already has a ship of the META
+// template's group: a ship limit broken along ship_meta_breakout keeps the
+// group in its template id (MetaCharacterConst.GetMetaShipGroupIDByConfigID
+// is the template id without its last digit).
+func (tx *Tx) ownsMetaShipGroup(templateID uint32) (bool, error) {
+	ships, err := tx.ListShipsByCommander(tx.ctx, tx.commanderID)
+	if err != nil {
+		return false, err
+	}
+	group := templateID / 10
+	for _, ship := range ships {
+		if ship.TemplateID/10 == group {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // readMetaLessonBooks reads the usage_arg of the item_data_statistics META
 // skill books.
 func readMetaLessonBooks(items map[uint32]itemConfig) {

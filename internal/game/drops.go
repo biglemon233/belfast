@@ -61,6 +61,38 @@ func (tx *Tx) grantDrops(drops []*protobuf.DROPINFO) error {
 				return err
 			}
 		case kind == dropTypeShip:
+			// a META ship the commander already has becomes broken crystals
+			// (the game's own reward for a duplicate): the drop the client is
+			// handed says so too, so it shows the crystals, not a ship
+			if broken := metaBrokenCrystals(id); broken != 0 {
+				owned, err := tx.ownsMetaShipGroup(id)
+				if err != nil {
+					return err
+				}
+				if owned {
+					broken *= count
+					if err := tx.AddItem(itemMetaBrokenCrystal, broken); err != nil {
+						return err
+					}
+					entry.Type = proto.Uint32(dropTypeItem)
+					entry.Id = proto.Uint32(itemMetaBrokenCrystal)
+					entry.Number = proto.Uint32(broken)
+					continue
+				}
+				// one is new; any past it duplicates that one
+				ship, err := tx.AddShip(id)
+				if err != nil {
+					return err
+				}
+				tx.newShips = append(tx.newShips, ship)
+				if count > 1 {
+					if err := tx.AddItem(itemMetaBrokenCrystal, broken*(count-1)); err != nil {
+						return err
+					}
+					entry.Number = proto.Uint32(1)
+				}
+				continue
+			}
 			for range count {
 				ship, err := tx.AddShip(id)
 				if err != nil {
