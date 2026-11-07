@@ -176,20 +176,22 @@ func (game *Game) activityList(ctx context.Context, commander db.Commander) (*pr
 			}
 			cruiseInfo(info, state, pt)
 		}
-		if config.Type == activityTypePtShop {
-			// the shop page's currency is the event's pt, not the stored data1
-			pt, err := shopCurrency(ctx, game.DB.Queries, commander.ID, config)
-			if err != nil {
+		if config.Type == activityTypePtShop || config.Type == activityTypeMetaShop {
+			if config.Type == activityTypePtShop {
+				// the event shop's currency is the event's pt, not the
+				// stored data1; the META shop's is 破碎的结晶, a bag item the
+				// client counts itself
+				pt, err := shopCurrency(ctx, game.DB.Queries, commander.ID, config)
+				if err != nil {
+					return nil, err
+				}
+				info.Data1 = proto.Uint32(pt)
+			}
+			if info.Data1List, info.Data2List, err = shopRecords(ctx, game.DB.Queries, commander.ID, config.ID); err != nil {
 				return nil, err
 			}
-			info.Data1 = proto.Uint32(pt)
-			if info.Data1List, err = shopRecords(ctx, game.DB.Queries, commander.ID, config.ID); err != nil {
-				return nil, err
-			}
-			// the page reads the bought counts from a record list; the
-			// client's own field isn't pinned down yet, so every channel
-			// carries the same [goods id, count] pairs
-			info.Data2List = info.Data1List
+			// ActivityShop.Ctor reads data1_list as the goods and data2_list
+			// as how many of each were bought, at the same index
 			if info.Date1KeyValueList, err = shopRecordList(ctx, game.DB.Queries, commander.ID, config.ID); err != nil {
 				return nil, err
 			}
@@ -314,6 +316,8 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 			return game.cruiseOperation(client, config, req)
 		case activityTypePtShop:
 			return game.activityShopOperation(client, config, req)
+		case activityTypeMetaShop:
+			return game.metaShopOperation(client, config, req)
 		}
 	}
 	activityType := config.Type

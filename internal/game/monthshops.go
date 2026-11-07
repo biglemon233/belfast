@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
 	"time"
 
@@ -33,11 +34,33 @@ type monthShop struct {
 	BlueprintLimit []uint32 `json:"blueprint_shop_limit_goods"`
 }
 
+// commodityIDs is activity_shop_template's commodity_id_list, which the goods
+// that don't offer a choice leave as "" instead of [].
+type commodityIDs []uint32
+
+func (ids *commodityIDs) UnmarshalJSON(data []byte) error {
+	var list []uint32
+	if json.Unmarshal(data, &list) == nil {
+		*ids = list
+		return nil
+	}
+	var text string
+	if json.Unmarshal(data, &text) == nil && text == "" {
+		*ids = nil
+		return nil
+	}
+	return fmt.Errorf("commodity_id_list: %s", data)
+}
+
 // activityGoods is an activity_shop_template row: num of the commodity for
 // resource_num of the price, num_limit times (0 no limit).
 type activityGoods struct {
-	CommodityType    uint32          `json:"commodity_type"`
-	CommodityID      uint32          `json:"commodity_id"`
+	CommodityType uint32 `json:"commodity_type"`
+	CommodityID   uint32 `json:"commodity_id"`
+	// CommodityIDList is what one purchase of a pick-one goods lets the
+	// commander choose among (the META shop's gear material): the client
+	// sends the picks instead of the goods' commodity_id
+	CommodityIDList  commodityIDs    `json:"commodity_id_list"`
 	Num              uint32          `json:"num"`
 	NumLimit         uint32          `json:"num_limit"`
 	ResourceCategory uint32          `json:"resource_category"` // DROP_TYPE_RESOURCE or DROP_TYPE_ITEM
