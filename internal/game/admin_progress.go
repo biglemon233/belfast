@@ -319,9 +319,14 @@ func (game *Game) ResetCounter(ctx context.Context, id uint32, counter string) (
 const CommissionDraws = commissionDailyPerDay
 
 // QuickFinishes are the Tactical Class lessons finished instantly today and
-// how many the running buffs allow.
-func QuickFinishes(commander db.Commander, now time.Time) (used, allowed uint32) {
-	return quickFinishesUsed(commander, now), quickFinishesAllowed(now)
+// how many the running buffs allow. The commander's own activities count too
+// (newUserActivities), the same set handleQuickFinishLesson accepts.
+func (game *Game) QuickFinishes(ctx context.Context, commander db.Commander, now time.Time) (used, allowed uint32, err error) {
+	allowed, err = quickFinishesAllowed(ctx, game.DB.Queries, commander.ID, now)
+	if err != nil {
+		return 0, 0, err
+	}
+	return quickFinishesUsed(commander, now), allowed, nil
 }
 
 // BuildPointsMax is the most build points a commander holds (the UR

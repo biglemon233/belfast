@@ -159,6 +159,23 @@ func (session *chapterSession) bossesDown() uint32 {
 	return count
 }
 
+// allEnemiesDown is whether no enemy fleet is left on the map. The third star
+// of most chapters (star_require_3 kind 3, "击破所有敌舰") is granted on
+// TakeBoxCount, which nothing else sets. Ambush cells don't count: they are
+// events, not fleets.
+func (session *chapterSession) allEnemiesDown() bool {
+	for _, cell := range session.info.CellList {
+		if cell.GetItemFlag() == cellFlagDisabled {
+			continue
+		}
+		switch cell.GetItemType() {
+		case attachEnemy, attachBoss, attachElite:
+			return false
+		}
+	}
+	return true
+}
+
 // won is Chapter:CheckChapterWin for the conditions the supported chapters use.
 func (session *chapterSession) won() bool {
 	for _, condition := range session.template.winConditions {
@@ -419,6 +436,9 @@ func (game *Game) retreat(ctx context.Context, client *connection.Client, sessio
 			progress.Progress = min(progress.Progress+session.template.progressBoss, 100)
 			progress.DefeatCount++
 			progress.TodayDefeatCount++
+			if session.allEnemiesDown() {
+				progress.TakeBoxCount = 1
+			}
 			if err := queries.SaveChapterProgress(ctx, db.SaveChapterProgressParams(progress)); err != nil {
 				return err
 			}

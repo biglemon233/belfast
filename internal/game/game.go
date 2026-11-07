@@ -789,6 +789,10 @@ func (game *Game) handleLoadPlayerData(client *connection.Client, req *protobuf.
 	if err := expireSkins(ctx, game.DB, commander.ID, now); err != nil {
 		return err
 	}
+	// the client never writes back the morale it recovered on its own
+	if err := restoreMorale(ctx, game.DB.Queries, commander.ID); err != nil {
+		return err
+	}
 	// the research ships' opening tasks first: syncTechPoints brings them
 	// to the commander's points
 	if err := game.syncBlueprintTasks(ctx, commander.ID, commander.Level); err != nil {
