@@ -133,6 +133,9 @@ func (game *Game) handleMonthShopping(client *connection.Client, req *protobuf.C
 	var drops []*protobuf.DROPINFO
 	err := game.tx(context.Background(), client, func(tx *Tx) (err error) {
 		drops, err = tx.buyMonthShopGoods(req.GetType(), req.GetId(), req.GetCount(), time.Now())
+		if err == nil && req.GetType() == monthShopCore {
+			tx.event(TaskEvent{SubType: TaskSubCoreShop, Count: 1})
+		}
 		return err
 	})
 	if err != nil && !refused(err) {

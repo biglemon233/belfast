@@ -59,6 +59,13 @@ const (
 	TaskSubBreakout = 32
 	// a gift package shop purchase (shop_template genre gift_package)
 	TaskSubGiftShop = 154
+	// the manual's shop tasks; the shop each one means was read off its desc
+	// and the shop screens (军火 → the medal exchange, 舰队 → the guild shop,
+	// 核心 → the monthly core shop, 军需 → requisition)
+	TaskSubArmoryShop = 150
+	TaskSubFleetShop  = 151
+	TaskSubCoreShop   = 152
+	TaskSubNavyShop   = 155
 )
 
 // Sub types whose event carries the current value (a level, a total) rather
