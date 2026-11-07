@@ -47,10 +47,6 @@ func (game *Game) handleMedalShopPurchase(client *connection.Client, req *protob
 	var drops []*protobuf.DROPINFO
 	err := game.tx(context.Background(), client, func(tx *Tx) (err error) {
 		drops, err = tx.buyMedalGoods(req.GetShopid(), req.GetFlashTime(), req.GetSelected(), time.Now())
-		if err == nil {
-			// the 军需 tab of the supply shop, priced in Medals of Honor
-			tx.event(TaskEvent{SubType: TaskSubNavyShop, Count: 1})
-		}
 		return err
 	})
 	if err != nil && !refused(err) {
