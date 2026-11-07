@@ -226,6 +226,13 @@ func parseDailyAward(entry []json.RawMessage) (dailyAward, bool) {
 		award.chance = uint32(chance)
 		return award, err == nil && chance > 0
 	}
+	// the localised client data writes "20%概率" (CN), so any "%" marks the
+	// entry as a chance: take the digits in front of it
+	if index := strings.Index(text, "%"); index > 0 {
+		chance, err := strconv.ParseUint(text[:index], 10, 32)
+		award.chance = uint32(chance)
+		return award, err == nil && chance > 0
+	}
 	low, high, isRange := strings.Cut(text, "~")
 	if !isRange {
 		high = low
