@@ -70,6 +70,8 @@ const (
 	TaskSubDailyClear = 186
 	// a gear skin worn (ShipEquipSkinCommand)
 	TaskSubGearSkin = 47
+	// a hard mode chapter cleared (困难海域), the daily 7205's event
+	TaskSubHardClear = 185
 )
 
 // Sub types whose event carries the current value (a level, a total) rather

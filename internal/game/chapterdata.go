@@ -67,6 +67,10 @@ type chapterTemplate struct {
 	// how the fleets are picked (chapter_template.type): chapterSelectFleet
 	// or chapterCustomFleet
 	fleetType uint32
+	// hard is a hard mode chapter (困难海域): its map is the 200s, one per
+	// normal chapter's map (10101 is 1-1's hard map 201). The client lists
+	// them separately and the commander manual's daily 7205 counts them.
+	hard bool
 	// the elite fleet set the chapter shares with the others of its
 	// formation (ChapterProxy.mapEliteFleetCache, SC_13001 fleet_list)
 	formation uint32
@@ -281,6 +285,9 @@ func loadChapterData() error {
 			template.awards = append(template.awards, award[1])
 		}
 		template.fleetType, template.formation = row.Type, row.Formation
+		// hard mode chapters share the normal chapters' ids times 100 and
+		// live on the maps after 200 (10101 is 1-1's hard map 201)
+		template.hard = row.Map >= 200 && row.Map < 300
 		template.groupNum, template.submarineNum, template.supportNum = row.GroupNum, row.SubmarineNum, row.SupportGroupNum
 		for _, fleet := range row.Limitation {
 			var limits [2][]shipLimit

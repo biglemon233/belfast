@@ -416,6 +416,11 @@ func (game *Game) retreat(ctx context.Context, client *connection.Client, sessio
 	err := game.tx(ctx, client, func(tx *Tx) error {
 		queries := tx.Queries
 		if session.won() {
+			// the commander manual's daily 7205: every hard mode win counts,
+			// not only the one that finishes the map (困难海域)
+			if session.template.hard {
+				tx.event(TaskEvent{SubType: TaskSubHardClear, Count: 1})
+			}
 			if autoRepeat {
 				seconds, err := recordChapterAuto(tx, session, time.Now())
 				if err != nil {
