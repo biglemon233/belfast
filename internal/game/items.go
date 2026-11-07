@@ -84,6 +84,10 @@ type itemUse struct {
 
 var itemUses map[uint32]itemUse
 
+// techBoxItems are the tech packs (item_data_statistics type 5): the commander
+// manual's task 22015 counts how many are opened.
+var techBoxItems map[uint32]bool
+
 // item_usage_invitation row: the ship an invitation gives, and the
 // commemorative item that comes with it (0 none)
 type invitationConfig struct {
@@ -314,9 +318,13 @@ func readTechPack(id uint32, row itemConfig, gear []packGear, items map[uint32]i
 // opens.
 func readItemUses(items map[uint32]itemConfig, gear []packGear) {
 	itemUses = make(map[uint32]itemUse, len(items))
+	techBoxItems = map[uint32]bool{}
 	itemComposes = map[uint32]itemCompose{}
 	var unread []uint32 // tech packs whose text gives no draw
 	for id, row := range items {
+		if row.Type == itemTypeEquipBox {
+			techBoxItems[id] = true
+		}
 		readItemCompose(id, row.itemUseConfig)
 		use := itemUse{usage: row.Usage}
 		var icons, args [][]uint32
@@ -525,6 +533,9 @@ func (tx *Tx) useItem(id, count uint32, arg []uint32) ([]*protobuf.DROPINFO, err
 	}
 	if err := tx.SpendItem(id, count); err != nil {
 		return nil, err
+	}
+	if techBoxItems[id] {
+		tx.event(TaskEvent{SubType: TaskSubTechBox, Count: count})
 	}
 	return drops, tx.grantDrops(drops)
 }

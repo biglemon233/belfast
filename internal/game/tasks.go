@@ -53,6 +53,12 @@ const (
 	TaskSubBreakoutStar = 1027 // the furthest breakout a ship has reached
 	// a permanent activity started (活动档案), the only task counting it
 	TaskSubPermanentActivity = 420
+	// tech packs used (item_data_statistics type 5)
+	TaskSubTechBox = 50
+	// ship breakouts done (UpgradeStarCommand)
+	TaskSubBreakout = 32
+	// a gift package shop purchase (shop_template genre gift_package)
+	TaskSubGiftShop = 154
 )
 
 // Sub types whose event carries the current value (a level, a total) rather

@@ -441,6 +441,10 @@ func (tx *Tx) buyGoods(id, count uint32, now time.Time) ([]*protobuf.DROPINFO, e
 	if goods.Group > 0 {
 		err = tx.AddShopGroupPurchase(tx.ctx, db.AddShopGroupPurchaseParams{CommanderID: tx.commanderID, GroupID: goods.Group, ExpiresAt: goods.groupResetAt(now), Count: goods.GroupBuyCount})
 	}
+	// the commander manual counts gift package purchases
+	if goods.Genre == genreGiftPackage {
+		tx.event(TaskEvent{SubType: TaskSubGiftShop, Count: 1})
+	}
 	return drops, err
 }
 
