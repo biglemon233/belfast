@@ -50,6 +50,10 @@ const (
 	bossTechPacks = 1
 	bossGearParts = 3
 	bossShips     = 1
+	// the draws from a battle's own award list: a normal or elite enemy one,
+	// the boss two (its list holds the designs, the packs and the parts)
+	battleItemDraws = 1
+	bossItemDraws   = 2
 )
 
 // handleBeginStage starts a battle (BeginStageCommand.SendRequest, CS_40001).
@@ -416,7 +420,74 @@ func saveShipBattleState(ctx context.Context, queries *db.Queries, ship db.Ship)
 // follows the capture: coins for every battle, and for a boss a Specialized
 // Core plus draws from the chapter's award pools (tech pack, gear parts, a
 // ship), in the capture's order.
+//
+// A battle with its own award list (the campaign enemies carry one) draws its
+// items from that: a normal enemy drops the chapter's designs, gear parts and
+// packs, not only coins.
 func scenarioDrops(template *chapterTemplate, expedition expeditionTemplate) []*protobuf.DROPINFO {
+	items, ships := expedition.pools()
+	if len(items) == 0 && len(ships) == 0 {
+		// no table of its own (the auto repeat's anonymous enemies): the
+		// chapter's pools stand in
+		return chapterScenarioDrops(template, expedition)
+	}
+	logger.WithFields("Drops",
+		logger.FieldValue("enemy", expedition.Level),
+		logger.FieldValue("boss", expedition.isBoss()),
+		logger.FieldValue("items", len(items)),
+		logger.FieldValue("ships", len(ships)),
+	).Debug("battle drops")
+	drops := []*protobuf.DROPINFO{dropInfo(dropTypeResource, ResourceGold, scenarioBossGold)}
+	if !expedition.isBoss() {
+		drops[0] = dropInfo(dropTypeResource, ResourceGold, scenarioGold)
+		return appendDraws(drops, items, battleItemDraws)
+	}
+	drops = append(drops, dropInfo(dropTypeVItem, vitemSpecializedCore, 1))
+	// the boss's own list, then the chapter's ships: an enemy's list names
+	// the ship drop through the "unknown character" placeholder, which has
+	// no pool of its own
+	drops = appendDraws(drops, items, bossItemDraws)
+	return appendDraws(drops, chapterShips(template), bossShips)
+}
+
+// pools splits an enemy's award_display into what it can drop: the item
+// entries (a virtual placeholder like the "unknown design" box is opened on
+// receipt, so it stays as it is) and the ships.
+func (expedition expeditionTemplate) pools() (items, ships []dropRef) {
+	for _, award := range expedition.Awards {
+		if len(award) < 2 {
+			continue
+		}
+		kind, id := award[0], award[1]
+		switch kind {
+		case dropTypeShip:
+			ships = append(ships, dropRef{kind, id})
+		case dropTypeItem:
+			// a virtual id with a pool is a box, a known item is itself;
+			// the other virtual ids are placeholders the server fills
+			if len(dropPools[id]) > 0 || itemNameTypes[id].Type != 0 {
+				items = append(items, dropRef{kind, id})
+			}
+		}
+	}
+	return items, ships
+}
+
+// chapterShips is a chapter's ship drop table (its awards' ship pools).
+func chapterShips(template *chapterTemplate) []dropRef {
+	var ships []dropRef
+	for _, award := range template.awards {
+		for _, ref := range dropPools[award[1]] {
+			if ref.kind == dropTypeShip {
+				ships = append(ships, ref)
+			}
+		}
+	}
+	return ships
+}
+
+// chapterScenarioDrops is the fallback for a battle without a list of its own.
+func chapterScenarioDrops(template *chapterTemplate, expedition expeditionTemplate) []*protobuf.DROPINFO {
 	if !expedition.isBoss() {
 		return []*protobuf.DROPINFO{dropInfo(dropTypeResource, ResourceGold, scenarioGold)}
 	}

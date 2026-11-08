@@ -139,6 +139,10 @@ type expeditionTemplate struct {
 	Exp   uint32 `json:"exp"`   // base ship exp
 	Level uint32 `json:"level"` // the enemy's level
 	Type  uint32 `json:"type"`
+	// award_display is this enemy's own drop list: the client shows it as
+	// the battle's "possible drops", and it is where a normal battle's
+	// items come from (the chapter's awards are the boss's ship table)
+	Awards [][]uint32 `json:"award_display"`
 }
 
 var expeditionTemplates map[uint32]expeditionTemplate
@@ -225,12 +229,16 @@ type shipLevelConfig struct {
 	FightOilRatio uint32 `json:"fight_oil_ratio"` // oil_at_end x this / 10000
 }
 
+// itemNameTypes is item_data_statistics, the items a drop list can name
+// directly (as opposed to the virtual placeholders dropPools holds).
+var itemNameTypes map[uint32]itemNameType
+
 // loadChapterData builds every chapter of chapter_template, the expeditions
 // fought in them, the award pools and the ship level curve.
 func loadChapterData() error {
 	var chapters map[uint32]chapterConfig
 	var items map[uint32]virtualItemConfig
-	var itemStats map[uint32]itemNameType
+	itemStats := map[uint32]itemNameType{}
 	var levels map[uint32]shipLevelConfig
 	var gameset map[string]uint32
 	err := gamedata.LoadAll(
@@ -361,6 +369,7 @@ func loadChapterData() error {
 		}
 	}
 	deriveVirtualPools(items, itemStats)
+	itemNameTypes = itemStats
 
 	maxLevel := uint32(0)
 	for _, row := range levels {
