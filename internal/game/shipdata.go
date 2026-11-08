@@ -88,6 +88,10 @@ type shipStatisticsConfig struct {
 	Attrs            []float64 `json:"attrs"`
 	AttrsGrowth      []float64 `json:"attrs_growth"`
 	AttrsGrowthExtra []float64 `json:"attrs_growth_extra"`
+	// Ammo is the ship's AttributeType.Ammo (Ship:getShipAmmo): a
+	// submarine's torpedo attacks per sortie, 0 for the surface ships, which
+	// spend the chapter's ammo_total instead
+	Ammo uint32 `json:"ammo"`
 
 	// the usage_favorability gifts it dislikes (giftDislikes)
 	GiftDislike json.RawMessage `json:"gift_dislike"`
