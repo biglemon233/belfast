@@ -170,6 +170,7 @@ type virtualItemConfig struct {
 type itemNameType struct {
 	Type    uint32 `json:"type"`
 	Display string `json:"display"`
+	Rarity  uint32 `json:"rarity"`
 }
 
 // Specialized Core: virtual item 59011 (virtual_type 20) is stored as the
