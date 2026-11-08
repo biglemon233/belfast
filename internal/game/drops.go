@@ -44,6 +44,7 @@ const itemCoreData = 59900
 // they cause. Frames, emojis...
 // have no storage yet and are only logged.
 func (tx *Tx) grantDrops(drops []*protobuf.DROPINFO) error {
+	rollPlaceholders(drops)
 	var cats []*protobuf.COMMANDERINFO
 	var island []*protobuf.DROPINFO
 	for _, entry := range drops {

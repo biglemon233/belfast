@@ -160,6 +160,16 @@ var dropPools map[uint32][]dropRef
 type virtualItemConfig struct {
 	DisplayIcon json.RawMessage `json:"display_icon"`
 	LinkID      uint32          `json:"link_id"`
+	// Name is the placeholder's name ("未知教材T4"): its tier is what the
+	// contents the client data leaves out are drawn from
+	Name string `json:"name"`
+}
+
+// itemNameType is what item_data_statistics says about an item, the fields
+// deriveVirtualPools reads.
+type itemNameType struct {
+	Type    uint32 `json:"type"`
+	Display string `json:"display"`
 }
 
 // Specialized Core: virtual item 59011 (virtual_type 20) is stored as the
@@ -219,12 +229,14 @@ type shipLevelConfig struct {
 func loadChapterData() error {
 	var chapters map[uint32]chapterConfig
 	var items map[uint32]virtualItemConfig
+	var itemStats map[uint32]itemNameType
 	var levels map[uint32]shipLevelConfig
 	var gameset map[string]uint32
 	err := gamedata.LoadAll(
 		gamedata.Load("chapter_template", &chapters),
 		gamedata.Load("expedition_data_template", &expeditionTemplates),
 		gamedata.Load("item_virtual_data_statistics", &items),
+		gamedata.Load("item_data_statistics", &itemStats),
 		gamedata.Load("ship_level", &levels),
 		gamedata.Load("energy_template", &energyStates),
 		func() (err error) {
@@ -347,6 +359,7 @@ func loadChapterData() error {
 			}
 		}
 	}
+	deriveVirtualPools(items, itemStats)
 
 	maxLevel := uint32(0)
 	for _, row := range levels {
