@@ -270,6 +270,11 @@ func (tx *Tx) settleResourceFields(commander db.Commander, now time.Time) error 
 			if err := tx.setFieldLevel(field.effect, field.level, 0); err != nil {
 				return err
 			}
+			if field.effect != effectClassFieldLevel {
+				// the manual's canteen/merchant tasks (TaskSubAcademyLevel)
+				// count the higher of the two buildings, and only ever go up
+				tx.event(TaskEvent{SubType: TaskSubAcademyLevel, Count: field.level})
+			}
 		}
 		if filled, err = tx.fillField(field, field.level, filled, now.Unix(), owned); err != nil {
 			return err
