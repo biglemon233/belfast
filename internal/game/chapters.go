@@ -556,6 +556,11 @@ func (game *Game) retreat(ctx context.Context, client *connection.Client, sessio
 			if err := tx.addRemasterPasses(session.template.id, 1); err != nil {
 				return err
 			}
+			// the side tasks' stars (TaskSubChapterStars) and the manual's
+			// state tasks after the clear
+			if err := tx.syncStateTasks(); err != nil {
+				return err
+			}
 		}
 		return queries.DeleteChapterState(ctx, client.CommanderID)
 	})
