@@ -17,6 +17,8 @@ const (
 	gridElite = 4 // an elite spawns here (elite_expedition_list)
 	gridEnemy = 6 // an enemy spawns here (expedition_id_weight_list)
 	gridBoss  = 8 // the boss spawns here (boss_expedition_id)
+	// gridSubBorn is where a submarine fleet starts (ChapterConst.AttachBorn_Sub)
+	gridSubBorn = 16
 )
 
 type chapterGrid struct {
@@ -42,14 +44,17 @@ type ambushRatio struct {
 }
 
 type chapterTemplate struct {
-	id           uint32
-	mapID        uint32 // expedition_data_by_map
-	oil          uint32 // oil spent to sortie
-	time         uint32 // seconds the sortie stays open
-	ammoTotal    uint32
-	progressBoss uint32 // progress gained per boss kill
-	grids        []chapterGrid
-	enemies      []weightedExpedition // expedition_id_weight_list
+	id        uint32
+	mapID     uint32 // expedition_data_by_map
+	oil       uint32 // oil spent to sortie
+	time      uint32 // seconds the sortie stays open
+	ammoTotal uint32
+	// ammoSubmarine is what a submarine fleet's torpedo tubes fire per sortie
+	// (chapter_template.ammo_submarine, ChapterLevelData's submarine bullets)
+	ammoSubmarine uint32
+	progressBoss  uint32 // progress gained per boss kill
+	grids         []chapterGrid
+	enemies       []weightedExpedition // expedition_id_weight_list
 	// enemies / elites per wave (enemy_refresh, elite_refresh), the first
 	// wave at start, see chapterSession.spawnWave
 	enemyRefresh  []int
@@ -91,11 +96,12 @@ var chapterTemplates map[uint32]*chapterTemplate
 
 // chapter_template row
 type chapterConfig struct {
-	Map          uint32 `json:"map"`
-	Oil          uint32 `json:"oil"`
-	Time         uint32 `json:"time"`
-	AmmoTotal    uint32 `json:"ammo_total"`
-	ProgressBoss uint32 `json:"progress_boss"`
+	Map           uint32 `json:"map"`
+	Oil           uint32 `json:"oil"`
+	Time          uint32 `json:"time"`
+	AmmoTotal     uint32 `json:"ammo_total"`
+	AmmoSubmarine uint32 `json:"ammo_submarine"`
+	ProgressBoss  uint32 `json:"progress_boss"`
 	// [row, column, walkable, kind], walkable a boolean or 0/1
 	Grids                  [][4]any   `json:"grids"`
 	ExpeditionIDWeightList [][]uint32 `json:"expedition_id_weight_list"`
@@ -245,17 +251,18 @@ func loadChapterData() error {
 	chapterTemplates = make(map[uint32]*chapterTemplate, len(chapters))
 	for id, row := range chapters {
 		template := &chapterTemplate{
-			id:           id,
-			mapID:        row.Map,
-			oil:          row.Oil,
-			time:         row.Time,
-			ammoTotal:    row.AmmoTotal,
-			progressBoss: row.ProgressBoss,
-			bosses:       row.BossExpeditionID,
-			bossRefresh:  row.BossRefresh,
-			isAmbush:     row.IsAmbush != 0,
-			ambushes:     row.AmbushExpeditionList,
-			avoidRatio:   row.AvoidRatio,
+			id:            id,
+			mapID:         row.Map,
+			oil:           row.Oil,
+			time:          row.Time,
+			ammoTotal:     row.AmmoTotal,
+			ammoSubmarine: row.AmmoSubmarine,
+			progressBoss:  row.ProgressBoss,
+			bosses:        row.BossExpeditionID,
+			bossRefresh:   row.BossRefresh,
+			isAmbush:      row.IsAmbush != 0,
+			ambushes:      row.AmbushExpeditionList,
+			avoidRatio:    row.AvoidRatio,
 		}
 		for _, grid := range row.Grids {
 			cellRow, _ := grid[0].(float64)

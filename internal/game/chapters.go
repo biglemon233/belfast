@@ -35,12 +35,14 @@ const (
 
 // ChapterConst.Op* (CS_13103.act)
 const (
-	opRetreat    = 0
-	opMove       = 1
-	opAmbush     = 4
-	opEnemyRound = 8
-	opSubState   = 9
-	opRequest    = 49
+	opRetreat     = 0
+	opMove        = 1
+	opAmbush      = 4
+	opEnemyRound  = 8
+	opSubState    = 9
+	opSubTeleport = 19 // a submarine fleet jumps to a cell of its hunting range
+	opSubStrike   = 31 // the submarine's torpedo strike, worked out client-side
+	opRequest     = 49
 )
 
 // fullHP is a ship's hp_rant at full health (ten-thousandths).
@@ -107,8 +109,17 @@ func (session *chapterSession) cell(row, column uint32) *protobuf.CHAPTERCELLINF
 	return nil
 }
 
+// groups are every fleet of the chapter: the surface ones, then the
+// submarines and the support fleets.
+func (session *chapterSession) groups() []*protobuf.GROUPINCHAPTER_P13 {
+	groups := slices.Clone(session.info.MainGroupList)
+	groups = append(groups, session.info.SubmarineGroupList...)
+	return append(groups, session.info.SupportGroupList...)
+}
+
+// group is the fleet with id, surface or submarine.
 func (session *chapterSession) group(id uint32) *protobuf.GROUPINCHAPTER_P13 {
-	for _, group := range session.info.MainGroupList {
+	for _, group := range session.groups() {
 		if group.GetId() == id {
 			return group
 		}
@@ -116,10 +127,30 @@ func (session *chapterSession) group(id uint32) *protobuf.GROUPINCHAPTER_P13 {
 	return nil
 }
 
+// removeGroup drops the fleet with id from whichever list holds it (a pulled
+// out surface fleet, a submarine), true when the chapter had it.
+func (session *chapterSession) removeGroup(id uint32) bool {
+	for _, list := range []*[]*protobuf.GROUPINCHAPTER_P13{&session.info.MainGroupList, &session.info.SubmarineGroupList, &session.info.SupportGroupList} {
+		groups, removed := (*list)[:0], false
+		for _, group := range *list {
+			if group.GetId() == id {
+				removed = true
+				continue
+			}
+			groups = append(groups, group)
+		}
+		*list = groups
+		if removed {
+			return true
+		}
+	}
+	return false
+}
+
 // activeGroup is the fleet a battle is fought with: the one standing on an
-// enemy, else the first.
+// enemy, else the first surface fleet.
 func (session *chapterSession) activeGroup() *protobuf.GROUPINCHAPTER_P13 {
-	for _, group := range session.info.MainGroupList {
+	for _, group := range session.groups() {
 		if isEnemyCell(session.cell(group.GetPos().GetRow(), group.GetPos().GetColumn())) {
 			return group
 		}
@@ -160,7 +191,7 @@ func (session *chapterSession) bossesDown() uint32 {
 }
 
 // allEnemiesDown is whether no enemy fleet is left on the map. The third star
-// of most chapters (star_require_3 kind 3, "击破所有敌舰") is granted on
+// of most chapters (star_require_3 kind 3, "击破所有敌舰) is granted on
 // TakeBoxCount, which nothing else sets. Ambush cells don't count: they are
 // events, not fleets.
 func (session *chapterSession) allEnemiesDown() bool {
@@ -193,10 +224,39 @@ func (session *chapterSession) won() bool {
 	return false
 }
 
+// submarineAmmo is what a sortie's submarine fleets can fire: the sum of the
+// ships' ammo (ship_data_statistics.ammo, 2 a submarine), which the client
+// computes as ChapterLevelData:getFleetAmmo's submarine maximum.
+func submarineAmmo(ctx context.Context, queries *db.Queries, commanderID uint32, teams []*protobuf.TEAM_INFO) (uint32, error) {
+	var ids []uint32
+	for _, team := range teams {
+		ids = append(ids, team.GetShipList()...)
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	ships, err := shipsByID(ctx, queries, commanderID, ids)
+	if err != nil {
+		return 0, err
+	}
+	ammo := uint32(0)
+	for _, ship := range ships {
+		ammo += shipStatistics[ship.TemplateID].Ammo
+	}
+	return ammo, nil
+}
+
+// chapterTeams are the fleets a sortie brings (FLEET_INFO): the surface
+// fleets (main_team) and the submarine ones (submarine_team). The support team
+// is left out until a support stage needs it.
+type chapterTeams struct {
+	main, submarine []*protobuf.TEAM_INFO
+}
+
 // newChapter lays the chapter out (chapter_template.grids): the fleets on the
 // born cells, the first wave of enemies (spawnWave), the boss cells empty
-// until bossRefresh kills.
-func newChapter(template *chapterTemplate, teams []*protobuf.TEAM_INFO, now uint32) *protobuf.CURRENTCHAPTERINFO {
+// until bossRefresh kills. subAmmo is what the submarine fleets fire.
+func newChapter(template *chapterTemplate, teams chapterTeams, subAmmo, now uint32) *protobuf.CURRENTCHAPTERINFO {
 	info := &protobuf.CURRENTCHAPTERINFO{
 		Id:                    proto.Uint32(template.id),
 		Time:                  proto.Uint32(now + template.time + chapterDueExtra),
@@ -210,7 +270,7 @@ func newChapter(template *chapterTemplate, teams []*protobuf.TEAM_INFO, now uint
 		MoveStepCount:         proto.Uint32(0),
 		StartTime:             proto.Uint32(now),
 	}
-	var born []*protobuf.CHAPTERCELLINFO_P13
+	var born, subBorn []*protobuf.CHAPTERCELLINFO_P13
 	for _, grid := range template.grids {
 		cell := &protobuf.CHAPTERCELLINFO_P13{Pos: cellPos(grid.row, grid.column)}
 		setCell(cell, attachNone, 0, 0)
@@ -219,37 +279,59 @@ func newChapter(template *chapterTemplate, teams []*protobuf.TEAM_INFO, now uint
 		switch grid.kind {
 		case gridBorn:
 			born = append(born, cell)
+		case gridSubBorn:
+			subBorn = append(subBorn, cell)
 		case gridBoss:
 			info.CellFlagList = append(info.CellFlagList, &protobuf.CELLFLAG{Pos: cellPos(grid.row, grid.column), FlagList: []uint32{bossSpawnFlag}})
 		}
 	}
 	(&chapterSession{template: template, info: info}).spawnWave()
+	// a submarine fleet starts on a submarine born cell (grid kind 16): the
+	// chapters with submarine slots have one per slot, and the classes
+	// without them fall back to the surface born cells
+	if len(subBorn) == 0 {
+		subBorn = born
+	}
+	info.MainGroupList = chapterGroups(teams.main, born, template.ammoTotal)
+	info.SubmarineGroupList = chapterGroups(teams.submarine, subBorn, subAmmo)
 	shipCount := uint32(0)
+	for _, group := range append(slices.Clone(info.MainGroupList), info.SubmarineGroupList...) {
+		shipCount += uint32(len(group.GetShipList()))
+	}
+	info.InitShipCount = proto.Uint32(shipCount)
+	return info
+}
+
+// chapterGroups are the groups of one team list, in the order the client sent
+// them, each on the born cell of its index (cycling when the chapter has fewer
+// born cells than fleets).
+func chapterGroups(teams []*protobuf.TEAM_INFO, born []*protobuf.CHAPTERCELLINFO_P13, ammo uint32) []*protobuf.GROUPINCHAPTER_P13 {
+	groups := make([]*protobuf.GROUPINCHAPTER_P13, 0, len(teams))
 	for i, team := range teams {
 		pos := cellPos(0, 0)
-		if i < len(born) {
-			pos = cellPos(born[i].GetPos().GetRow(), born[i].GetPos().GetColumn())
+		if len(born) > 0 {
+			cell := born[i%len(born)]
+			pos = cellPos(cell.GetPos().GetRow(), cell.GetPos().GetColumn())
 		}
 		group := &protobuf.GROUPINCHAPTER_P13{
 			Id:            proto.Uint32(team.GetId()),
 			Pos:           pos,
 			StepCount:     proto.Uint32(0),
-			Bullet:        proto.Uint32(template.ammoTotal),
-			StartPos:      cellPos(0, 0),
+			Bullet:        proto.Uint32(ammo),
+			StartPos:      cellPos(pos.GetRow(), pos.GetColumn()),
 			MoveStepDown:  proto.Uint32(0),
 			KillCount:     proto.Uint32(0),
 			FleetId:       proto.Uint32(team.GetId()),
 			VisionLv:      proto.Uint32(0),
 			CommanderList: teamMeowfficers(team),
+			ShipList:      make([]*protobuf.SHIPINCHAPTER_P13, 0, len(team.GetShipList())),
 		}
 		for _, id := range team.GetShipList() {
 			group.ShipList = append(group.ShipList, &protobuf.SHIPINCHAPTER_P13{Id: proto.Uint32(id), HpRant: proto.Uint32(fullHP)})
-			shipCount++
 		}
-		info.MainGroupList = append(info.MainGroupList, group)
+		groups = append(groups, group)
 	}
-	info.InitShipCount = proto.Uint32(shipCount)
-	return info
+	return groups
 }
 
 // handleTracking13101 starts a sortie (TrackingCommand, CS_13101): the
@@ -277,7 +359,7 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 		return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
 	}
 	var elite *protobuf.FLEET_INFO
-	var teams []*protobuf.TEAM_INFO
+	var teams chapterTeams
 	if template.fleetType == chapterCustomFleet {
 		var err error
 		elite, err = checkEliteFleet(ctx, game.DB.Queries, client.CommanderID, template, req.GetFleet())
@@ -289,16 +371,25 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 		}
 		for _, team := range elite.GetMainTeam() {
 			if len(team.GetShipList()) > 0 {
-				teams = append(teams, &protobuf.TEAM_INFO{
-					Id: proto.Uint32(uint32(len(teams) + 1)), ShipList: team.GetShipList(),
+				teams.main = append(teams.main, &protobuf.TEAM_INFO{
+					Id: proto.Uint32(uint32(len(teams.main) + 1)), ShipList: team.GetShipList(),
+					CommanderMain: team.CommanderMain, CommanderSub: team.CommanderSub,
+				})
+			}
+		}
+		for _, team := range elite.GetSubmarineTeam() {
+			if len(team.GetShipList()) > 0 {
+				teams.submarine = append(teams.submarine, &protobuf.TEAM_INFO{
+					Id: proto.Uint32(uint32(len(teams.main) + len(teams.submarine) + 1)), ShipList: team.GetShipList(),
 					CommanderMain: team.CommanderMain, CommanderSub: team.CommanderSub,
 				})
 			}
 		}
 	} else {
-		teams = req.GetFleet().GetMainTeam()
+		teams.main = req.GetFleet().GetMainTeam()
+		teams.submarine = req.GetFleet().GetSubmarineTeam()
 		var ids []uint32
-		for _, team := range teams {
+		for _, team := range append(slices.Clone(teams.main), teams.submarine...) {
 			ids = append(ids, team.GetShipList()...)
 		}
 		owned, err := ownsShips(ctx, game.DB.Queries, client.CommanderID, ids)
@@ -308,7 +399,7 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 		if !owned || len(slices.Compact(slices.Sorted(slices.Values(ids)))) != len(ids) {
 			return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
 		}
-		err = checkTeamMeowfficers(ctx, game.DB.Queries, client.CommanderID, teams, false)
+		err = checkTeamMeowfficers(ctx, game.DB.Queries, client.CommanderID, append(slices.Clone(teams.main), teams.submarine...), false)
 		if refused(err) {
 			return client.Send(&protobuf.SC_13102{Result: result(err)})
 		}
@@ -316,10 +407,21 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 			return err
 		}
 	}
-	if len(teams) == 0 {
+	if len(teams.main) == 0 {
 		return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
 	}
-	session := &chapterSession{template: template, info: newChapter(template, teams, uint32(time.Now().Unix()))}
+	if uint32(len(teams.submarine)) > template.submarineNum {
+		return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
+	}
+	// a submarine fleet's torpedoes are its ships' ammo, which the client
+	// adds up too (ChapterLevelData:getFleetAmmo, Ship:getShipAmmo) on top of
+	// the chapter's ammo_submarine (0 in every table so far)
+	subAmmo, err := submarineAmmo(ctx, game.DB.Queries, client.CommanderID, teams.submarine)
+	if err != nil {
+		return err
+	}
+	subAmmo += template.ammoSubmarine
+	session := &chapterSession{template: template, info: newChapter(template, teams, subAmmo, uint32(time.Now().Unix()))}
 	err = game.tx(ctx, client, func(tx *Tx) error {
 		if err := tx.SpendResource(ResourceOil, template.oil); err != nil {
 			return err
@@ -380,6 +482,11 @@ func (game *Game) handleChapterOp(client *connection.Client, req *protobuf.CS_13
 		session.info.Round = proto.Uint32(session.info.GetRound() + 1)
 	case opSubState:
 		session.info.IsSubmarineAutoAttack = proto.Uint32(req.GetActArg_1())
+	case opSubTeleport:
+		reply = session.teleportSub(req.GetGroupId(), req.GetActArg_1(), req.GetActArg_2())
+	case opSubStrike:
+		// the client works the submarine's torpedo strike out itself
+		// (OPSubStrike only needs result 0); its ammo is its own bookkeeping
 	case opRequest:
 		reply = session.resync(req.GetGroupId())
 	}
@@ -399,18 +506,16 @@ func (game *Game) handleChapterOp(client *connection.Client, req *protobuf.CS_13
 // stage's Operational Handover record (recordChapterAuto), sent back as
 // auto_battle_time_update.
 func (game *Game) retreat(ctx context.Context, client *connection.Client, session *chapterSession, groupID uint32, autoRepeat bool) error {
-	if groupID != 0 && len(session.info.MainGroupList) > 1 {
-		groups := session.info.MainGroupList[:0]
-		for _, group := range session.info.MainGroupList {
-			if group.GetId() != groupID {
-				groups = append(groups, group)
+	if groupID != 0 {
+		// pulling a fleet out: the sortie goes on while a surface fleet is
+		// left (pulling the last one, or one the chapter doesn't know, ends
+		// it below)
+		if session.removeGroup(groupID) && len(session.info.MainGroupList) > 0 {
+			if err := session.save(ctx, game.DB.Queries, client.CommanderID); err != nil {
+				return err
 			}
+			return client.Send(opReply(nil))
 		}
-		session.info.MainGroupList = groups
-		if err := session.save(ctx, game.DB.Queries, client.CommanderID); err != nil {
-			return err
-		}
-		return client.Send(opReply(nil))
 	}
 	reply := opReply(nil)
 	err := game.tx(ctx, client, func(tx *Tx) error {
@@ -487,6 +592,34 @@ func (session *chapterSession) move(groupID, row, column uint32) *protobuf.SC_13
 	session.info.MoveStepCount = proto.Uint32(session.info.GetMoveStepCount() + steps)
 	session.info.Round = proto.Uint32(session.info.GetRound() + 1)
 	return reply
+}
+
+// teleportSub jumps a submarine fleet to (row, column) (OpSubTeleport, its
+// hunting range's teleport). The client builds the jump's path from the
+// fleet's start_pos itself, so only the position and the sortie's counters
+// change.
+func (session *chapterSession) teleportSub(groupID, row, column uint32) *protobuf.SC_13104 {
+	group := session.group(groupID)
+	submarine := slices.ContainsFunc(session.info.SubmarineGroupList, func(candidate *protobuf.GROUPINCHAPTER_P13) bool {
+		return candidate.GetId() == groupID
+	})
+	if group == nil || !submarine || !session.walkable(row, column) {
+		return opReply(errRefused)
+	}
+	group.Pos = cellPos(row, column)
+	session.info.MoveStepCount = proto.Uint32(session.info.GetMoveStepCount() + 1)
+	session.info.Round = proto.Uint32(session.info.GetRound() + 1)
+	return opReply(nil)
+}
+
+// walkable is whether the chapter's grids let a fleet stand on (row, column).
+func (session *chapterSession) walkable(row, column uint32) bool {
+	for _, grid := range session.template.grids {
+		if grid.row == row && grid.column == column {
+			return grid.walkable
+		}
+	}
+	return false
 }
 
 // findPath is a shortest walk over walkable cells, without the start cell.
@@ -717,7 +850,7 @@ func (game *Game) handleChapterBattleResult(client *connection.Client, req *prot
 
 // occupied is whether a fleet stands on (row, column).
 func (session *chapterSession) occupied(row, column uint32) bool {
-	for _, group := range session.info.MainGroupList {
+	for _, group := range session.groups() {
 		if group.GetPos().GetRow() == row && group.GetPos().GetColumn() == column {
 			return true
 		}
