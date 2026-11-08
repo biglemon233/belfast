@@ -69,6 +69,7 @@ func loadGameData() error {
 		loadColoringData,
 		loadNewServerShopData,
 		loadChargeGoods,
+		loadEquipmentBoxes,
 		loadAppreciationData,
 		loadAttireData,
 		loadVoteData,
