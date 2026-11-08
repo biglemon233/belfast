@@ -14,11 +14,12 @@ import (
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
-// handleChargeList answers GetChargeListCommand: nothing bought with money,
-// so every first-purchase bonus is still available. normal_list is what was
-// bought of the gift packages (ShopsProxy:GetNormalByID, counted against
-// their limit_args "time"), normal_group_list of the shop groups, since they
-// last reset.
+// handleChargeList answers GetChargeListCommand: pay_list is what the
+// commander bought of the money goods (the charged list the client builds,
+// its pay_count the goods' purchase count), first_pay_list the first-purchase
+// doubling goods not bought yet, normal_list what was bought of the gift
+// packages (ShopsProxy:GetNormalByID, counted against their limit_args
+// "time"), normal_group_list of the shop groups, since they last reset.
 func (game *Game) handleChargeList(client *connection.Client, req *protobuf.CS_16104) error {
 	ctx, now := context.Background(), time.Now()
 	purchases, err := shopPurchases(ctx, game.DB.Queries, client.CommanderID, now)
@@ -30,7 +31,20 @@ func (game *Game) handleChargeList(client *connection.Client, req *protobuf.CS_1
 		return err
 	}
 	reply := &protobuf.SC_16105{}
+	for _, id := range slices.Sorted(maps.Keys(chargeGoods)) {
+		count, bought := purchases[id]
+		if !bought {
+			if chargeGoods[id].FirstPayDouble != 0 {
+				reply.FirstPayList = append(reply.FirstPayList, id)
+			}
+			continue
+		}
+		reply.PayList = append(reply.PayList, &protobuf.SHOPINFO{ShopId: proto.Uint32(id), PayCount: proto.Uint32(count)})
+	}
 	for _, id := range slices.Sorted(maps.Keys(purchases)) {
+		if _, charge := chargeGoods[id]; charge {
+			continue
+		}
 		if genre := shopTemplate[id].Genre; genre == genreGiftPackage || genre == genreNewServerShop {
 			reply.NormalList = append(reply.NormalList, &protobuf.SHOPINFO{ShopId: proto.Uint32(id), PayCount: proto.Uint32(purchases[id])})
 		}
