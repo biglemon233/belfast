@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -28,18 +29,83 @@ import (
 // maintenance."), RefundChargeCommand errorTip("charge", 5002).
 var errChargeDisabled error = refusal{"charging disabled", 5002}
 
-// handleCharge answers ChargeCommand (CS_11501, a gem pack, a gift pack or
-// a pass bought with money). On result 0 the client calls the platform SDK's
-// pay (SdkPay / YoStarPay) with the shop_template product and the pay id:
-// a real purchase on the player's store account. Belfast must never let
-// that happen, so it always refuses with 5002, which the client shows as
-// the payment processor being under maintenance without calling the SDK or
-// starting its payment wait (ShopsProxy:addWaitTimer).
+// errChargeLimit is SC_11502 result 6: ChargeCommand shows
+// charge_error_count_limit ("Purchase limit reached"), the same result the
+// SDK's own limit uses.
+var errChargeLimit error = refusal{"charge limit reached", 6}
+
+// handleCharge answers ChargeCommand (CS_11501, a gem pack, a gift pack or a
+// pass bought with money).
 //
-//belfast:static
+// The official server answers with a pay id the client hands to the platform
+// SDK, which charges the store account and reports back through CS_11504
+// (paid) or CS_11510 (failed). Belfast has no payment provider, so it hands
+// the goods out itself: the purchase is granted here (gems and
+// extra_service_item, from server/pay_data.json), counted against its limit,
+// and the client is told it succeeded through SC_11503, the push the official
+// server sends once a payment went through (PlayerProxy 11503 →
+// GAME.CHARGE_SUCCESS: the gems, the charged list and "charge_success").
+// SC_11502 still answers result 0 so the client calls the SDK and its pay id
+// feeds SC_11503's; the SDK's failure (CS_11510, no store account) is
+// logged and changes nothing.
 func (game *Game) handleCharge(client *connection.Client, req *protobuf.CS_11501) error {
-	logger.WithFields("Charge", logger.FieldValue("commander", client.CommanderID), logger.FieldValue("shop", req.GetShopId()), logger.FieldValue("device", req.GetDevice())).Info("purchase refused: no payment provider")
-	return client.Send(&protobuf.SC_11502{Result: result(errChargeDisabled), PayId: proto.String(""), Url: proto.String(""), OrderSign: proto.String("")})
+	ctx, now := context.Background(), time.Now()
+	good, ok := chargeGoods[req.GetShopId()]
+	if !ok || !good.Time.Open(now) {
+		logger.WithFields("Charge", logger.FieldValue("commander", client.CommanderID), logger.FieldValue("shop", req.GetShopId())).Info("purchase refused: no such goods on sale")
+		return client.Send(&protobuf.SC_11502{Result: result(errChargeDisabled), PayId: proto.String(""), Url: proto.String(""), OrderSign: proto.String("")})
+	}
+	// the pay id the SDK failure and SC_11503 name; the client ignores a
+	// repeat of the last one (charge_trade_no_error), so it is unique
+	payID := fmt.Sprintf("%d-%d", client.CommanderID, now.UnixNano())
+	gem, gemFree := good.Gem+good.ExtraGem, uint32(0)
+	err := game.tx(ctx, client, func(tx *Tx) error {
+		purchases, err := shopPurchases(tx.ctx, tx.Queries, tx.commanderID, now)
+		if err != nil {
+			return err
+		}
+		if good.LimitArg > 0 && purchases[req.GetShopId()] >= good.LimitArg {
+			return errChargeLimit
+		}
+		// 首充双倍: the first purchase of a pack that offers it pays gem*2
+		// instead of gem + extra_gem (ChargeCommand's SdkPay amount)
+		if good.FirstPayDouble != 0 && purchases[req.GetShopId()] == 0 {
+			gem = good.Gem * 2
+		}
+		if gem > 0 {
+			if err := tx.AddResource(ResourceGem, gem); err != nil {
+				return err
+			}
+		}
+		if gemFree > 0 {
+			if err := tx.AddResource(ResourceFreeGem, gemFree); err != nil {
+				return err
+			}
+		}
+		if len(good.Items) > 0 {
+			drops := make([]*protobuf.DROPINFO, 0, len(good.Items))
+			for _, item := range good.Items {
+				drops = append(drops, dropInfo(item[0], item[1], item[2]))
+			}
+			if err := tx.grantDrops(drops); err != nil {
+				return err
+			}
+		}
+		return tx.AddShopPurchase(tx.ctx, db.AddShopPurchaseParams{
+			CommanderID: tx.commanderID, ShopID: req.GetShopId(), ExpiresAt: good.purchaseResetAt(now), Count: 1,
+		})
+	})
+	if refused(err) {
+		return client.Send(&protobuf.SC_11502{Result: result(err), PayId: proto.String(""), Url: proto.String(""), OrderSign: proto.String("")})
+	}
+	if err != nil {
+		return err
+	}
+	logger.WithFields("Charge", logger.FieldValue("commander", client.CommanderID), logger.FieldValue("shop", req.GetShopId()), logger.FieldValue("money", good.Money)).Info("purchase granted")
+	if err := client.Send(&protobuf.SC_11502{Result: proto.Uint32(0), PayId: proto.String(payID), Url: proto.String(""), OrderSign: proto.String("")}); err != nil {
+		return err
+	}
+	return client.Send(&protobuf.SC_11503{ShopId: proto.Uint32(req.GetShopId()), PayId: proto.String(payID), Gem: proto.Uint32(gem), GemFree: proto.Uint32(gemFree)})
 }
 
 // handleRefundCharge answers RefundChargeCommand (CS_11513, paying back a
