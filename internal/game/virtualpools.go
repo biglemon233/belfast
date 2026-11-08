@@ -13,6 +13,17 @@ import (
 // ("未知教材T4", "未知科技箱T2"): the tier of what it can turn into.
 var placeholderTier = regexp.MustCompile(`T([0-9]+)$`)
 
+// itemRarityElite is AL's R grade (精锐) in item_data_statistics' rarity; the
+// S grade (超稀有) is 4, as the "未知超稀有图纸" box's own contents show.
+const itemRarityElite = 2
+
+// designGradeBoxes are the "unknown design" boxes whose name gives no tier:
+// the item rarity of what they give. 52004 未知精锐设计图 draws the gear
+// designs of the R grade.
+var designGradeBoxes = map[uint32]uint32{
+	52004: itemRarityElite,
+}
+
 // deriveVirtualPools fills the contents the client data leaves out: the
 // "unknown" items (item_virtual_data_statistics) are random boxes, most with
 // a display_icon pool, but the tech box and equipment blueprint ones
@@ -27,6 +38,13 @@ var placeholderTier = regexp.MustCompile(`T([0-9]+)$`)
 func deriveVirtualPools(virtuals map[uint32]virtualItemConfig, items map[uint32]itemNameType) {
 	for id, row := range virtuals {
 		if len(dropPools[id]) > 0 {
+			continue
+		}
+		if rarity, graded := designGradeBoxes[id]; graded {
+			pool := designPoolsOfRarity(items, rarity)
+			if len(pool) > 0 {
+				dropPools[id] = pool
+			}
 			continue
 		}
 		match := placeholderTier.FindStringSubmatch(row.Name)
@@ -72,4 +90,17 @@ func deriveVirtualPools(virtuals map[uint32]virtualItemConfig, items map[uint32]
 			dropPools[id] = pool
 		}
 	}
+}
+
+// designPoolsOfRarity is every equipment design (item_data_statistics type 9)
+// of a rarity, sorted by id.
+func designPoolsOfRarity(items map[uint32]itemNameType, rarity uint32) []dropRef {
+	var pool []dropRef
+	for itemID, item := range items {
+		if item.Type == itemTypeDesign && item.Rarity == rarity {
+			pool = append(pool, dropRef{kind: dropTypeItem, id: itemID})
+		}
+	}
+	slices.SortFunc(pool, func(a, b dropRef) int { return cmp.Compare(a.id, b.id) })
+	return pool
 }
