@@ -54,7 +54,53 @@ const (
 	// the boss two (its list holds the designs, the packs and the parts)
 	battleItemDraws = 1
 	bossItemDraws   = 2
+	// scenarioShipChance is how often a won mid-way battle drops a shipgirl
+	// (the wiki's samples measure 45-47% on 2-4 and A3, 60% on 7-2); a boss
+	// win drops one every time
+	scenarioShipChance = 45
 )
+
+// shipRarityWeights are the odds a dropped ship is of a rarity (the
+// community samples: 80% common, 16% rare, 4% elite, 1.5% super rare)
+var shipRarityWeights = map[uint32]uint32{
+	shipRarityGray: 800, // 2, Common
+	3:              160, // Rare
+	4:              40,  // Elite
+	shipRarityGold: 15,  // 5, Super Rare
+}
+
+// drawShip picks one of pool: its rarity first (the community samples' odds),
+// then one of the ships of that rarity.
+func drawShip(pool []dropRef) dropRef {
+	byRarity := map[uint32][]dropRef{}
+	for _, ref := range pool {
+		rarity := ownableShips[ref.id].Rarity
+		byRarity[rarity] = append(byRarity[rarity], ref)
+	}
+	total := 0
+	for rarity := range byRarity {
+		weight := shipRarityWeights[rarity]
+		if weight == 0 {
+			weight = 100
+		}
+		total += int(weight)
+	}
+	if total <= 0 {
+		return pool[rand.IntN(len(pool))]
+	}
+	roll := rand.IntN(total)
+	for rarity, refs := range byRarity {
+		weight := shipRarityWeights[rarity]
+		if weight == 0 {
+			weight = 100
+		}
+		if roll < int(weight) {
+			return refs[rand.IntN(len(refs))]
+		}
+		roll -= int(weight)
+	}
+	return pool[rand.IntN(len(pool))]
+}
 
 // handleBeginStage starts a battle (BeginStageCommand.SendRequest, CS_40001).
 // key is the token the client mixes into its CS_40003 check value; ships
@@ -440,14 +486,28 @@ func scenarioDrops(template *chapterTemplate, expedition expeditionTemplate) []*
 	drops := []*protobuf.DROPINFO{dropInfo(dropTypeResource, ResourceGold, scenarioBossGold)}
 	if !expedition.isBoss() {
 		drops[0] = dropInfo(dropTypeResource, ResourceGold, scenarioGold)
-		return appendDraws(drops, items, battleItemDraws)
+		drops = appendDraws(drops, items, battleItemDraws)
+		return appendShipDrop(drops, template, ships, scenarioShipChance)
 	}
 	drops = append(drops, dropInfo(dropTypeVItem, vitemSpecializedCore, 1))
-	// the boss's own list, then the chapter's ships: an enemy's list names
-	// the ship drop through the "unknown character" placeholder, which has
-	// no pool of its own
+	// the boss's own list, then its ship: an enemy's list names the ship
+	// drop through the "unknown character" placeholder, which has no pool
 	drops = appendDraws(drops, items, bossItemDraws)
-	return appendDraws(drops, chapterShips(template), bossShips)
+	return appendShipDrop(drops, template, ships, 100)
+}
+
+// appendShipDrop adds a shipgirl from the chapter's table when the roll of
+// chance (percent) hits: a boss win always pays one, a mid-way battle often
+// doesn't.
+func appendShipDrop(drops []*protobuf.DROPINFO, template *chapterTemplate, pool []dropRef, chance uint32) []*protobuf.DROPINFO {
+	if len(pool) == 0 {
+		pool = chapterShips(template)
+	}
+	if len(pool) == 0 || rand.IntN(100) >= int(chance) {
+		return drops
+	}
+	ref := drawShip(pool)
+	return append(drops, dropInfo(ref.kind, ref.id, 1))
 }
 
 // pools splits an enemy's award_display into what it can drop: the item
