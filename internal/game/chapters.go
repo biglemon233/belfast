@@ -423,6 +423,17 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 	}
 	subAmmo += template.ammoSubmarine
 	session := &chapterSession{template: template, info: newChapter(template, teams, subAmmo, uint32(time.Now().Unix()))}
+	// a cleared stage runs in loop mode (周回模式): the client rolls no
+	// ambushes there (ChapterLevelData:activateAmbush is `not isLoop() and
+	// ...`) and only then offers Auto-Fight (CanActivateAutoFight requires
+	// isLoop())
+	progress, err := chapterProgress(ctx, game.DB.Queries, client.CommanderID, template.id)
+	if err != nil {
+		return err
+	}
+	if progress.Progress >= 100 {
+		session.info.LoopFlag = proto.Uint32(1)
+	}
 	err = game.tx(ctx, client, func(tx *Tx) error {
 		if err := tx.SpendResource(ResourceOil, template.oil); err != nil {
 			return err
