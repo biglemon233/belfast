@@ -542,8 +542,17 @@ func (tx *Tx) endChapterAuto(now time.Time) (*protobuf.SC_13015, error) {
 			continue
 		}
 		var sortie []*protobuf.DROPINFO
+		// the auto repeat doesn't say which enemy each battle was: the
+		// chapter's first normal one stands in for them, its award list
+		// being what a battle there drops
+		enemy := expeditionTemplate{}
+		if len(template.enemies) > 0 {
+			if known, ok := expeditionTemplates[template.enemies[0].id]; ok {
+				enemy = known
+			}
+		}
 		for range config.EnemyTimes {
-			sortie = append(sortie, scenarioDrops(template, expeditionTemplate{})...)
+			sortie = append(sortie, scenarioDrops(template, enemy)...)
 		}
 		boss := expeditionTemplate{Type: expeditionTypeBoss}
 		if ids := gamedata.IDs(config.Boss); len(ids) > 0 {
