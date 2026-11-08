@@ -14,6 +14,7 @@ import (
 
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -465,6 +466,12 @@ func (game *Game) handleChapterOp(client *connection.Client, req *protobuf.CS_13
 		return client.Send(opReply(errRefused))
 	}
 	reply := opReply(nil)
+	logger.WithFields("Chapter",
+		logger.FieldValue("act", req.GetAct()),
+		logger.FieldValue("group", req.GetGroupId()),
+		logger.FieldValue("arg1", req.GetActArg_1()),
+		logger.FieldValue("arg2", req.GetActArg_2()),
+	).Debug("chapter op")
 	switch req.GetAct() {
 	case opRetreat:
 		return game.retreat(ctx, client, session, req.GetGroupId(), req.GetActArg_1() == 1)
