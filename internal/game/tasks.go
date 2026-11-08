@@ -1023,6 +1023,14 @@ func (tx *Tx) syncStateTasks() error {
 	if err != nil {
 		return err
 	}
+	commander, err := tx.GetCommander(tx.ctx, tx.commanderID)
+	if err != nil {
+		return err
+	}
+	// the manual's "upgrade the canteen or the merchant to level N": either
+	// building counts (TaskSubAcademyLevel is its sub type), so the higher of
+	// the academy's two fields
+	academy := max(commander.OilFieldLevel, commander.GoldFieldLevel)
 	var stars uint32
 	for _, row := range progress {
 		if row.Progress >= 100 {
@@ -1052,6 +1060,8 @@ func (tx *Tx) syncStateTasks() error {
 			value = min(topBreakout, config.TargetNum)
 		case TaskSubStars:
 			value = min(stars, config.TargetNum)
+		case TaskSubAcademyLevel:
+			value = min(academy, config.TargetNum)
 		default:
 			continue
 		}
