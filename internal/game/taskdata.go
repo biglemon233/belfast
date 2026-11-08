@@ -11,11 +11,11 @@ import (
 
 // task_data_template row (TaskProxy, ActivityTaskProxy tasks)
 type taskConfig struct {
-	Type         uint32          `json:"type"`
-	Level        uint32          `json:"level"`
-	IsHead       uint32          `json:"is_head"` // first task of its chain
-	SubType      uint32          `json:"sub_type"`
-	TargetID     json.RawMessage `json:"target_id"`
+	Type     uint32          `json:"type"`
+	Level    uint32          `json:"level"`
+	IsHead   uint32          `json:"is_head"` // first task of its chain
+	SubType  uint32          `json:"sub_type"`
+	TargetID json.RawMessage `json:"target_id"`
 	// the second target: some sub types keep their threshold here as a string
 	// (task 22012's "10" for "own a ship at level 10 or above")
 	TargetID2    json.RawMessage `json:"target_id_2"`
@@ -35,6 +35,15 @@ type taskConfig struct {
 	awards [][]uint32 // award_display
 	target taskTarget // target_id
 	next   []uint32   // next_task
+}
+
+// targetID is task_data_template.target_id as one id, 0 when it names none or
+// several (the side tasks' chapter and level-cap thresholds).
+func (config taskConfig) targetID() uint32 {
+	if len(config.target.ids) == 1 {
+		return config.target.ids[0]
+	}
+	return 0
 }
 
 // targetID2Value is task_data_template.target_id_2 as a number: the table

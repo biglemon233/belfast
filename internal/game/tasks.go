@@ -72,7 +72,18 @@ const (
 	TaskSubGearSkin = 47
 	// a hard mode chapter cleared (困难海域), the daily 7205's event
 	TaskSubHardClear = 185
+	// a ship's level cap (cognitive awakening), target_id the cap: the side
+	// tasks' "raise any ship's level cap to 125"
+	TaskSubLevelCap = 36
+	// a ship's intimacy in 1/100 (intimacy_template), 10000 being intimacy 100
+	TaskSubIntimacy = 1010
+	// a chapter's stars, target_id the chapter: the side tasks' "collect
+	// 1-1's 3 stars"
+	TaskSubChapterStars = 1021
 )
+
+// taskIntimacyFull is the side tasks' intimacy 100 in the ships' 1/100 scale.
+const taskIntimacyFull = 10000
 
 // Sub types whose event carries the current value (a level, a total) rather
 // than an amount to add. Progress is counted by the server: neither the Lua
@@ -91,6 +102,11 @@ var taskAbsoluteSubTypes = map[uint32]bool{
 	TaskSubBreakoutStar: true,
 	TaskSubCityDPS:      true,
 	TaskSubCityWave:     true,
+	// the side tasks' "any ship's level cap", "any ship's intimacy" and "a
+	// chapter's 3 stars": server state, true or not
+	TaskSubLevelCap:     true,
+	TaskSubIntimacy:     true,
+	TaskSubChapterStars: true,
 	// the auction's: its best lot and its coins
 	TaskSubAuctionLot:      true,
 	TaskSubAuctionLotTotal: true,
@@ -114,6 +130,11 @@ var taskInheritedSubTypes = map[uint32]bool{
 	TaskSubTechPoints:   true,
 	TaskSubCityDPS:      true,
 	TaskSubCityWave:     true,
+	// the side tasks' state: a chapter's stars, a ship's level cap, a ship's
+	// intimacy (their events carry the chapter or the threshold)
+	TaskSubChapterStars: true,
+	TaskSubLevelCap:     true,
+	TaskSubIntimacy:     true,
 	TaskSubAuctionGold:  true,
 }
 
@@ -1011,13 +1032,17 @@ func (tx *Tx) syncStateTasks() error {
 	if err != nil {
 		return err
 	}
-	var topLevel, topBreakout uint32
+	var topLevel, topBreakout, topCap, topIntimacy uint32
 	for _, ship := range ships {
 		topLevel = max(topLevel, ship.Level)
 		// a limit break moves the ship to template group*10+n: n-1 breakouts
 		if n := ship.TemplateID % 10; n > 1 {
 			topBreakout = max(topBreakout, n-1)
 		}
+		// the level cap its cognitive awakening has raised (the side tasks'
+		// 125): ships store it in max_level
+		topCap = max(topCap, ship.MaxLevel)
+		topIntimacy = max(topIntimacy, ship.Intimacy)
 	}
 	progress, err := tx.ListChapterProgress(tx.ctx, tx.commanderID)
 	if err != nil {
@@ -1032,16 +1057,20 @@ func (tx *Tx) syncStateTasks() error {
 	// the academy's two fields
 	academy := max(commander.OilFieldLevel, commander.GoldFieldLevel)
 	var stars uint32
+	chapterStars := map[uint32]uint32{}
 	for _, row := range progress {
+		count := uint32(0)
 		if row.Progress >= 100 {
-			stars++
+			count++
 		}
 		if row.KillBossCount > 0 {
-			stars++
+			count++
 		}
 		if row.TakeBoxCount > 0 {
-			stars++
+			count++
 		}
+		stars += count
+		chapterStars[row.ChapterID] = count
 	}
 	for _, task := range tasks {
 		config, ok := taskConfigs[task.TaskID]
@@ -1062,13 +1091,27 @@ func (tx *Tx) syncStateTasks() error {
 			value = min(stars, config.TargetNum)
 		case TaskSubAcademyLevel:
 			value = min(academy, config.TargetNum)
+		case TaskSubChapterStars:
+			// target_id names the chapter: "collect 1-1's 3 stars"
+			if need := config.targetID(); need != 0 && chapterStars[need] >= 3 {
+				value = 1
+			}
+		case TaskSubLevelCap:
+			// target_id the cap: "raise any ship's level cap to 125"
+			if need := config.targetID(); need != 0 && topCap >= need {
+				value = 1
+			}
+		case TaskSubIntimacy:
+			if topIntimacy >= taskIntimacyFull {
+				value = 1
+			}
 		default:
 			continue
 		}
 		if value == 0 || value <= task.Progress {
 			continue
 		}
-		tx.event(TaskEvent{SubType: config.SubType, Count: value})
+		tx.event(TaskEvent{SubType: config.SubType, Target: config.targetID(), Count: value})
 	}
 	return nil
 }
