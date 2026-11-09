@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Shizuku 后端：由 Shizuku 服务校验，未装时无副作用 -->
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+
+    <!--
+      后台跑任务期间 app 进程必须活着：进程一死，特权进程的看门狗就自杀并释放虚拟屏
+      实测 MIUI 的 ProcessManager SwipeUpClean 会按 Adj=905 直接 force-stop
+      前台服务本体是 .service.RunForegroundService，通知与电池白名单是它的前提
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!--
+      前台模式的控制层：屏幕让给了目标应用，没有悬浮球或音量键就没法停任务
+      两项都由特权进程代授（AppOps / Settings.Secure），用户不必逐个去系统页点
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- 存储访问：与上面两项一样由特权进程代授，对齐 MaaMeow -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
+
+    <uses-permission
+        android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
+        tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:name=".MaaFwApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="${appIcon}"
+        android:label="${appLabel}"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:roundIcon="${appRoundIcon}"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MaaFwApp"
+        android:localeConfig="@xml/locales_config"
+        tools:targetApi="33">
+
+        <!-- 只有启动 Activity 挂启动主题；application 那层保持 Theme.MaaFwApp，
+             否则别的窗口也会顶着首屏底色起来 -->
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:label="${appLabel}"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.MaaFwApp.Starting"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- API 32- 的 per-app locale 由 appcompat 持久化并在 Activity 附着前回放（33+ 走系统） -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <!--
+          虚拟屏存续期间的保活前台服务
+          specialUse：现有 FGS 类型没有一个对得上「守护另一块屏上的运行环境」，
+          dataSync / mediaProjection 都不是这回事，硬套会在 34+ 被判类型不符
+        -->
+        <receiver android:name=".service.BootReceiver" android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.RunForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Guards the ALAS runtime environment (privileged service, bridge and virtual display); keeps the app process alive so the watchdog does not tear the environment down" />
+        </service>
+
+        <!-- 只过滤按键，不读窗口内容；用途见 AccessibilityHelperService -->
+        <service
+            android:name=".service.AccessibilityHelperService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_helper_service_config" />
+        </service>
+
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false" />
+
+        <!-- Root 后端的 binder 回投口：特权进程经 getContentProviderExternal 打到这里，
+             provider 内按 uid ∈ {0, 2000} 与一次性 token 校验（docs/privileged-runtime.md §3） -->
+        <provider
+            android:name=".root.RootServiceBootstrapProvider"
+            android:authorities="${applicationId}.root.bootstrap"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false" />
+
+        <!-- 把随包的 shizuku.apk 交给系统安装器：API 24 起 file:// 直接抛 FileUriExposedException -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+    </application>
+
+    <queries>
+        <package android:name="moe.shizuku.privileged.api" />
+    </queries>
+
+</manifest>

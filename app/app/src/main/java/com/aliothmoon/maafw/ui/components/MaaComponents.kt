@@ -1,0 +1,348 @@
+package com.aliothmoon.maafw.ui.components
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import com.aliothmoon.maafw.theme.MaaDesignTokens
+import com.aliothmoon.maafw.theme.MaaMotion
+import com.aliothmoon.maafw.theme.MaaTheme
+
+// 不依赖组合，提到文件级免得每次重组重建一整套 transition
+// 只 expand/shrink 会把不透明的文字裁一半，必须配 fade；Alignment.Top 不能省——
+// 默认 Bottom 展开时先冒出正文末行
+private val CardExpand = expandVertically(
+    animationSpec = MaaMotion.enter(MaaMotion.DURATION_SHORT),
+    expandFrom = Alignment.Top,
+) + fadeIn(MaaMotion.enter(MaaMotion.DURATION_SHORT))
+
+private val CardCollapse = shrinkVertically(
+    animationSpec = MaaMotion.exit(MaaMotion.DURATION_SHORT),
+    shrinkTowards = Alignment.Top,
+) + fadeOut(MaaMotion.exit(MaaMotion.DURATION_SHORT))
+
+/**
+ * [collapsible] 要求有 [title]：折叠靠点标题行，没标题就没有可点的表头
+ *
+ * 展开态只活在本次会话（[rememberSaveable]）——收起是临时整理视线，不是配置，不该进 DataStore
+ */
+@Composable
+fun MaaCard(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    collapsible: Boolean = false,
+    // 默认参数不能读 CompositionLocal；innerPadding 两风格同值，静态回落安全
+    contentPadding: PaddingValues = PaddingValues(MaaDesignTokens.Card.innerPadding),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    // 不要给 rememberSaveable 传 key：运行时已废弃它，理由正是会绕开位置作用域造成状态串卡
+    var expanded by rememberSaveable { mutableStateOf(true) }
+    val canCollapse = collapsible && title != null
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = if (MaaTheme.isMaterial) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = MaaTheme.style.cardElevation),
+        border = if (MaaTheme.isMaterial) null else BorderStroke(MaaDesignTokens.Separator.thickness, MaterialTheme.colorScheme.outline),
+    ) {
+        Column(
+            modifier = Modifier.padding(contentPadding),
+            verticalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.sm),
+        ) {
+            // 动画状态放在 chevron 内部：不可折叠的卡片压根不组合它，也就不必付一个
+            // Animatable 与常驻协程（全仓 24 个调用点里只有 8 个可折叠）
+            val chevron: @Composable () -> Unit = {
+                val rotation by animateFloatAsState(
+                    targetValue = if (expanded) 180f else 0f,
+                    animationSpec = MaaMotion.enter(MaaMotion.DURATION_SHORT),
+                    label = "chevron",
+                )
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowUp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .size(MaaDesignTokens.IconSize.sm)
+                        .rotate(rotation),
+                )
+            }
+            when {
+                // trailing 已占住表头右侧，此时只有箭头本身可点，避免与开关抢同一片区域
+                trailing != null -> MaaLabeledControlRow(
+                    label = title.orEmpty(),
+                    labelStyle = MaterialTheme.typography.titleMedium,
+                    leading = leading,
+                    trailing = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.sm),
+                        ) {
+                            trailing()
+                            if (canCollapse) {
+                                Box(Modifier.maaClickable(indication = false) { expanded = !expanded }) {
+                                    chevron()
+                                }
+                            }
+                        }
+                    },
+                )
+
+                title != null -> MaaLabeledControlRow(
+                    label = title,
+                    labelStyle = MaterialTheme.typography.titleMedium,
+                    leading = leading,
+                    modifier = if (canCollapse) {
+                        Modifier.maaClickable(indication = false) { expanded = !expanded }
+                    } else {
+                        Modifier
+                    },
+                    trailing = { if (canCollapse) chevron() },
+                )
+            }
+            if (canCollapse) {
+                AnimatedVisibility(visible = expanded, enter = CardExpand, exit = CardCollapse) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.sm),
+                        content = content,
+                    )
+                }
+            } else {
+                content()
+            }
+        }
+    }
+}
+
+/** 尾控件固宽，标签占剩余并换行，避免长 label 挤掉 Switch/Icon */
+@Composable
+fun MaaLabeledControlRow(
+    label: String,
+    modifier: Modifier = Modifier,
+    labelStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+    labelColor: Color = Color.Unspecified,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: @Composable () -> Unit,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.md),
+    ) {
+        leading?.invoke()
+        Text(
+            text = label,
+            style = labelStyle,
+            color = labelColor,
+            modifier = Modifier.weight(1f),
+        )
+        Box(
+            modifier = Modifier.wrapContentWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            trailing()
+        }
+    }
+}
+
+/** Shared Material 3 button shape; preserve each existing screen's sizing and layout. */
+@Composable
+fun MaaButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = if (MaaTheme.isMaterial) ButtonDefaults.shape else RoundedCornerShape(MaaTheme.style.radii.button),
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        shape = shape,
+        colors = colors,
+        contentPadding = contentPadding,
+        content = content,
+    )
+}
+
+@Composable
+fun MaaOutlinedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = if (MaaTheme.isMaterial) ButtonDefaults.shape else RoundedCornerShape(MaaTheme.style.radii.button),
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    border: BorderStroke? = ButtonDefaults.outlinedButtonBorder(enabled),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        shape = shape,
+        colors = colors,
+        border = border,
+        contentPadding = contentPadding,
+        content = content,
+    )
+}
+
+/**
+ * 点进二级页面的一行：标题 + 说明 + 右侧箭头
+ *
+ * 与 [MaaLabeledControlRow] 分开：那个的尾部是控件、点的是控件本身；这个整行可点，
+ * 语义是「离开当前页」
+ */
+@Composable
+fun MaaNavigationRow(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .maaClickable(onClick = onClick)
+            .padding(vertical = MaaDesignTokens.Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.md),
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.xxs),
+        ) {
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            description?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(MaaDesignTokens.IconSize.md),
+        )
+    }
+}
+
+/** 卡片配方 Surface；普通内容卡用 [MaaCard] */
+@Composable
+fun MaaCardSurface(
+    modifier: Modifier = Modifier,
+    color: Color = if (MaaTheme.isMaterial) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surface,
+    border: BorderStroke? = if (MaaTheme.isMaterial) null else BorderStroke(MaaDesignTokens.Separator.thickness, MaterialTheme.colorScheme.outline),
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        color = color,
+        shadowElevation = MaaTheme.style.cardElevation,
+        border = border,
+        content = content,
+    )
+}
+
+/** 未选中态走调色板的 `switchOff`：outline 与轨道同色会糊，onSurfaceVariant 又压得慌 */
+@Composable
+fun MaaSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        colors = SwitchDefaults.colors(
+            uncheckedThumbColor = MaaTheme.palette.switchOff,
+            uncheckedBorderColor = MaaTheme.palette.switchOff,
+        ),
+    )
+}
+
+/** 卡片内一组控件的小标题；一张卡装多组时靠它区分，没有它几排 chip 分不清谁是谁 */
+@Composable
+fun MaaFieldLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun MaaInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaaDesignTokens.Spacing.lg),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.4f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(0.6f),
+        )
+    }
+}

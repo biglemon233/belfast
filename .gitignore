@@ -1,0 +1,41 @@
+# BEGIN create-maa-project
+# END create-maa-project
+.create-maa-project/
+.tmp/
+.uv-cache/
+.venv/
+__pycache__/
+config/
+debug/
+dist/
+node_modules/
+maafw.log
+*.log
+
+# v3 阶段：本地归档（MaaFwApp fork + ALAS 副本，留本地不进公开仓）
+m0-archive/
+
+# Android/Gradle 构建产物（可重建）
+.gradle/
+build/
+.kotlin/
+local.properties
+*.iml
+.idea/
+
+# spike 产物：APK 二进制可重建不入库；dist/logs 文本证据保留
+!spike/**/dist/
+spike/**/dist/*.apk
+
+# rootfs/ 资产必须进仓，解除上方通用目录名规则（build/、config/）的误伤
+!rootfs/build/
+!rootfs/patches/module/config/
+!app/app/src/main/java/com/aliothmoon/maafw/config/
+
+# rootfs 资产随包内置（300MB+ 不入库，构建前从 rootfs-dist 拷入）；BUILD_MANIFEST 入库
+/app/app/src/main/assets/rootfs/rootfs.tar.xz
+/keystore/
+
+/.vscode/
+/.kimi-code/
+/.local/

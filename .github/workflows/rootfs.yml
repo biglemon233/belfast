@@ -1,0 +1,242 @@
+name: rootfs
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      native_slim:
+        description: 'Build and validate an experimental slim OpenCV 4.6 imgcodecs'
+        required: false
+        default: false
+        type: boolean
+      trim_baseline_run:
+        description: 'Optional successful rootfs run ID; validate trimming its exact artifact'
+        required: false
+        default: ''
+        type: string
+      trim_baseline_sha256:
+        description: 'Expected rootfs.tar.xz SHA256; required when validating trimming'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: rootfs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOURCE_SHA: 1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_dispatch' || (!inputs.native_slim && inputs.trim_baseline_run == '')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            artifact: rootfs
+          - arch: amd64
+            runner: ubuntu-24.04
+            artifact: rootfs-amd64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Runner info
+        run: |
+          uname -m
+          nproc
+          df -h
+
+      - name: Build rootfs
+        env:
+          ROOTFS_ARCH: ${{ matrix.arch }}
+          ROOTFS_PLAIN_TAR: ${{ matrix.arch == 'arm64' && '1' || '' }}
+          WORK_DIR: ${{ github.workspace }}/.tmp/rootfs-build
+        run: |
+          # Create the runner-owned parent before the script elevates to sudo.
+          mkdir -p .tmp/native-slim
+          bash rootfs/build/build-rootfs.sh
+
+      - name: Install shared image-codec build dependencies
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=3 install -y --no-install-recommends build-essential cmake ninja-build pkg-config binutils python3 \
+            libjpeg-dev libpng-dev libtiff-dev libwebp-dev libopenjp2-7-dev zlib1g-dev
+
+      - name: Fingerprint native build environment
+        if: matrix.arch == 'arm64'
+        id: native-packages
+        run: |
+          mkdir -p .tmp/native-slim
+          dpkg-query -W -f='${binary:Package}\t${Version}\t${Architecture}\n' > .tmp/native-slim/host-packages.txt
+          echo "digest=$(sha256sum .tmp/native-slim/host-packages.txt | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore native image-codec build
+        if: matrix.arch == 'arm64'
+        id: native-cache
+        uses: actions/cache@v5
+        with:
+          path: .tmp/native-slim/native
+          key: imgcodecs-${{ runner.os }}-${{ runner.arch }}-${{ env.SOURCE_SHA }}-${{ hashFiles('rootfs/build/build_slim_imgcodecs.sh') }}-${{ steps.native-packages.outputs.digest }}
+
+      - name: Build slim native image codecs on cache miss
+        if: matrix.arch == 'arm64' && steps.native-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .tmp/native-slim
+          curl -fL --retry 3 https://codeload.github.com/opencv/opencv/tar.gz/refs/tags/4.6.0 -o .tmp/native-slim/opencv.tar.gz
+          bash rootfs/build/build_slim_imgcodecs.sh \
+            --source-archive .tmp/native-slim/opencv.tar.gz --expected-sha256 "$SOURCE_SHA" \
+            --work .tmp/native-slim/build --output .tmp/native-slim/native
+
+      - name: Validate slim native image codecs against this run
+        if: matrix.arch == 'arm64'
+        run: |
+          baseline_sha=$(sha256sum dist/rootfs.tar | cut -d ' ' -f 1)
+          sudo python3 rootfs/build/validate_slim_opencv.py \
+            --input dist/rootfs.tar --expected-sha256 "$baseline_sha" \
+            --replacement .tmp/native-slim/native/libopencv_imgcodecs.so.4.6.0 \
+            --work .tmp/native-slim/validation --dist .tmp/native-slim/validated
+          # Promote only after the native loader, image/OCR comparison and
+          # unchanged ALAS tree gates pass. App consumes this run's final image.
+          sudo cp .tmp/native-slim/validated/candidate.tar.xz dist/rootfs.tar.xz
+          sudo mkdir -p dist/native-slim
+          sudo cp .tmp/native-slim/validated/*.json .tmp/native-slim/validated/*.log \
+            .tmp/native-slim/native/OPENCV_BUILD.json dist/native-slim/
+
+      # OCR 门禁已内联进 build-rootfs.sh（import 硬门禁：import mxnet 会 dlopen libmxnet.so，
+      # 顺带验 openblas/opencv apt 库 + numpy_shim；构建期 chroot 内执行）。
+      # 原 Spike F PP-OCR 门禁随 PP-OCR 退役一并移除。
+
+      - name: Measure rootfs and native dependency footprint
+        run: |
+          # The build runs under sudo; return its outputs to the runner before writing the report.
+          sudo chown -R "$(id -u):$(id -g)" dist
+          python3 rootfs/build/profile_bundle.py --rootfs dist/rootfs.tar.xz --output dist/SIZE_REPORT.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          compression-level: 0
+          path: |
+            dist/rootfs.tar.xz
+            dist/BUILD_MANIFEST
+            dist/SIZE_REPORT.json
+            dist/TRIM_REPORT.json
+            dist/VALIDATION.json
+            dist/native-slim/
+          retention-days: 14
+
+      - name: Preserve native validation evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rootfs-native-slim-failure-${{ matrix.arch }}
+          path: |
+            dist/smoke-*.log
+            dist/VALIDATION.json
+            dist/TRIM_PLAN.json
+            .tmp/native-slim/validated/*.json
+            .tmp/native-slim/validated/*.log
+            .tmp/native-slim/native/OPENCV_BUILD.json
+            .tmp/native-slim/build/configure.log
+            .tmp/native-slim/build/build.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  validate-trim:
+    if: github.event_name == 'workflow_dispatch' && !inputs.native_slim && inputs.trim_baseline_run != ''
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test archive safety boundaries
+        run: python3 -m unittest discover -s rootfs/tests -p test_trim_rootfs.py -v
+      - name: Download unchanged baseline
+        uses: actions/download-artifact@v8
+        with:
+          name: rootfs
+          path: baseline
+          run-id: ${{ inputs.trim_baseline_run }}
+          github-token: ${{ github.token }}
+      - name: Validate each group with original OCR and runtime
+        env:
+          BASELINE_SHA: ${{ inputs.trim_baseline_sha256 }}
+        run: |
+          sudo python3 rootfs/build/validate_trim.py \
+            --input baseline/rootfs.tar.xz --expected-sha256 "$BASELINE_SHA" \
+            --work .tmp/trim-validation --dist dist
+      - name: Save candidate and validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rootfs-trim-validation
+          path: dist/
+          retention-days: 14
+
+  native-slim:
+    if: github.event_name == 'workflow_dispatch' && inputs.native_slim
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    env:
+      BASELINE_RUN: ${{ inputs.trim_baseline_run || '38024585869' }}
+      BASELINE_SHA: ${{ inputs.trim_baseline_sha256 || '2ccb1a4ddac66393c04c2dfe72c7a8da2af3e3c68b24c6365a3fa4527428f3bf' }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare isolated build workspace
+        run: mkdir -p .tmp/native-slim dist
+      - name: Check library safety and archive regressions
+        run: |
+          python3 -m unittest discover -s rootfs/tests -p test_slim_opencv_backends.py -v
+          python3 -m unittest discover -s rootfs/tests -p test_trim_rootfs.py -v
+      - name: Install compiler and shared image-codec headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config binutils python3 \
+            libjpeg-dev libpng-dev libtiff-dev libwebp-dev libopenjp2-7-dev zlib1g-dev
+      - name: Download unchanged runtime baseline
+        uses: actions/download-artifact@v8
+        with:
+          name: rootfs
+          path: .tmp/native-slim/input
+          run-id: ${{ env.BASELINE_RUN }}
+          github-token: ${{ github.token }}
+      - name: Build real OpenCV imgcodecs without optional backends
+        run: |
+          curl -fL --retry 3 https://codeload.github.com/opencv/opencv/tar.gz/refs/tags/4.6.0 -o .tmp/native-slim/opencv.tar.gz
+          bash rootfs/build/build_slim_imgcodecs.sh \
+            --source-archive .tmp/native-slim/opencv.tar.gz --expected-sha256 "$SOURCE_SHA" \
+            --work .tmp/native-slim/build --output dist/native
+      - name: Validate loader, common image formats and original OCR
+        run: |
+          sudo python3 rootfs/build/validate_slim_opencv.py \
+            --input .tmp/native-slim/input/rootfs.tar.xz --expected-sha256 "$BASELINE_SHA" \
+            --replacement dist/native/libopencv_imgcodecs.so.4.6.0 \
+            --work .tmp/native-slim/validation --dist dist/validation
+      - name: Save candidate and evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rootfs-native-slim
+          path: |
+            dist/native/
+            dist/validation/*.json
+            dist/validation/*.log
+            dist/validation/BUILD_MANIFEST
+            dist/validation/candidate.tar.xz
+            .tmp/native-slim/build/configure.log
+            .tmp/native-slim/build/build.log
+          retention-days: 14

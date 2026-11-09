@@ -1,0 +1,14 @@
+// Build a test-only runner against an already provisioned, idle release installation.
+// gradlew -p app -I scripts/orientation-probe.init.gradle :app:assembleReleaseAndroidTest
+// adb shell am instrument -w com.dreamry2c.alasaos.test/com.aliothmoon.maafw.ui.HomeOrientationProbe
+allprojects {
+    plugins.withId('com.android.application') {
+        extensions.getByName('android').testBuildType = 'release'
+        extensions.getByName('androidComponents').finalizeDsl { android ->
+            android.defaultConfig.testInstrumentationRunner = 'com.aliothmoon.maafw.ui.HomeOrientationProbe'
+        }
+        extensions.getByName('android').defaultConfig.testProguardFiles(
+            rootProject.file('scripts/orientation-probe.pro')
+        )
+    }
+}

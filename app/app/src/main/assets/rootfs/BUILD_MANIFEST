@@ -1,0 +1,15 @@
+{
+  "rootfs_version": "0.2.0-ocr",
+  "build_time_utc": "2026-10-10T04:36:20Z",
+  "alas_repo": "https://github.com/LmeSzinc/AzurLaneAutoScript.git",
+  "alas_commit": "7d6a415e3ef5ed049fd7024311c16158fcd2af28",
+  "patches_source": "rootfs/patches @ repo commit aa725dfec0706ee35eb592441e6256bfeb99a695",
+  "ocr": {
+    "engine": "cnocr+mxnet (ALAS original, UseOcrServer=false)",
+    "mxnet_version": "1.9.1",
+    "cnocr_version": "<module 'cnocr.__version__' from '/usr/local/lib/python3.12/dist-packages/cnocr/__version__.py'>",
+    "azur_lane_params_sha256": "4e107680e4bcb4a0577a967207733cd2c8832cfcd94af39c7be449d72937d412"
+  },
+  "python_version": "3.12.3",
+  "opencv_version": "4.10.0"
+}

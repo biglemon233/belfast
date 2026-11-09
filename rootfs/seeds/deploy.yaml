@@ -1,0 +1,72 @@
+# AlasAos rootfs 内置 deploy 配置：行结构按 ALAS config/deploy.template-linux-cn.yaml，
+# 更新器七键全锁定 + 默认国内镜像（git.lyoko.io / aliyun pypi）。
+# 注：ALAS 上游 config_redirect() 仅对 5 个官方废弃的旧镜像 URL 做强制重定向，
+# 用户在 AOS 设置页或自定义填写的私人仓库不受其影响。
+# AutoUpdate:false 是保住 rootfs 钉版 commit（BUILD_MANIFEST.alas_commit）的唯一闸门。
+Deploy:
+  Git:
+    # 默认国内源；在 AOS 设置页可自由切换为 GitHub 或自定义仓库
+    Repository: git://git.lyoko.io/AzurLaneAutoScript
+    Branch: master
+    GitExecutable: /usr/bin/git
+    GitProxy: null
+    SSLVerify: true
+    # 禁止启动时 git pull，保住钉版 commit
+    AutoUpdate: false
+
+  Python:
+    # rootfs 内 /usr/local/bin/python → python3 软链（build-rootfs.sh 建立）
+    PythonExecutable: python
+    PypiMirror: https://mirrors.aliyun.com/pypi/simple
+    # 依赖在构建期已装好，禁止启动时 pip install
+    InstallDependencies: false
+    RequirementsFile: ./deploy/headless/requirements.txt
+
+  Adb:
+    AdbExecutable: /usr/bin/adb
+    # 不替换/不暴连 adb；真机连接由 wrapper 负责
+    ReplaceAdb: false
+    AutoConnect: false
+    # 源码里该键为 if False 死键，置 false 表明意图
+    InstallUiautomator2: false
+
+  Ocr:
+    # AlasToFox 原版 OCR 链（cnocr 1.2.2 + mxnet 1.9.1 + azur_lane 模型）：
+    # UseOcrServer:false → ocr.py 直推 OCR_MODEL（=OcrModel/cnocr，本进程内推理），
+    # 不连 OCR server，也不走已退役的 AOS 自研 rpc.py。StartOcrServer 保持 false。
+    UseOcrServer: false
+    StartOcrServer: false
+    OcrServerPort: 22268
+    OcrClientAddress: 127.0.0.1:22300
+
+  Update:
+    # EnableReload:true——用户需要 WebUI「Force restart」强制重启
+    # 来刷新重新加载 ALAS 代码（换源后尤其有用）。开启后 gui.py 走父子进程守护模式，
+    # Force restart 按钮 kill 子进程并重启（重新 import module.webui.app）；已核实与
+    # wrapper 的 gui.py 进程监管兼容（wrapper 管父进程，重启只换子进程，supervisor 不受影响）。
+    # 定时检查与定时重启（CheckUpdateInterval:0 / AutoRestartTime:null）。
+    EnableReload: true
+    CheckUpdateInterval: 0
+    AutoRestartTime: null
+
+  Misc:
+    DiscordRichPresence: false
+
+  RemoteAccess:
+    EnableRemoteAccess: false
+    SSHUser: null
+    SSHServer: null
+    SSHExecutable: /usr/bin/ssh
+
+  Webui:
+    WebuiHost: 0.0.0.0
+    # 22267 是 ALAS WebUI 默认端口；22367 是 AlasApp 另一套，勿混
+    WebuiPort: 22267
+    Language: zh-CN
+    Theme: default
+    DpiScaling: true
+    Password: null
+    CDN: false
+    Run: null
+    WebuiSSLKey: null
+    WebuiSSLCert: null
