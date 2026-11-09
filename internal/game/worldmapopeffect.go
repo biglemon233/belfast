@@ -38,13 +38,23 @@ import (
 //   - 21 {ids}: triggers (world task complete_condition 8, phase 4 hook);
 //   - 27 {story, [[option, effect], ...]}: the option picked (act_arg_1,
 //     the effect) runs next;
+//   - 28 {[[row], [column], trap], ...}: those world_trap_data traps appear
+//     at the cells the offsets from the event name (a Siren device's hazard
+//     fields, 1011-1016 and 3000);
 //   - 33 {enemy}: that enemy's attachments leave the map;
 //   - 35 {condition, effect, ..., default}: the first effect whose
 //     condition holds runs next (difficulty, item, stage, collection,
 //     task, a rectangle holding an event); others count as false;
-//   - 36 {[effect, weight], ...}: one drawn by weight runs next (0: none).
+//   - 36 {[effect, weight], ...}: one drawn by weight runs next (0: none);
+//   - 39 {from, to}: event from replaced by to;
+//   - 47 {[[row], [column], event], ...}: those world_event_data events (the
+//     islands that shape a zone) appear at the cells the offsets from the
+//     event name;
+//   - 51 {[from, to], ...}: each event listed replaced by its pair (the
+//     Siren control devices' hidden infection markers leave the map when the
+//     device is destroyed, 5215).
 //
-// Unknown types (23, 25, 26, 28, 31, 39...) do nothing but are taken off.
+// Unknown types (31, 34, ...) do nothing but are taken off.
 
 // world_effect_data types the server applies.
 const (
@@ -69,6 +79,7 @@ const (
 	worldEffectTriggerReset  = 25
 	worldEffectTriggerWait   = 26
 	worldEffectConsumeItem   = 24
+	worldEffectTrapAt        = 28 // {[[row], [column], trap], ...}: traps at offsets
 	worldEffectStoryOption   = 27
 	worldEffectFleetShipHP   = 30
 	worldEffectProgress      = 32
@@ -80,9 +91,11 @@ const (
 	worldEffectDeleteTask    = 40
 	worldEffectGlobalBuff    = 44
 	worldEffectMapClearFlag  = 45
+	worldEffectIslandAt      = 47 // {[[row], [column], event], ...}: events at offsets
 	worldEffectBrokenClean   = 48
 	worldEffectCatSalvage    = 49
 	worldEffectBossFreeCount = 50
+	worldEffectReplaceMany   = 51 // {[from, to], ...}: each pair replaced
 	worldEffectTip           = 52 // a text the client shows
 )
 
@@ -361,9 +374,23 @@ func (op *worldOp) runEffect(ev *worldAttachment, id, chosen uint32) error {
 		if worldScripted(ev.ID) {
 			op.terrain(ev, params)
 		}
+	case worldEffectTrapAt, worldEffectIslandAt:
+		op.spawnAt(ev, params)
 	case worldEffectReplace:
 		if ids := paramUints(params); worldScripted(ev.ID) && len(ids) == 2 {
 			op.replaceEvents(ids[0], ids[1])
+		}
+	case worldEffectReplaceMany:
+		// {[from, to], ...}: the Siren control devices' hidden infection
+		// markers (5207) are replaced when the device showing them is
+		// destroyed (5215), so leaving them would keep the zone's infection
+		// up and no OpReqPressing could ever secure it
+		for _, raw := range params {
+			var pair []uint32
+			if json.Unmarshal(raw, &pair) != nil || len(pair) != 2 || pair[0] == 0 || pair[1] == 0 {
+				continue
+			}
+			op.replaceEvents(pair[0], pair[1])
 		}
 	case worldEffectStory, worldEffectGuide:
 		// the client's: the story or guide played before the request
@@ -604,6 +631,43 @@ func (op *worldOp) terrain(ev *worldAttachment, params []json.RawMessage) {
 				}
 				if !slices.Contains(op.lands, cell) {
 					op.lands = append(op.lands, cell)
+				}
+			}
+		}
+	}
+}
+
+// spawnAt is effect types 28 and 47 ({[[row], [column], id], ...}, offsets
+// from the event): the object appears on those cells. An id of world_event_data
+// is an event (47: the islands a zone is shaped with), anything else a
+// world_trap_data trap (28: the Siren devices' hazard fields, 1011-1016 and
+// 3000); a cell already holding it is left alone.
+func (op *worldOp) spawnAt(ev *worldAttachment, params []json.RawMessage) {
+	template := worldTemplates[op.m.TemplateID]
+	for _, raw := range params {
+		var entry []json.RawMessage
+		if json.Unmarshal(raw, &entry) != nil || len(entry) < 3 {
+			continue
+		}
+		id := rawUint(entry[2])
+		if id == 0 {
+			continue
+		}
+		for _, dr := range rawInts(entry[0]) {
+			for _, dc := range rawInts(entry[1]) {
+				r, c := int32(ev.Row)+dr, int32(ev.Column)+dc
+				if r < 0 || c < 0 || !template.hasCell(uint32(r), uint32(c)) {
+					continue
+				}
+				cell := [2]uint32{uint32(r), uint32(c)}
+				var attachment *worldAttachment
+				if _, ok := worldEvents[id]; ok {
+					attachment = newWorldEvent(id, cell[0], cell[1])
+				} else {
+					attachment = &worldAttachment{Row: cell[0], Column: cell[1], Type: worldAttachTrap, ID: id}
+				}
+				if op.m.addAttachment(attachment) {
+					op.mark(cell)
 				}
 			}
 		}
