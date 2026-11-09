@@ -128,8 +128,10 @@ func (game *Game) handleBeginStage(client *connection.Client, req *protobuf.CS_4
 	if req.GetSystem() == systemWorld {
 		return game.beginWorld(client, req)
 	}
+	var session *chapterSession
 	if req.GetSystem() == systemScenario {
-		session, err := loadChapter(ctx, game.DB.Queries, client.CommanderID)
+		var err error
+		session, err = loadChapter(ctx, game.DB.Queries, client.CommanderID)
 		if err != nil {
 			return err
 		}
@@ -163,7 +165,12 @@ func (game *Game) handleBeginStage(client *connection.Client, req *protobuf.CS_4
 			if !ok {
 				continue
 			}
-			ship.Energy -= min(ship.Energy, battleConsumeEnergy)
+			// the 高效作战指令书 doubles the morale a campaign battle costs
+			cost := battleConsumeEnergy
+			if session != nil && session.operationItem != 0 {
+				cost *= 2
+			}
+			ship.Energy -= min(ship.Energy, cost)
 			if err := saveShipBattleState(ctx, tx.Queries, ship); err != nil {
 				return err
 			}
@@ -241,6 +248,11 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 	group := session.activeGroup()
 	score := min(req.GetScore(), scoreS)
 	win := score > scoreC
+	// the 高效作战指令书 doubles every gain of the sortie's battles
+	gain := uint32(1)
+	if session.operationItem != 0 {
+		gain = 2
+	}
 	if _, known := battleExp.ship[score]; !known {
 		logger.WithFields("Battle", logger.FieldValue("score", score)).Warn("no ship exp rate for this score, ships get no exp")
 	}
@@ -289,13 +301,13 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 		}
 	}
 	ships := settleBattleShips(req.GetStatistics(), byID, func(ship db.Ship) uint32 {
-		return shipBattleExp(expedition, scenarioExpRate, score, ship, ship.ID == flagship, ship.ID == mvp)
+		return shipBattleExp(expedition, scenarioExpRate, score, ship, ship.ID == flagship, ship.ID == mvp) * gain
 	}, win, flagship, mvp)
 	events = append(events, ships.events...)
 	reply.ShipExpList = ships.exps
 	updated, proficiency, techLevel := ships.updated, ships.proficiency, ships.techLevel
 	group.Bullet = proto.Uint32(group.GetBullet() - min(group.GetBullet(), 1))
-	reply.PlayerExp = proto.Uint32(playerBattleExp(expedition, score, uint32(len(updated)), commander.Level))
+	reply.PlayerExp = proto.Uint32(playerBattleExp(expedition, score, uint32(len(updated)), commander.Level) * gain)
 
 	if win {
 		if cell.GetItemType() == attachAmbush {
@@ -307,6 +319,9 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 		session.info.KillCount = proto.Uint32(session.info.GetKillCount() + 1)
 		session.info.ContinuousKillCount = proto.Uint32(session.info.GetContinuousKillCount() + 1)
 		reply.DropInfo = scenarioDrops(session.template, expedition)
+		if gain > 1 {
+			reply.DropInfo = doubleDrops(reply.DropInfo)
+		}
 	} else {
 		session.info.ContinuousKillCount = proto.Uint32(0)
 	}
@@ -344,7 +359,7 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 		}
 		if win {
 			var err error
-			if reply.CommanderExp, err = tx.grantBattleMeowfficerExp(session.template, expedition, group, updated); err != nil {
+			if reply.CommanderExp, err = tx.grantBattleMeowfficerExp(session.template, expedition, group, updated, gain); err != nil {
 				return err
 			}
 		}
@@ -494,6 +509,15 @@ func scenarioDrops(template *chapterTemplate, expedition expeditionTemplate) []*
 	// drop through the "unknown character" placeholder, which has no pool
 	drops = appendDraws(drops, items, bossItemDraws)
 	return appendShipDrop(drops, template, ships, 100)
+}
+
+// doubleDrops is the 高效作战指令书's doubled battle gains: every drop's count
+// twice over.
+func doubleDrops(drops []*protobuf.DROPINFO) []*protobuf.DROPINFO {
+	for _, drop := range drops {
+		drop.Number = proto.Uint32(drop.GetNumber() * 2)
+	}
+	return drops
 }
 
 // appendShipDrop adds a shipgirl from the chapter's table when the roll of

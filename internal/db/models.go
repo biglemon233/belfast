@@ -186,9 +186,10 @@ type ChapterProgress struct {
 }
 
 type ChapterState struct {
-	CommanderID uint32
-	State       []byte
-	Ambushed    Cells
+	CommanderID   uint32
+	State         []byte
+	Ambushed      Cells
+	OperationItem uint32
 }
 
 type ChargeExp struct {

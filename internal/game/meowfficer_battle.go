@@ -338,7 +338,7 @@ func meowfficerMapBonus(template *chapterTemplate) uint32 {
 // so does the server (addMeowfficerExp). A lost battle gives none: the
 // formula has no rank term and no source says a loss earns EXP. Built from
 // the Lua and the wiki: no capture has a meowfficer in a battle.
-func (tx *Tx) grantBattleMeowfficerExp(template *chapterTemplate, expedition expeditionTemplate, group *protobuf.GROUPINCHAPTER_P13, ships []db.Ship) ([]*protobuf.COMMANDER_EXP, error) {
+func (tx *Tx) grantBattleMeowfficerExp(template *chapterTemplate, expedition expeditionTemplate, group *protobuf.GROUPINCHAPTER_P13, ships []db.Ship, multiplier uint32) ([]*protobuf.COMMANDER_EXP, error) {
 	if !meowfficerBattleExp.loaded {
 		return nil, nil
 	}
@@ -354,7 +354,8 @@ func (tx *Tx) grantBattleMeowfficerExp(template *chapterTemplate, expedition exp
 	if expedition.isBoss() {
 		rate = meowfficerBattleExp.boss
 	}
-	base := uint32(calcFloor(shares*rate)) + meowfficerMapBonus(template)
+	// multiplier is what the sortie's operation item doubles (1 without one)
+	base := (uint32(calcFloor(shares*rate)) + meowfficerMapBonus(template)) * max(multiplier, 1)
 	var list []*protobuf.COMMANDER_EXP
 	for _, cat := range cats {
 		ratio := talentBonus(cat, talentAdditionRatio, talentAttrBattleExp, 0, 0)

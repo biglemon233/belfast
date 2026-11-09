@@ -57,12 +57,21 @@ const bossSpawnFlag = 1
 // chapter_template.time plus 365 days.
 const chapterDueExtra = 365 * 24 * 3600
 
+// chapterOperationItem is the item a sortie can be started with (高效作战指令书,
+// item_data_statistics 61001): the sortie's oil and morale cost and its battle
+// gains all double, as the item's own display says. Only a loop mode (周回)
+// chapter offers it.
+const chapterOperationItem = 61001
+
 // chapterSession is the active sortie, stored as the CURRENTCHAPTERINFO the
 // client gets plus the scripted ambushes already sprung.
 type chapterSession struct {
 	template *chapterTemplate
 	info     *protobuf.CURRENTCHAPTERINFO
 	ambushed db.Cells
+	// operationItem is the 高效作战指令书 the sortie runs with, 0 for none:
+	// the oil and morale it costs and its battle gains double.
+	operationItem uint32
 }
 
 // loadChapter returns the commander's active chapter, nil if there is none.
@@ -82,7 +91,7 @@ func loadChapter(ctx context.Context, queries *db.Queries, commanderID uint32) (
 	if template == nil {
 		return nil, fmt.Errorf("active chapter %d has no template", info.GetId())
 	}
-	return &chapterSession{template: template, info: info, ambushed: row.Ambushed}, nil
+	return &chapterSession{template: template, info: info, ambushed: row.Ambushed, operationItem: row.OperationItem}, nil
 }
 
 func (session *chapterSession) save(ctx context.Context, queries *db.Queries, commanderID uint32) error {
@@ -91,9 +100,10 @@ func (session *chapterSession) save(ctx context.Context, queries *db.Queries, co
 		return err
 	}
 	return queries.SaveChapterState(ctx, db.SaveChapterStateParams{
-		CommanderID: commanderID,
-		State:       state,
-		Ambushed:    session.ambushed,
+		CommanderID:   commanderID,
+		State:         state,
+		Ambushed:      session.ambushed,
+		OperationItem: session.operationItem,
 	})
 }
 
@@ -434,8 +444,43 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 	if progress.Progress >= 100 {
 		session.info.LoopFlag = proto.Uint32(1)
 	}
+	// the operation item (高效作战指令书): only a loop mode chapter offers it,
+	// and it doubles the oil and morale the sortie costs and its battle gains.
+	// The client names the item; the bag's own id is what gets spent (one per
+	// sortie), so a client that names it differently still pays for it.
+	if item := req.GetOperationItem(); item != 0 {
+		if session.info.GetLoopFlag() == 0 {
+			return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
+		}
+		if item != chapterOperationItem {
+			logger.WithFields("Chapter", logger.FieldValue("item", item)).Warn("unexpected operation item")
+		}
+		session.operationItem = chapterOperationItem
+	}
+	// the fleet roles of the fleet select screen (道中战斗 / 旗舰战斗 / 全部战斗 /
+	// 待机), keyed by fleet (CS_13101.fleet_duties): Auto-Fight sends the fleets
+	// by them, and the client keeps them in CURRENTCHAPTERINFO.fleet_duties, so
+	// they have to come back with the map or every sortie runs on the defaults.
+	session.info.FleetDuties = req.GetFleetDuties()
+	duties := make([]string, 0, len(req.GetFleetDuties()))
+	for _, duty := range req.GetFleetDuties() {
+		duties = append(duties, fmt.Sprintf("%d=%d", duty.GetKey(), duty.GetValue()))
+	}
+	logger.WithFields("Chapter",
+		logger.FieldValue("id", template.id),
+		logger.FieldValue("loop", session.info.GetLoopFlag()),
+		logger.FieldValue("item", req.GetOperationItem()),
+		logger.FieldValue("duties", fmt.Sprint(duties)),
+	).Debug("chapter tracking")
 	err = game.tx(ctx, client, func(tx *Tx) error {
-		if err := tx.SpendResource(ResourceOil, template.oil); err != nil {
+		oil := template.oil
+		if session.operationItem != 0 {
+			oil *= 2
+			if err := tx.SpendItem(session.operationItem, 1); err != nil {
+				return err
+			}
+		}
+		if err := tx.SpendResource(ResourceOil, oil); err != nil {
 			return err
 		}
 		// War Archives stages take tickets (remaster.go)
@@ -687,8 +732,13 @@ func (session *chapterSession) findPath(fromRow, fromColumn, toRow, toColumn uin
 // through: 5% plus the matching ambush_ratio_extra rows (1-1's (4,3) is
 // certain). The investigation term needs fleet stats the server doesn't
 // model, so it is left out; a sprung cell doesn't spring again this sortie.
+// A loop mode (周回) chapter rolls none at all, as in the game
+// (ChapterLevelData:activateAmbush is gated on not isLoop()): the client
+// shows its ambush prompt for any ambush cell the server sends, loop mode or
+// not, and Auto-Fight then waits for a tap that would also void the
+// continuous operation's record.
 func (session *chapterSession) springAmbush(row, column uint32) *protobuf.CHAPTERCELLINFO_P13 {
-	if !session.template.isAmbush || len(session.template.ambushes) == 0 {
+	if !session.template.isAmbush || len(session.template.ambushes) == 0 || session.info.GetLoopFlag() != 0 {
 		return nil
 	}
 	cell := session.cell(row, column)
