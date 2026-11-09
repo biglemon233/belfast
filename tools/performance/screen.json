@@ -1,0 +1,23 @@
+[
+  {
+    "actions": [
+      [
+        "wait",
+        3
+      ]
+    ],
+    "name": "virtual_screen"
+  },
+  {
+    "actions": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "virtual_screen_return"
+  }
+]

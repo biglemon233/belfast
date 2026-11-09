@@ -1,0 +1,29 @@
+diff --git a/src/syscall/exit.c b/src/syscall/exit.c
+--- a/src/syscall/exit.c
++++ b/src/syscall/exit.c
+@@ -76,4 +76,13 @@ void translate_syscall_exit(Tracee *tracee)
+     syscall_number = get_sysnum(tracee, ORIGINAL);
+     syscall_result = peek_reg(tracee, CURRENT, SYSARG_RESULT);
+     switch (syscall_number) {
++    case PR_faccessat2:
++	/* CNB 的旧容器策略拒绝新调用；让 glibc 经旧调用继续检查权限。
++	 * Old CNB container profiles reject this call; let glibc check
++	 * permissions through its older syscall fallback. */
++	if ((int) syscall_result != -EPERM)
++	    goto end;
++	status = -ENOSYS;
++	break;
++
+     case PR_brk:
+diff --git a/src/syscall/seccomp.c b/src/syscall/seccomp.c
+--- a/src/syscall/seccomp.c
++++ b/src/syscall/seccomp.c
+@@ -404,7 +404,7 @@ static FilteredSysnum filtered_sysnums[] = {
+     { PR_socketcall, FILTER_SYSEXIT },
+     { PR_stat, 0 },
+     { PR_statx, 0 },
+-    { PR_faccessat2, 0 },
++    { PR_faccessat2, FILTER_SYSEXIT },
+     { PR_stat64, 0 },
+     { PR_statfs, 0 },
+     { PR_statfs64, 0 },

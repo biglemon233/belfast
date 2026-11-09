@@ -1,0 +1,63 @@
+# 随 rootfs 出厂的上游部署配置种子：构建期由 build-azurpilot.sh 装为
+# /opt/azurpilot/config/deploy.yaml，承载首次启动前的默认值。
+#
+# Factory seed of the upstream deploy configuration shipped with the rootfs:
+# installed as /opt/azurpilot/config/deploy.yaml by build-azurpilot.sh at build
+# time, carrying the defaults that apply before first boot.
+Deploy:
+  Git:
+    # 与构建期固定的上游来源一致。/ Matches the upstream source pinned at build time.
+    Repository: https://github.com/wess09/AzurPilot.git
+    Branch: dev
+    GitExecutable: /usr/bin/git
+    GitProxy: null
+    SSLVerify: true
+  Python:
+    PythonExecutable: ./.venv/bin/python
+    PypiMirror: https://pypi.org/simple
+    # 依赖已在构建期由 uv sync --frozen 锁定，运行期禁止再联网安装。
+    # Dependencies were locked by `uv sync --frozen` at build time; installing
+    # them again over the network at runtime is not allowed.
+    InstallDependencies: false
+  Adb:
+    # Android 端截图与控制不走 adb（实例配置 Serial / Method 均为 azurpilot_android），
+    # 此段仅为满足上游 schema。/ Screenshot and control on Android never touch adb
+    # (the instance config sets Serial and both methods to azurpilot_android);
+    # this section only satisfies the upstream schema.
+    AdbExecutable: /usr/bin/adb
+    ReplaceAdb: false
+    AutoConnect: false
+    InstallUiautomator2: false
+  Ocr:
+    # OCR 走进程内 onnxruntime（CPU），不启独立 OCR 服务进程。
+    # OCR runs in-process via onnxruntime on CPU; no standalone OCR server.
+    UseOcrServer: false
+    StartOcrServer: false
+    OcrServerPort: 22268
+    OcrClientAddress: 127.0.0.1:22268
+  Update:
+    # 更新由 App 的 Android 私有接口编排，避免上游定时器同时修改源码。
+    # The app orchestrates updates through Android APIs to avoid competing upstream timers.
+    EnableReload: true
+    CheckUpdateInterval: 0
+    AutoRestartTime: null
+  Misc:
+    DiscordRichPresence: false
+  RemoteAccess:
+    EnableRemoteAccess: false
+    RemoteAccessMode: cloudflare
+    CloudflareRegistry: https://remote.azurpilot.com
+  Webui:
+    # 回环地址与 25548 端口是 app 壳与运行时的对接约定，不可改动。
+    # The loopback address and port 25548 are the handshake contract between the
+    # app shell and the runtime; do not change them.
+    WebuiHost: 127.0.0.1
+    WebuiPort: 25548
+    Language: zh-CN
+    Theme: default
+    DpiScaling: true
+    Password: null
+    CDN: false
+    Run: null
+    WebuiSSLKey: null
+    WebuiSSLCert: null

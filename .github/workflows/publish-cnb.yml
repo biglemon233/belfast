@@ -1,0 +1,45 @@
+name: Publish existing GitHub release to CNB
+
+on:
+  workflow_dispatch:
+    inputs:
+      github_tag:
+        description: Existing signed GitHub release tag to mirror without rebuilding
+        required: true
+        default: azurpilot-android-latest
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cnb-release-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'wess09/AzurPilot-for-Android'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify CNB release synchronization
+        run: python3 tools/tests/test_cnb_release.py
+      - name: Download the existing GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TAG: ${{ inputs.github_tag }}
+        run: |
+          set -euo pipefail
+          python3 tools/cnb_release.py download --source-dir .tmp/github-release \
+            --github-tag "$GITHUB_TAG"
+      - name: Publish the same artifacts to CNB Releases
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          GITHUB_TAG: ${{ inputs.github_tag }}
+        run: |
+          set -euo pipefail
+          python3 tools/cnb_release.py publish --source-dir .tmp/github-release \
+            --output-dir .tmp/cnb-release --github-tag "$GITHUB_TAG"

@@ -1,0 +1,83 @@
+[
+  {
+    "actions": [
+      [
+        "text",
+        "日志"
+      ],
+      [
+        "wait",
+        1
+      ],
+      [
+        "swipe",
+        550,
+        1750,
+        550,
+        800,
+        350
+      ],
+      [
+        "wait",
+        0.5
+      ]
+    ],
+    "name": "runtime_logs"
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        0.6
+      ]
+    ],
+    "name": "runtime_statistics",
+    "actions": [
+      [
+        "text",
+        "统计"
+      ],
+      [
+        "wait",
+        2
+      ],
+      [
+        "swipe",
+        550,
+        1750,
+        550,
+        800,
+        350
+      ],
+      [
+        "wait",
+        0.5
+      ]
+    ]
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        0.6
+      ]
+    ],
+    "name": "runtime_settings",
+    "actions": [
+      [
+        "description",
+        "设置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  }
+]

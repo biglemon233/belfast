@@ -1,0 +1,1096 @@
+{
+  "version": 2,
+  "upstream_commit": "1841cb1941751a81ab70668b4d2383c369c4506e",
+  "converter": "onnx2tf==2.6.9",
+  "models": [
+    {
+      "asset": "models/ppocr-v6/PP-OCRv6_tiny_rec.onnx",
+      "sha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            48,
+            "DynamicDimension.1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            "floor(floor(floor(DynamicDimension.1/2 - 1/2)/2)/2 - 1/2) + 1",
+            6906
+          ]
+        }
+      ],
+      "custom_metadata_map": {},
+      "litert": {
+        "asset": "litert/PP-OCRv6_tiny_rec.tflite",
+        "sha256": "d237f12a6bf7dc2c3283da09fe137b6e63a24ed520171e2682680096b87f7fbf",
+        "input_layout": "nhwc",
+        "input_shape": [
+          1,
+          48,
+          320,
+          3
+        ],
+        "output_shape": [
+          1,
+          40,
+          6906
+        ],
+        "output_layout": "native",
+        "cpu_shape_patches": [
+          {
+            "offset": 928,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 968,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 105912,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 4423523,
+            "size": 1,
+            "expected": 0,
+            "value": 1
+          },
+          {
+            "offset": 4434560,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 4434596,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 4453568,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          },
+          {
+            "offset": 4453596,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          }
+        ],
+        "cpu_dynamic_max_abs_error": 0.00015938282012939453
+      },
+      "mnn": {
+        "asset": "mnn/PP-OCRv6_tiny_rec.mnn",
+        "sha256": "8d1c8e6be4882ceb8fb1d00f2fcddf9ec877941fbe56cd4c7bc47e93ffbbc492",
+        "converter": "MNN==3.6.1",
+        "input_layout": "nchw",
+        "input_shape": [
+          1,
+          3,
+          48,
+          320
+        ],
+        "output_shape": [
+          1,
+          40,
+          6906
+        ],
+        "cpu_max_abs_error": 0.005723774433135986
+      },
+      "kind": "recognition",
+      "npu_supported": true,
+      "source_weight_bundled": false
+    },
+    {
+      "asset": "models/ppocr-v6/PP-OCRv6_small_rec.onnx",
+      "sha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            48,
+            "DynamicDimension.1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            "Reshape_471_o0__d2",
+            18710
+          ]
+        }
+      ],
+      "custom_metadata_map": {},
+      "litert": {
+        "asset": "litert/PP-OCRv6_small_rec.tflite",
+        "sha256": "872474916ca27390a33aec20d8ff81e66f9ab9031318d1b8953c8394aa46dea6",
+        "input_layout": "nhwc",
+        "input_shape": [
+          1,
+          48,
+          320,
+          3
+        ],
+        "output_shape": [
+          1,
+          40,
+          18710
+        ],
+        "output_layout": "native",
+        "cpu_shape_patches": [
+          {
+            "offset": 1412,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1540,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1632,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1676,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1724,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1772,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1820,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1868,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1916,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2556,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2724,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 3084,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 3424,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 21085923,
+            "size": 1,
+            "expected": 0,
+            "value": 1
+          },
+          {
+            "offset": 21104912,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 21104940,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 21143484,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          },
+          {
+            "offset": 21143512,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          }
+        ],
+        "cpu_dynamic_max_abs_error": 6.878376007080078e-05,
+        "output_postprocess": "softmax"
+      },
+      "mnn": {
+        "asset": "mnn/PP-OCRv6_small_rec.mnn",
+        "sha256": "988998f0143db84ad17976c30cffb6ea19835bfc17d76e3e2a0f5d0643eb1c9b",
+        "converter": "MNN==3.6.1",
+        "input_layout": "nchw",
+        "input_shape": [
+          1,
+          3,
+          48,
+          320
+        ],
+        "output_shape": [
+          1,
+          40,
+          18710
+        ],
+        "cpu_max_abs_error": 0.0036829710006713867
+      },
+      "kind": "recognition",
+      "npu_supported": true,
+      "source_weight_bundled": false
+    },
+    {
+      "asset": "models/azur_lane/alocr-en-us-v2.6.nvc.onnx",
+      "sha256": "35413805f63b5fb13a0060b1cf3d5fcefb2fba6b88a3e85a1e1ae236533af5f6",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            48,
+            "DynamicDimension.1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.2",
+            "DynamicDimension.3",
+            97
+          ]
+        }
+      ],
+      "custom_metadata_map": {},
+      "litert": {
+        "asset": "litert/alocr-en-us-v2.6.nvc.tflite",
+        "sha256": "04737fd2eb8ce15f0c4812e402238151babf2a56b758dca7bc0f637c1c7e47ec",
+        "input_layout": "nhwc",
+        "input_shape": [
+          1,
+          48,
+          320,
+          3
+        ],
+        "output_shape": [
+          1,
+          40,
+          97
+        ],
+        "output_layout": "native",
+        "cpu_shape_patches": [
+          {
+            "offset": 1556,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1684,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1744,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1820,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1868,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1916,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1964,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2012,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2060,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2108,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2160,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 955692,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 955860,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 956220,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 956516,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 7613371,
+            "size": 1,
+            "expected": 0,
+            "value": 1
+          },
+          {
+            "offset": 7643948,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 7643984,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 7699396,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          },
+          {
+            "offset": 7699424,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          }
+        ],
+        "cpu_dynamic_max_abs_error": 2.5451183319091797e-05
+      },
+      "mnn": {
+        "asset": "mnn/alocr-en-us-v2.6.nvc.mnn",
+        "sha256": "648abcbc18730aa60e4259510eab8e36fbc77eb33c637d103ade5a399955becc",
+        "converter": "MNN==3.6.1",
+        "input_layout": "nchw",
+        "input_shape": [
+          1,
+          3,
+          48,
+          320
+        ],
+        "output_shape": [
+          1,
+          40,
+          97
+        ],
+        "cpu_max_abs_error": 5.0067901611328125e-06
+      },
+      "kind": "recognition",
+      "npu_supported": true,
+      "source_weight_bundled": false
+    },
+    {
+      "asset": "models/zh-CN/alocr-zh-cn-v3.dtk.onnx",
+      "sha256": "d0cd4977b80b1138239f88ce6b5de8e421d508fdf6da63b744e6077a4e2af0f3",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            48,
+            "DynamicDimension.1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.2",
+            "DynamicDimension.3",
+            18385
+          ]
+        }
+      ],
+      "custom_metadata_map": {},
+      "litert": {
+        "asset": "litert/alocr-zh-cn-v3.dtk.tflite",
+        "sha256": "cb336f2d99435f309fbf5f2addc3b4f0dc444eee9e583927bac651ef2886c646",
+        "input_layout": "nhwc",
+        "input_shape": [
+          1,
+          48,
+          320,
+          3
+        ],
+        "output_shape": [
+          1,
+          40,
+          18385
+        ],
+        "output_layout": "native",
+        "cpu_shape_patches": [
+          {
+            "offset": 1652,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1780,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1840,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1916,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1964,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2012,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2060,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2108,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2156,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2204,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2256,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 955788,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 955956,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 956316,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 956612,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 16464771,
+            "size": 1,
+            "expected": 0,
+            "value": 1
+          },
+          {
+            "offset": 16495436,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 16495464,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 16550796,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          },
+          {
+            "offset": 16550824,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          }
+        ],
+        "cpu_dynamic_max_abs_error": 2.9385089874267578e-05,
+        "output_postprocess": "softmax"
+      },
+      "mnn": {
+        "asset": "mnn/alocr-zh-cn-v3.dtk.mnn",
+        "sha256": "c4507ba797e1c823264fc39cb2f0b94e93362bed171fce6a7b7fa19580cfbca1",
+        "converter": "MNN==3.6.1",
+        "input_layout": "nchw",
+        "input_shape": [
+          1,
+          3,
+          48,
+          320
+        ],
+        "output_shape": [
+          1,
+          40,
+          18385
+        ],
+        "cpu_max_abs_error": 0.0002779960632324219
+      },
+      "kind": "recognition",
+      "npu_supported": true,
+      "source_weight_bundled": false
+    },
+    {
+      "asset": "models/det/PP-OCRv6_tiny_det.onnx",
+      "sha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            "DynamicDimension.1",
+            "DynamicDimension.2"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "type": "tensor(float)",
+          "shape": [
+            "ConvTranspose_459_o0__d0",
+            1,
+            "ConvTranspose_459_o0__d2",
+            "ConvTranspose_459_o0__d3"
+          ]
+        }
+      ],
+      "custom_metadata_map": {},
+      "litert": {
+        "asset": "litert/PP-OCRv6_tiny_det.tflite",
+        "sha256": "ab525ee1d3aad1f59b1bb7e1c370eb5f9af31042b8aaf4b3c249fdf1ecb4df70",
+        "input_layout": "nhwc",
+        "input_shape": [
+          1,
+          64,
+          64,
+          3
+        ],
+        "output_shape": [
+          1,
+          64,
+          64,
+          1
+        ],
+        "output_layout": "nhwc",
+        "cpu_shape_patches": [
+          {
+            "offset": 2944,
+            "size": 4,
+            "expected": 64,
+            "dimension": 2,
+            "divisor": 1
+          },
+          {
+            "offset": 2948,
+            "size": 4,
+            "expected": 64,
+            "dimension": 3,
+            "divisor": 1
+          },
+          {
+            "offset": 7120,
+            "size": 4,
+            "expected": 32,
+            "dimension": 2,
+            "divisor": 2
+          },
+          {
+            "offset": 7124,
+            "size": 4,
+            "expected": 32,
+            "dimension": 3,
+            "divisor": 2
+          },
+          {
+            "offset": 44156,
+            "size": 4,
+            "expected": 16,
+            "dimension": 2,
+            "divisor": 4
+          },
+          {
+            "offset": 44160,
+            "size": 4,
+            "expected": 16,
+            "dimension": 3,
+            "divisor": 4
+          },
+          {
+            "offset": 44260,
+            "size": 4,
+            "expected": 16,
+            "dimension": 2,
+            "divisor": 4
+          },
+          {
+            "offset": 44264,
+            "size": 4,
+            "expected": 16,
+            "dimension": 3,
+            "divisor": 4
+          },
+          {
+            "offset": 44748,
+            "size": 4,
+            "expected": 16,
+            "dimension": 2,
+            "divisor": 4
+          },
+          {
+            "offset": 44752,
+            "size": 4,
+            "expected": 16,
+            "dimension": 3,
+            "divisor": 4
+          },
+          {
+            "offset": 69084,
+            "size": 4,
+            "expected": 16,
+            "dimension": 2,
+            "divisor": 4
+          },
+          {
+            "offset": 69088,
+            "size": 4,
+            "expected": 16,
+            "dimension": 3,
+            "divisor": 4
+          },
+          {
+            "offset": 80444,
+            "size": 4,
+            "expected": 8,
+            "dimension": 2,
+            "divisor": 8
+          },
+          {
+            "offset": 80448,
+            "size": 4,
+            "expected": 8,
+            "dimension": 3,
+            "divisor": 8
+          },
+          {
+            "offset": 91428,
+            "size": 4,
+            "expected": 4,
+            "dimension": 2,
+            "divisor": 16
+          },
+          {
+            "offset": 91432,
+            "size": 4,
+            "expected": 4,
+            "dimension": 3,
+            "divisor": 16
+          },
+          {
+            "offset": 1757616,
+            "size": 4,
+            "expected": 64,
+            "dimension": 2,
+            "divisor": 1,
+            "floor": false,
+            "add": 0
+          },
+          {
+            "offset": 1757620,
+            "size": 4,
+            "expected": 64,
+            "dimension": 3,
+            "divisor": 1,
+            "floor": false,
+            "add": 0
+          },
+          {
+            "offset": 1757656,
+            "size": 4,
+            "expected": 64,
+            "dimension": 2,
+            "divisor": 1,
+            "floor": false,
+            "add": 0
+          },
+          {
+            "offset": 1757660,
+            "size": 4,
+            "expected": 64,
+            "dimension": 3,
+            "divisor": 1,
+            "floor": false,
+            "add": 0
+          },
+          {
+            "offset": 1797904,
+            "size": 4,
+            "expected": 64,
+            "dimension": 2
+          },
+          {
+            "offset": 1797908,
+            "size": 4,
+            "expected": 64,
+            "dimension": 3
+          },
+          {
+            "offset": 1797932,
+            "size": 4,
+            "expected": 64,
+            "dimension": 2
+          },
+          {
+            "offset": 1797936,
+            "size": 4,
+            "expected": 64,
+            "dimension": 3
+          }
+        ],
+        "cpu_dynamic_max_abs_error": 1.3616674721106392e-07
+      },
+      "kind": "detector",
+      "npu_supported": false,
+      "source_weight_bundled": false
+    },
+    {
+      "asset": "models/ppocr-v6/PP-OCRv6_medium_rec.onnx",
+      "sha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            3,
+            48,
+            "DynamicDimension.1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fetch_name_0",
+          "type": "tensor(float)",
+          "shape": [
+            "DynamicDimension.0",
+            "Reshape_498_o0__d2",
+            18710
+          ]
+        }
+      ],
+      "custom_metadata_map": {},
+      "litert": {
+        "asset": "litert/PP-OCRv6_medium_rec.tflite",
+        "sha256": "515c793061e93bd08076a876525b062d26650cfe3f3b41623fe1cd73756cf07e",
+        "input_layout": "nhwc",
+        "input_shape": [
+          1,
+          48,
+          320,
+          3
+        ],
+        "output_shape": [
+          1,
+          40,
+          18710
+        ],
+        "output_layout": "native",
+        "cpu_shape_patches": [
+          {
+            "offset": 1468,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1596,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1688,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1732,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1780,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1828,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1876,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1924,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 1972,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2708,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 2876,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 3236,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 3576,
+            "size": 4,
+            "expected": 40,
+            "value": -1
+          },
+          {
+            "offset": 76474075,
+            "size": 1,
+            "expected": 0,
+            "value": 1
+          },
+          {
+            "offset": 76494988,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 76495016,
+            "size": 4,
+            "expected": 40,
+            "dimension": 3,
+            "divisor": 8,
+            "floor": true,
+            "add": 3
+          },
+          {
+            "offset": 76535852,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          },
+          {
+            "offset": 76535880,
+            "size": 4,
+            "expected": 320,
+            "dimension": 3
+          }
+        ],
+        "cpu_dynamic_max_abs_error": 8.600950241088867e-05,
+        "output_postprocess": "softmax"
+      },
+      "kind": "recognition",
+      "npu_supported": false,
+      "source_weight_bundled": false
+    }
+  ]
+}

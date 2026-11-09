@@ -1,0 +1,43 @@
+name: Sync to CNB
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - azurpilot-android-latest
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-cnb-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'wess09/AzurPilot-for-Android'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to CNB Repository
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          # 移除 origin/HEAD 符号引用，避免推送出多余的 refs/heads/HEAD
+          git remote set-head origin -d 2>/dev/null || true
+
+          # 添加配置了凭证的 CNB 远程镜像源
+          git remote add cnb "https://cnb:${CNB_TOKEN}@cnb.cool/azurpilot/AzurPilot-for-Android.git"
+
+          # 分支与 GitHub 同步；发布 tag 由产物上传步骤推进，避免同步旧 tag 覆盖新发布。
+          git push -f --prune cnb 'refs/remotes/origin/*:refs/heads/*'

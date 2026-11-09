@@ -1,0 +1,39 @@
+# rootfs 在原生架构的构建容器内用 PRoot 构建，不依赖内核挂载或指令模拟。
+#
+# Builds rootfs with PRoot in the native build container, without kernel mounts or emulation.
+# uv 从 GitHub Releases 直接安装：CNB 构建机无法通过 TLS 校验 ghcr.io 的令牌端点，
+# 拉取 ghcr.io/astral-sh/uv 会因 x509 证书不受信而失败。
+# uv is installed from GitHub Releases: CNB runners cannot verify ghcr.io's token
+# endpoint over TLS, so pulling ghcr.io/astral-sh/uv fails with an untrusted x509 chain.
+FROM node:24-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git python3 xz-utils binutils util-linux gcc \
+      libc6-dev make pkg-config libtalloc-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && case "$(dpkg --print-architecture)" in \
+         arm64) UV_ARCH=aarch64 ;; \
+         amd64) UV_ARCH=x86_64 ;; \
+         *) echo "Unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+       esac \
+    && curl -fL --retry 3 \
+      "https://github.com/astral-sh/uv/releases/latest/download/uv-${UV_ARCH}-unknown-linux-gnu.tar.gz" \
+      -o /tmp/uv.tar.gz \
+    && tar -xzf /tmp/uv.tar.gz -C /tmp \
+    && install -m 0755 "/tmp/uv-${UV_ARCH}-unknown-linux-gnu/uv" /usr/local/bin/uv \
+    && install -m 0755 "/tmp/uv-${UV_ARCH}-unknown-linux-gnu/uvx" /usr/local/bin/uvx \
+    && rm -rf /tmp/uv.tar.gz "/tmp/uv-${UV_ARCH}-unknown-linux-gnu" \
+    && uv --version
+COPY .cnb/patches/proot-faccessat2.patch /tmp/proot-faccessat2.patch
+# 固定支持 clone3 的版本，并让旧容器策略下的 glibc 使用权限检查回退。
+RUN git init -q /tmp/proot \
+    && git -C /tmp/proot remote add origin https://github.com/proot-me/proot.git \
+    && git -C /tmp/proot fetch --depth 1 origin d4b49e2243dee34e41c13dfeca6a3d07e9cf0f00 \
+    && git -C /tmp/proot checkout -q --detach FETCH_HEAD \
+    && git -C /tmp/proot submodule update --init --depth 1 \
+    && git -C /tmp/proot apply /tmp/proot-faccessat2.patch \
+    && make -C /tmp/proot/src -j"$(nproc)" \
+    && install -m 0755 /tmp/proot/src/proot /usr/local/bin/proot \
+    && rm -rf /tmp/proot /tmp/proot-faccessat2.patch \
+    && proot --version
+WORKDIR /workspace
+RUN git config --global --add safe.directory /workspace

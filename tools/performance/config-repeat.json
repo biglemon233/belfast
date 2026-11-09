@@ -1,0 +1,272 @@
+[
+  {
+    "prepare": [
+      [
+        "expect",
+        "配置"
+      ]
+    ],
+    "name": "config_entry_1",
+    "actions": [
+      [
+        "text",
+        "配置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "system_task_entry_1",
+    "actions": [
+      [
+        "text",
+        "系统设置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "system_task_scroll_1",
+    "actions": [
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ],
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ],
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "config_return_1",
+    "actions": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "config_entry_2",
+    "actions": [
+      [
+        "text",
+        "配置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "system_task_entry_2",
+    "actions": [
+      [
+        "text",
+        "系统设置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "system_task_scroll_2",
+    "actions": [
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ],
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ],
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "config_return_2",
+    "actions": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "config_entry_3",
+    "actions": [
+      [
+        "text",
+        "配置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "system_task_entry_3",
+    "actions": [
+      [
+        "text",
+        "系统设置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "system_task_scroll_3",
+    "actions": [
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ],
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ],
+      [
+        "swipe",
+        550,
+        1900,
+        550,
+        500,
+        400
+      ],
+      [
+        "wait",
+        0.5
+      ]
+    ]
+  },
+  {
+    "prepare": null,
+    "name": "config_return_3",
+    "actions": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ]
+  }
+]

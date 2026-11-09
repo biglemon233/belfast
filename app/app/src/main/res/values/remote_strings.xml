@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="remote_pair_camera_permission">请允许使用相机，或返回使用六位配对码。</string>
+    <string name="remote_pair_current">当前连接：%1$s</string>
+    <string name="remote_pair_local">返回本机 AzurPilot</string>
+    <string name="remote_pair_auth_failed">配对授权已失效，请返回设置重新配对。</string>
+    <string name="remote_pair_try_tunnel">试用 Quick Tunnel（重启生效）</string>
+    <string name="remote_pair_title">连接远程 AzurPilot</string>
+    <string name="remote_client_hint">扫描或输入配对码，即可使用远程 AzurPilot。无需安装、启动本机 Runtime 或授权 Shizuku。</string>
+    <string name="remote_pair_hint">在 AzurPilot 的「远程访问」页点击配对，即可获取二维码和六位配对码。</string>
+    <string name="remote_pair_code_alternative">或使用配对码</string>
+    <string name="remote_pair_saved_devices">已绑定设备</string>
+    <string name="remote_pair_device">AzurPilot 设备</string>
+    <string name="remote_pair_connected">已连接</string>
+    <string name="remote_pair_selected">当前设备，等待连接</string>
+    <string name="remote_pair_tap_connect">点击连接</string>
+    <string name="remote_pair_remove_device">移除 %1$s</string>
+    <string name="remote_pair_scan">扫描二维码</string>
+    <string name="remote_pair_scan_hint">对准 AzurPilot 的配对二维码，即可自动扫描</string>
+    <string name="remote_pair_scan_detected">已识别二维码</string>
+    <string name="remote_pair_torch_on">打开补光灯</string>
+    <string name="remote_pair_torch_off">关闭补光灯</string>
+    <string name="remote_pair_camera_allow">允许使用相机</string>
+    <string name="remote_pair_camera_failed">无法打开相机，请返回重试，或使用六位配对码。</string>
+    <string name="remote_pair_code">六位配对码</string>
+    <string name="remote_pair_connect">绑定并连接</string>
+    <string name="remote_pair_busy">正在绑定…</string>
+    <string name="remote_pair_failed">配对失败，请检查网络和配对码后重试。</string>
+    <string name="remote_pair_code_unavailable">配对码无效、已领取或已过期。请在 AzurPilot 重新生成，再输入新码。</string>
+    <string name="remote_pair_device_offline">AzurPilot 暂时离线。请等 AzurPilot 的远程访问就绪后，使用当前配对码重试。</string>
+    <string name="remote_pair_rate_limited">配对尝试过于频繁，请一分钟后重试。</string>
+    <string name="remote_pair_api_mismatch">配对服务接口不存在（HTTP 404），请更新 AzurPilot 和 AFA 后重试。</string>
+    <string name="remote_pair_open_failed">远程 AzurPilot 暂时离线，请稍后重新打开。</string>
+    <string name="remote_pair_remove">移除</string>
+</resources>

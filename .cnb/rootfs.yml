@@ -1,0 +1,3 @@
+# 停用 CNB 双架构构建入口，避免分发流程再次拉起原生编译。
+# Disable CNB native runtime builds; releases are mirrored from GitHub.
+{}

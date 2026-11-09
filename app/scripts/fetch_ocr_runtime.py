@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""准备与 LiteRT 同版的厂商 JIT 库，按哈希校验并仅提取白名单文件。
+
+构建产物写入被忽略的 .tmp/ocr-runtime；不运行下载包内的脚本。APK 内同时带上
+来源清单和 SDK 许可文本。升级 LiteRT 时须重新核对插件、QNN 和 NeuroPilot 的版本。
+
+Prepares matching LiteRT vendor JIT libraries using hashes and allowlisted extraction.
+Writes ignored .tmp/ocr-runtime outputs without executing downloaded scripts. APKs include
+source manifests and SDK license texts. Recheck all vendor versions when upgrading LiteRT.
+"""
+
+import hashlib
+import json
+import shutil
+import tarfile
+import urllib.request
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUTPUT = ROOT / ".tmp/ocr-runtime"
+VERSION = "2.1.0rc1"
+SOURCES = {
+    "litert-jit.zip": (
+        f"https://github.com/google-ai-edge/LiteRT/releases/download/v{VERSION}/litert_npu_runtime_libraries_jit.zip",
+        "7c1cf0e466daccebb884e2b7dc626ac263103adb7f2a51912d7b1f69d4012615",
+    ),
+    "qnn-runtime.aar": (
+        "https://repo.maven.apache.org/maven2/com/qualcomm/qti/qnn-runtime/2.40.0/qnn-runtime-2.40.0.aar",
+        "a39572b77013f2c58657d05f08cad36ab256cc44402df746de5850b3b6d94397",
+    ),
+    "neuropilot.tar.gz": (
+        "https://s3.ap-southeast-1.amazonaws.com/mediatek.neuropilot.com/66f2c33a-2005-4f0b-afef-2053c8654e4f.gz",
+        "f69434d45856964627c750e716b835988a1f07511b6196d7f070fdde26027994",
+    ),
+}
+
+
+def digest(path):
+    """计算文件哈希。 / Computes a file hash."""
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def download(name, url, expected):
+    """下载完整文件并校验，失败不留下可用缓存。 / Downloads and verifies complete files."""
+    cache = OUTPUT / "downloads"
+    cache.mkdir(parents=True, exist_ok=True)
+    target = cache / name
+    if target.is_file() and digest(target) == expected:
+        return target
+    temporary = target.with_suffix(".partial")
+    print(f"Downloading {name}", flush=True)
+    with urllib.request.urlopen(url, timeout=120) as response, temporary.open("wb") as out:
+        shutil.copyfileobj(response, out)
+    if digest(temporary) != expected:
+        temporary.unlink()
+        raise ValueError(f"Checksum mismatch: {name}")
+    temporary.replace(target)
+    return target
+
+
+def main():
+    """生成库目录和许可清单。 / Generates library directories and license manifests."""
+    archives = {name: download(name, *source) for name, source in SOURCES.items()}
+    libraries = OUTPUT / "jni/arm64-v8a"
+    notices = OUTPUT / "assets/ocr/licenses"
+    libraries.mkdir(parents=True, exist_ok=True)
+    notices.mkdir(parents=True, exist_ok=True)
+    bundled = {}
+
+    def write(name, data):
+        destination = libraries / name
+        destination.write_bytes(data)
+        bundled[name] = hashlib.sha256(data).hexdigest()
+
+    with zipfile.ZipFile(archives["litert-jit.zip"]) as archive:
+        for vendor, folder in [("Qualcomm", "qualcomm_runtime_v69"), ("MediaTek", "mediatek_runtime")]:
+            for kind in ["CompilerPlugin", "Dispatch"]:
+                name = f"libLiteRt{kind}_{vendor}.so"
+                installed_name = "libLiteRtDispatch_MediaTek_Vendor.so" if vendor == "MediaTek" and kind == "Dispatch" else name
+                write(installed_name, archive.read(f"{folder}/src/main/jni/arm64-v8a/{name}"))
+
+    with zipfile.ZipFile(archives["qnn-runtime.aar"]) as archive:
+        names = ["libQnnHtp.so", "libQnnHtpPrepare.so", "libQnnSystem.so"]
+        names += [f"libQnnHtpV{version}{kind}.so"
+                  for version in [68, 69, 73, 75, 79, 81] for kind in ["Skel", "Stub"]]
+        for name in names:
+            write(name, archive.read(f"jni/arm64-v8a/{name}"))
+        for name in archive.namelist():
+            if not name.endswith("/") and any(key in name.lower() for key in ["license", "notice"]):
+                (notices / f"qnn-{Path(name).name}").write_bytes(archive.read(name))
+
+    with tarfile.open(archives["neuropilot.tar.gz"]) as archive:
+        for name, member in {
+            "libneuronusdk_adapter.mtk.so": "neuro_pilot/v8_0_10/usdk/lib64/libneuronusdk_adapter.mtk.so",
+            "libneuronusdk_adapter.9.mtk.so": "neuro_pilot/v9_0_3/usdk/lib64/libneuronusdk_adapter.so",
+        }.items():
+            with archive.extractfile(member) as stream:
+                write(name, stream.read())
+        with archive.extractfile("neuro_pilot/LICENSE AGREEMENT.pdf") as stream:
+            (notices / "neuropilot-license.pdf").write_bytes(stream.read())
+
+    from prepare_hiai_runtime import HIAI_LIBRARIES, prepare
+    # HiAI 由独立来源准备；清理 LiteRT 旧版库时保留它的白名单。
+    for path in libraries.iterdir():
+        if path.name not in bundled and path.name not in HIAI_LIBRARIES:
+            path.unlink()
+    manifest = {
+        "litert": VERSION, "qnn": "2.40.0", "neuropilot": ["8.0.10", "9.0.3"],
+        "sources": {name: {"url": url, "sha256": checksum}
+                    for name, (url, checksum) in SOURCES.items()},
+        "libraries": bundled,
+    }
+    (OUTPUT / "assets/ocr/runtime.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"Prepared {len(bundled)} matching arm64 NPU libraries", flush=True)
+    prepare()
+
+
+if __name__ == "__main__":
+    main()

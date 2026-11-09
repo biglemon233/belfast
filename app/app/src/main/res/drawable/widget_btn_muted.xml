@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 忙碌态按钮：内侧底色 19dp 胶囊（禁用观感） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_inner_background" />
+    <corners android:radius="19dp" />
+</shape>

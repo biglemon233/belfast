@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="remote_pair_camera_permission">カメラを許可するか、戻って6桁のコードを使ってください。</string>
+    <string name="remote_pair_current">接続先：%1$s</string>
+    <string name="remote_pair_local">ローカル AzurPilot に戻る</string>
+    <string name="remote_pair_auth_failed">認証が無効です。設定からペアリングし直してください。</string>
+    <string name="remote_pair_try_tunnel">Quick Tunnel を試す（再起動が必要）</string>
+    <string name="remote_pair_title">リモート AzurPilot に接続</string>
+    <string name="remote_client_hint">スキャンまたはペアリングコードでリモート AzurPilot に接続できます。端末内の Runtime のインストール・起動や Shizuku の権限は不要です。</string>
+    <string name="remote_pair_hint">AzurPilot のリモートアクセスページでペアリングを選ぶと、QR コードと 6 桁のコードを取得できます。</string>
+    <string name="remote_pair_code_alternative">またはコードを使用</string>
+    <string name="remote_pair_saved_devices">連携済みの端末</string>
+    <string name="remote_pair_device">AzurPilot 端末</string>
+    <string name="remote_pair_connected">接続済み</string>
+    <string name="remote_pair_selected">選択中、接続を待っています</string>
+    <string name="remote_pair_tap_connect">タップして接続</string>
+    <string name="remote_pair_remove_device">%1$s を削除</string>
+    <string name="remote_pair_scan">QR コードをスキャン</string>
+    <string name="remote_pair_scan_hint">AzurPilot のペアリング QR コードに向けると自動で読み取ります</string>
+    <string name="remote_pair_scan_detected">QR コードを認識しました</string>
+    <string name="remote_pair_torch_on">ライトをオン</string>
+    <string name="remote_pair_torch_off">ライトをオフ</string>
+    <string name="remote_pair_camera_allow">カメラを許可</string>
+    <string name="remote_pair_camera_failed">カメラを開けません。戻って再試行するか、6 桁のペアリングコードを使用してください。</string>
+    <string name="remote_pair_code">6桁のペアリングコード</string>
+    <string name="remote_pair_connect">連携して接続</string>
+    <string name="remote_pair_busy">連携中…</string>
+    <string name="remote_pair_failed">ペアリングできません。ネットワークとコードを確認してください。</string>
+    <string name="remote_pair_code_unavailable">コードが無効、使用済み、または期限切れです。AzurPilot で新しいコードを生成してください。</string>
+    <string name="remote_pair_device_offline">AzurPilot がオフラインです。リモートアクセスが利用可能になってから同じコードで再試行してください。</string>
+    <string name="remote_pair_rate_limited">試行回数が多すぎます。1分後に再試行してください。</string>
+    <string name="remote_pair_api_mismatch">ペアリング API がありません（HTTP 404）。AzurPilot と AFA を更新してください。</string>
+    <string name="remote_pair_open_failed">リモート AzurPilot はオフラインです。後でもう一度開いてください。</string>
+    <string name="remote_pair_remove">削除</string>
+</resources>

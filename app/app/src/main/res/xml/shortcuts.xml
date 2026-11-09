@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  桌面静态快捷方式：长按应用图标时由桌面读取，按声明顺序展示
+  intent 不写 targetPackage/targetClass，靠 MainActivity 的隐式 action intent-filter
+  解析（applicationId 会被构建 profile 加后缀，写死包名会指错目标），
+  目的地经 extra 传给 MainActivity，见 ui/shortcut/Shortcuts.kt
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 一键启停：复用小组件的启停广播链，MainActivity 收到后直接分发 -->
+    <shortcut
+        android:shortcutId="toggle_runner"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_toggle"
+        android:shortcutShortLabel="@string/shortcut_toggle_short"
+        android:shortcutLongLabel="@string/shortcut_toggle_long">
+        <intent android:action="com.azurpilot.ghio.action.SHORTCUT">
+            <extra
+                android:name="com.azurpilot.ghio.extra.SHORTCUT_ID"
+                android:value="toggle_runner" />
+        </intent>
+    </shortcut>
+
+    <!-- 虚拟屏：切到虚拟屏主 tab -->
+    <shortcut
+        android:shortcutId="screen"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_screen"
+        android:shortcutShortLabel="@string/shortcut_screen_short"
+        android:shortcutLongLabel="@string/shortcut_screen_long">
+        <intent android:action="com.azurpilot.ghio.action.SHORTCUT">
+            <extra
+                android:name="com.azurpilot.ghio.extra.SHORTCUT_ID"
+                android:value="screen" />
+        </intent>
+    </shortcut>
+
+    <!-- 运行日志：打开 AzurPilot 日志二级页 -->
+    <shortcut
+        android:shortcutId="runner_log"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_log"
+        android:shortcutShortLabel="@string/shortcut_log_short"
+        android:shortcutLongLabel="@string/shortcut_log_long">
+        <intent android:action="com.azurpilot.ghio.action.SHORTCUT">
+            <extra
+                android:name="com.azurpilot.ghio.extra.SHORTCUT_ID"
+                android:value="runner_log" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

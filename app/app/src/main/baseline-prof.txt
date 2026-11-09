@@ -1,0 +1,24 @@
+# 入口与常用页面由 ADB 场景覆盖；提前编译首次布局路径，降低 JIT 对 120 Hz 帧预算的影响。
+# Entry and common pages are covered by ADB journeys; precompile initial layout paths for 120 Hz.
+HSPLcom/azurpilot/ghio/MainActivity;->**(**)**
+HSPLcom/azurpilot/ghio/ui/AppRootKt**;->**(**)**
+HSPLcom/azurpilot/ghio/ui/AppNavigationScaffoldKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/motion/**;->**(**)**
+HPLcom/azurpilot/ghio/ui/hangar/HangarScreenKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/AzurPilotPageKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/sections/ConfigSectionKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/sections/FieldEditorsKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/sections/OverviewSectionKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/sections/StatisticsSectionKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/sections/LogsSectionKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/azurpilot/sections/settings/DeploySettingsPageKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/settings/SettingsScreenKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/settings/LicensePagesKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/components/AppComponentsKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/ksu/AppLazySettingsGroupKt**;->**(**)**
+HPLcom/azurpilot/ghio/ui/ksu/AppPageScaffoldKt**;->**(**)**
+# 本地移植的 Miuix 模块没有上游 AAR 的 profile；只覆盖导航与基础偏好控件。
+# Local Miuix sources lack upstream AAR profiles; cover navigation and basic preferences only.
+HPLtop/yukonga/miuix/kmp/nav/**;->**(**)**
+HPLtop/yukonga/miuix/kmp/basic/**;->**(**)**
+HPLtop/yukonga/miuix/kmp/preference/**;->**(**)**

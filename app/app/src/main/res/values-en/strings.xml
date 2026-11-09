@@ -1,0 +1,993 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">AzurPilot</string>
+
+    <!-- Common -->
+    <string name="common_close">Close</string>
+    <string name="common_back">Back</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_loading">Loading…</string>
+    <string name="dialog_confirm">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <!-- Tasks screen -->
+
+    <!-- Runner toggle -->
+
+    <!-- Configuration sheet -->
+
+    <!-- Add tasks sheet -->
+
+    <!-- Home screen -->
+
+    <!-- Settings screen -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_cat_display">Display &amp; language</string>
+    <string name="settings_cat_display_desc">Theme and language</string>
+    <string name="settings_cat_screen">Virtual display</string>
+    <string name="settings_cat_screen_desc">Virtual display refresh rate</string>
+    <string name="settings_cat_logs">Logs</string>
+    <string name="settings_cat_logs_desc">View and export run logs</string>
+    <string name="settings_cat_keep_alive">Keep-Alive</string>
+    <string name="settings_cat_keep_alive_desc">Anti-kill strategies and status</string>
+    <string name="settings_cat_advanced">Runtime &amp; security</string>
+    <string name="settings_cat_advanced_desc">Privileged backend and lock protection</string>
+    <string name="settings_cat_widget">Widgets</string>
+    <string name="settings_cat_widget_desc">Add widgets to the home screen</string>
+    <string name="settings_cat_runtime">Runtime</string>
+    <string name="settings_cat_runtime_desc">Version and download mirror</string>
+    <string name="settings_cat_about">About</string>
+    <string name="settings_cat_about_desc">Version, licenses and components</string>
+    <string name="settings_follow_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_hint">Switching language reloads the project; unavailable while running</string>
+    <string name="settings_about_description">AzurPilot for Android brings AzurPilot to Android, with run controls, a virtual display preview, a native in-app interface, and logs. It supports arm64-v8a and x86_64 devices; the app and Runtime update separately, with multi-mirror multi-threaded Runtime downloads.</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_build">Build</string>
+    <string name="settings_project">Project</string>
+    <string name="settings_about_license">License</string>
+    <string name="settings_about_repository">Repository</string>
+    <string name="settings_about_source_project">Source Project</string>
+    <string name="settings_about_components_summary">%1$d open-source components; tap to view all and full texts</string>
+    <string name="settings_open_source_licenses">Open-source components and licenses</string>
+    <string name="settings_license_search_placeholder">Search components, groups, or licenses…</string>
+    <string name="settings_license_filter_all">All</string>
+    <string name="settings_license_filter_core">Core &amp; Bundled</string>
+    <string name="settings_license_filter_libs">Libraries</string>
+    <string name="settings_license_view_source">Visit project homepage</string>
+    <string name="settings_license_text_title">Full license text</string>
+    <string name="settings_license_copied">License text copied to clipboard</string>
+    <string name="settings_license_component_not_found">Open-source component not found</string>
+    <string name="settings_license_spdx">License</string>
+    <string name="settings_feedback_bug">Report a Bug</string>
+    <string name="settings_feedback_bug_desc">Open GitHub to file an issue or browse known ones</string>
+    <string name="settings_feedback_group">Join the Feedback Group</string>
+    <string name="settings_feedback_group_desc">Join the QQ group to share questions and suggestions</string>
+    <string name="compat_notice_title">Add your device to the list</string>
+    <string name="compat_notice_message">Whether the app runs well differs a lot between devices. Please add one entry — brand, model, system version, working or not — to the device support list on GitHub. Your single record saves others a lot of trial and error.</string>
+    <string name="compat_notice_dont_ask_again">Don\'t show again</string>
+    <string name="compat_notice_go">Open the list</string>
+    <string name="compat_notice_later">Not now</string>
+    <string name="community_warning_title">Warning</string>
+    <string name="community_warning_message">Do NOT report issues or ask questions in the upstream AzurPilot repository (wess09/AzurPilot) or in non-AzurPilot for Android QQ groups (including upstream AzurPilot QQ groups).\n\nViolators will be permanently removed from related groups and blocked on GitHub.</string>
+    <string name="community_warning_confirm_read">I have read and understood</string>
+    <string name="community_warning_continue">Continue</string>
+    <string name="settings_hot_update">Hot update</string>
+    <string name="settings_hot_update_desc">Updates source and web assets only, never reinstalls the runtime; running tasks stop first and resume afterwards.</string>
+    <string name="settings_hot_update_check">Check for updates</string>
+    <string name="settings_hot_update_apply">Update now</string>
+    <string name="settings_hot_update_latest">Up to date</string>
+    <string name="settings_hot_update_available">New version %1$s available</string>
+    <string name="settings_hot_update_wait_build">Assets for the new version are not ready yet, try again later</string>
+    <string name="settings_hot_update_updating">Updating: %1$s</string>
+    <string name="settings_hot_update_failed">Last update failed: %1$s</string>
+    <string name="settings_hot_update_disabled">Download source not ready; takes effect after the runtime restarts</string>
+    <string name="settings_hot_update_unreachable">Runtime not connected or outdated; incremental update unavailable — install the full Runtime update first</string>
+    <string name="settings_hot_update_phase_git">Fetching source</string>
+    <string name="settings_hot_update_phase_dist">Preparing web assets</string>
+    <string name="settings_hot_update_phase_manifest">Writing version info</string>
+    <string name="settings_hot_update_phase_reload">Restarting runtime</string>
+    <string name="settings_auto_update_hour">Auto update time</string>
+    <string name="settings_auto_update_hour_desc">Automatically check and apply updates daily at this hour without interrupting running tasks</string>
+    <string name="settings_auto_update_hour_format">Daily at %1$02d:00</string>
+    <string name="settings_auto_update_hour_dialog_title">Select daily auto-update hour</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_run">AzurPilot Runtime guard</string>
+    <string name="notification_channel_run_desc">Guards the virtual display and bridge so the system does not reclaim the process</string>
+    <string name="notification_host_title">Guarding AzurPilot Runtime</string>
+    <string name="notification_host_content_ok">Virtual display #%1$d · bridge OK</string>
+    <string name="notification_host_content_degraded">Virtual display #%1$d · bridge unreachable</string>
+    <string name="notification_host_content_proot">Built-in AzurPilot Runtime running (no virtual display)</string>
+
+    <!-- Floating control layer -->
+    <string name="accessibility_service_description">Press volume up and down together to open the control panel in primary-display mode. Only key events are filtered; screen content is never read.</string>
+    <string name="overlay_panel_title">Control panel</string>
+    <string name="overlay_back_to_app">Back to app</string>
+    <string name="overlay_lock">Lock position</string>
+    <string name="overlay_unlock">Unlock position</string>
+    <string name="overlay_ball_idle">Idle</string>
+    <string name="overlay_ball_running">Running</string>
+    <string name="overlay_host_start">Start Runtime</string>
+    <string name="overlay_host_stop">Stop Runtime</string>
+    <string name="overlay_host_privileged">Privileged process: %1$s</string>
+    <string name="overlay_host_bridge">Bridge: %1$s</string>
+    <string name="overlay_host_display">Virtual display: %1$s</string>
+    <string name="overlay_azurpilot_status">AzurPilot scheduler: %1$s</string>
+    <string name="overlay_azurpilot_running">Running · pid %1$d</string>
+    <string name="overlay_azurpilot_stopped">Stopped</string>
+    <string name="overlay_azurpilot_unreachable">Runtime not ready</string>
+    <string name="overlay_azurpilot_preparing">Preparing Runtime · %1$s</string>
+    <string name="overlay_azurpilot_preparing_generic">Preparing Runtime…</string>
+    <string name="overlay_azurpilot_start_failed">Start failed: %1$s</string>
+    <string name="overlay_azurpilot_start">Start</string>
+    <string name="overlay_azurpilot_stop">Stop</string>
+    <string name="overlay_azurpilot_log_empty">No logs yet</string>
+    <string name="overlay_azurpilot_hint">Frequent actions live here; full configuration is in the in-app AzurPilot console</string>
+    <string name="host_state_connected">connected</string>
+    <string name="host_state_disconnected">disconnected</string>
+    <string name="host_state_ok">OK</string>
+    <string name="host_state_unreachable">unreachable</string>
+    <string name="host_state_display_none">not created</string>
+
+    <!-- Screen saver -->
+    <string name="screensaver_idle">Waiting for tasks</string>
+    <string name="screensaver_swipe_to_unlock">Slide all the way to unlock</string>
+    <string name="screensaver_title">Screen-off mode</string>
+    <string name="screensaver_auto">Enter automatically when a run starts</string>
+    <string name="screensaver_brightness">Screen-off brightness: %1$d%%</string>
+    <string name="screensaver_description">Screen-off mode uses a black screen at adjustable brightness to prevent accidental touches and hide navigation. Time and task status shift slightly every 30 idle seconds, pausing on touch. Drag the slider to unlock.</string>
+    <string name="screensaver_running">Running</string>
+    <string name="screensaver_connecting">Connecting to runtime</string>
+    <string name="screensaver_battery">%1$d%%</string>
+    <string name="screensaver_charging">Charging</string>
+    <string name="screensaver_show_failed">Unable to enable screen-off mode. Check the overlay permission.</string>
+
+    <!-- Schedules -->
+
+
+
+
+
+    <!-- Navigation & dialogs -->
+    <string name="nav_azurpilot">AzurPilot</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- AzurPilot tab: WebUI container -->
+    <string name="proot_phase_preparing">Preparing Runtime…</string>
+    <string name="proot_phase_updating">Hot-updating AzurPilot…</string>
+    <string name="proot_phase_starting">Starting AzurPilot service…</string>
+    <string name="proot_phase_failed">Failed to start AzurPilot Runtime: %1$s</string>
+
+    <!-- Home tab: run config + control panel + run log -->
+    <string name="nav_hangar">Home</string>
+    <string name="nav_screen">Screen</string>
+    <string name="screen_waiting">Connecting to the display…</string>
+    <string name="screen_hint">Tap or swipe on the picture to drive the virtual display</string>
+    <string name="screen_idle_title">Virtual display ready</string>
+    <string name="screen_idle_message">The picture shows up here once a run or a tool starts</string>
+    <string name="hangar_config_label">Run config</string>
+    <string name="hangar_start">Start</string>
+    <string name="hangar_stop">Stop</string>
+    <string name="hangar_status_ready">Runner Standby</string>
+    <string name="hangar_status_running">Runner Active</string>
+    <string name="hangar_tasks_standby">%1$d scheduled tasks ready · Tap to start</string>
+    <string name="hangar_tasks_running">%1$d tasks in queue · Running</string>
+    <string name="hangar_gateway_idle">Queue ready</string>
+    <string name="hangar_gateway_waiting">Waiting for runtime gateway</string>
+    <string name="hangar_task_running">Running: %1$s</string>
+    <string name="hangar_env_privileged">Privileged: %1$s</string>
+    <string name="hangar_env_bridge">Bridge: %1$s</string>
+    <string name="hangar_env_display">Display: %1$s</string>
+    <string name="hangar_env_gateway">Gateway: %1$s</string>
+    <string name="tool_label">Tools</string>
+    <string name="tool_semi_auto">Semi-Auto Click</string>
+    <string name="tool_event_story">Event Story</string>
+    <string name="tool_stop">Stop</string>
+
+    <!-- Option editor -->
+
+    <!-- Localized text for structured domain/VM semantics (ui/i18n/DomainStrings) -->
+
+    <!-- Runner reject/failure reasons: reason is now UiText, no longer interpolated as %s -->
+
+    <!-- Server switching & run options -->
+
+    <!-- Privileged access (home permission card + Shizuku guidance) -->
+    <string name="permission_section">Permissions</string>
+    <string name="permission_backend">Startup mode</string>
+    <string name="permission_request">Request</string>
+    <string name="permission_requesting">Requesting…</string>
+
+    <!-- Service status line -->
+    <string name="dialog_shizuku_not_installed_title">shizuku-m Not Detected</string>
+    <string name="dialog_shizuku_not_installed_message">This app relies on the privileged service provided by shizuku-m (a modified Shizuku), which was not detected on this device. Tap below to open the download page and install it, then come back — the app re-checks automatically.</string>
+    <string name="dialog_shizuku_download_confirm">Download shizuku-m</string>
+    <string name="dialog_shizuku_switch_to_root">Switch to Root</string>
+    <string name="dialog_shizuku_skip_check">Skip check (not recommended)</string>
+    <string name="dialog_shizuku_not_running_title">Shizuku Not Running</string>
+    <string name="dialog_shizuku_not_running_message">Shizuku is installed but the service is not running. It must be reactivated after every device reboot: open shizuku-m and tap Start (no WLAN or computer needed), then return to this app and it will continue automatically.</string>
+    <string name="dialog_shizuku_open_app">Open Shizuku</string>
+    <string name="dialog_sui_detected_title">Sui Detected</string>
+    <string name="dialog_sui_detected_message">Sui is providing the Shizuku service with root privileges. This app may not work correctly; please verify by actual testing.</string>
+    <string name="dialog_shizuku_need_auth_title">Shizuku Not Authorized</string>
+    <string name="dialog_shizuku_need_auth_message">Shizuku is running but has not authorized this app yet. Please grant access. This prompt keeps showing until access is granted.</string>
+    <string name="dialog_shizuku_official_conflict_title">Official Shizuku Detected</string>
+    <string name="dialog_shizuku_official_conflict_message">This app works with shizuku-m, a modified Shizuku that reconnects offline after every reboot without WLAN or a computer. It shares the official package name but uses a different signature, so it cannot be installed over the official build — uninstall the official Shizuku first, then install shizuku-m as prompted. Uninstalling it does not affect this app data.</string>
+    <string name="dialog_shizuku_uninstall_confirm">Uninstall official build</string>
+    <string name="common_got_it">Got it</string>
+
+
+    <!-- Run history: one file per run -->
+
+    <!-- Launcher logs: the whole log/ directory (app.log rolling files by AppLogWriter, session.log, crash) -->
+    <string name="app_log_title">Launcher logs</string>
+    <string name="app_log_empty">No launcher logs yet</string>
+    <string name="app_log_clear">Clear all</string>
+    <!-- size · last written -->
+    <string name="app_log_meta">%1$s · %2$s</string>
+    <string name="app_log_clear_title">Clear launcher logs</string>
+    <string name="app_log_clear_message">Deletes only the app.log rolling files; session.log and crash records are kept. This cannot be undone.</string>
+
+    <!-- AzurPilot logs (rootfs/opt/azurpilot/log): error captures + daily logs -->
+    <string name="azurpilot_log_title">AzurPilot logs</string>
+    <string name="azurpilot_log_empty">No AzurPilot logs yet</string>
+    <string name="azurpilot_log_section_errors">Error records</string>
+    <string name="azurpilot_log_section_daily">Daily logs</string>
+    <string name="azurpilot_log_error_meta">%1$d files</string>
+
+    <!-- Log viewer (tail loading) -->
+    <string name="log_tail_load_earlier">Load earlier</string>
+    <string name="log_tail_empty">This log is empty</string>
+    <string name="log_tail_missing">The file no longer exists</string>
+
+    <!-- Export -->
+    <string name="log_export_azurpilot_title">Export AzurPilot logs</string>
+    <string name="log_export_launcher_title">Export launcher logs</string>
+    <string name="log_export_share">Share</string>
+    <string name="log_export_save">Save to device</string>
+    <string name="log_export_running">Packing…</string>
+    <string name="log_export_failed">Export failed: nothing to export</string>
+    <string name="log_export_saved">Saved as %1$s</string>
+    <string name="log_export_subject">AzurPilot for Android logs</string>
+
+    <!-- Settings "Logs" group entries -->
+    <string name="settings_log_launcher_desc">View launcher run logs and crash records</string>
+    <string name="settings_log_azurpilot_desc">View AzurPilot daily logs and error captures</string>
+    <string name="settings_log_export_azurpilot_desc">Pack the last 7 days of AzurPilot logs and error records</string>
+    <string name="settings_log_export_launcher_desc">Pack all launcher logs with device properties</string>
+    <string name="settings_auto_clean_logs">Auto-clean logs</string>
+    <string name="settings_auto_clean_logs_desc">On cold start, deletes AzurPilot logs older than 7 days and truncates stale session logs</string>
+    <string name="dialog_disable_auto_clean_title">Disable auto-clean</string>
+    <string name="dialog_disable_auto_clean_message">With auto-clean off, expired logs are never removed and may take up significant storage over time.</string>
+
+    <!-- Diagnostic texts; built by DiagnosticMessages in domain/Diagnostics.kt -->
+
+    <!-- PI unpacking -->
+
+
+    <!-- Foreground mode: primary display size and control panel -->
+    <string name="foreground_resolution_apply_failed">Could not change the resolution; this device may not allow it</string>
+    <string name="foreground_resolution_reset_failed">Could not reset the resolution; this device may not allow it</string>
+    <string name="foreground_resolution_too_small">The screen %1$s is too small to fit a 16:9 picture</string>
+
+    <!-- Settings "Notifications" group entry -->
+
+    <!-- Notification settings screen -->
+
+    <!-- Push channel names -->
+
+    <!-- Channel fields -->
+
+    <!-- Per-channel feedback for a test push -->
+
+    <!-- Run event notifications; channel names show up in the system notification settings -->
+
+    <!-- Push failure reasons, produced by each channel and shown in the test feedback -->
+    <!-- First-launch rootfs provisioning -->
+    <string name="provision_title">Setting up Runtime</string>
+    <string name="provision_subtitle">Local use requires about 1 GB of Runtime: the full APK unpacks it locally, and the slim APK uses your selected download source. Installation is needed only once.</string>
+    <string name="provision_back_home">Back to home</string>
+    <string name="home_runtime_title">Local Runtime is not installed</string>
+    <string name="home_runtime_description">Download Runtime to run locally. To connect to a remote AzurPilot, tap Bind at the top right. No download is needed.</string>
+    <string name="home_runtime_download">Download Runtime</string>
+    <string name="remote_pair_bind">Bind</string>
+    <string name="provision_checking">Checking Runtime…</string>
+    <string name="provision_extracting">Extracting %1$d%% (%2$d / %3$d MB)</string>
+    <string name="provision_downloading">Downloading Runtime %1$d%%…</string>
+    <string name="provision_low_disk">Not enough storage: only %1$d MB left, at least 2 GB required</string>
+    <string name="provision_not_bundled">No Runtime is available from this source. Try another source or use the full APK that matches your device architecture</string>
+    <string name="provision_failed">Setup failed: %1$s</string>
+    <string name="provision_retry">Retry</string>
+    <string name="provision_skip">Skip (debug only)</string>
+    <string name="provision_source">Download source</string>
+    <string name="provision_source_direct">Direct GitHub</string>
+    <string name="provision_source_cnb">CNB China (recommended)</string>
+    <string name="provision_source_custom">Custom</string>
+    <string name="provision_source_desc">Pick a built-in mirror or set a custom prefix in Settings; switching restarts the download right away</string>
+    <string name="app_update_title">AzurPilot for Android update</string>
+    <string name="app_update_message">App version %1$s is ready. Your app data and installed Runtime will be preserved.</string>
+    <string name="app_update_downloading">Downloading the APK…</string>
+    <string name="app_update_verifying">Verifying the APK…</string>
+    <string name="app_update_progress">%1$d%% · %2$s / %3$s</string>
+    <string name="app_update_error">Update failed: %1$s</string>
+    <string name="app_update_install">Download and install</string>
+    <string name="app_update_later">Later</string>
+    <string name="gateway_startup_auto">Auto-start on launch</string>
+    <string name="gateway_overview_empty">No scheduled tasks</string>
+    <string name="gateway_overview_next">Next: %1$s · %2$s (%3$d total)</string>
+    <string name="settings_runtime_commit">AzurPilot commit</string>
+    <string name="settings_runtime_unknown">Unknown</string>
+    <string name="settings_runtime_installed">Installed version</string>
+    <string name="settings_runtime_latest">Latest version</string>
+    <string name="runtime_update_title">Runtime update available</string>
+    <string name="runtime_update_message">Installed: %1$s\nLatest: %2$s\nDownload and update Runtime now?</string>
+    <string name="runtime_update_now">Update now</string>
+    <string name="settings_runtime_managed">The app checks GitHub Latest on launch and asks before downloading or updating Runtime. A manual check shows the available version; restart the app to choose an update.</string>
+    <string name="settings_github_mirror">Download source</string>
+    <string name="settings_github_mirror_desc">Used for App, Runtime, and frontend updates. CNB provides direct downloads in China. File size and SHA-256 are verified.</string>
+    <string name="settings_mirror_custom_save">Save</string>
+    <string name="settings_mirror_custom_hint">Custom mirror prefix, e.g. https://your-proxy.example.com/</string>
+    <string name="settings_runtime_check">Check Runtime update</string>
+    <string name="settings_runtime_checking">Checking Runtime…</string>
+    <string name="settings_runtime_current">AP is up to date; no Runtime update needed</string>
+    <string name="settings_runtime_commit_only">New source available via hot update</string>
+    <string name="settings_runtime_new_version">New version available; restart the app to choose an update</string>
+    <string name="settings_runtime_check_failed">Check failed: %1$s</string>
+    <string name="settings_app_check">Check for app update</string>
+    <string name="settings_lan_control">LAN control</string>
+    <string name="settings_lan_control_desc">When on, a computer on the same Wi-Fi can open the address below in a browser to control the automation. Restart the Runtime to apply; the access password is generated automatically.</string>
+    <string name="settings_lan_control_address">LAN address</string>
+    <string name="settings_lan_control_password">Access password</string>
+    <string name="settings_lan_control_password_hint">The access password is generated after a Runtime restart</string>
+    <string name="settings_runtime_restart">Restart Runtime</string>
+    <string name="settings_runtime_restart_desc">Restarts the runtime process; running tasks stop and do not resume automatically.</string>
+    <string name="settings_runtime_restart_title">Restart Runtime?</string>
+    <string name="settings_runtime_restart_message">Running tasks will be interrupted. Continue?</string>
+    <string name="settings_runtime_restarting">Restarting Runtime…</string>
+    <string name="settings_remote_access">Remote access</string>
+    <string name="settings_remote_access_desc">When on and the Runtime restarts, a publicly reachable entry is created so you can control the automation from the web anywhere. Guard the access password: anyone who has it controls your device.</string>
+    <string name="settings_remote_access_state">Connection state</string>
+    <string name="settings_remote_access_address">Remote address</string>
+    <string name="settings_remote_access_password">Access password</string>
+    <string name="settings_remote_state_ready">Ready</string>
+    <string name="settings_remote_state_waiting">Establishing connection…</string>
+    <string name="settings_remote_state_stopped">Not connected</string>
+    <string name="settings_remote_state_unreachable">Runtime not ready</string>
+    <string name="settings_info_copy">Copy</string>
+    <string name="settings_info_copied">Copied to clipboard</string>
+    <!-- AzurPilot 原生界面（原 WebUI 的功能面） -->
+    <string name="ap_section_overview">Overview</string>
+    <string name="ap_section_config">Config</string>
+    <string name="ap_section_logs">Logs</string>
+    <string name="ap_section_stats">Stats</string>
+    <string name="ap_section_settings">Settings</string>
+    <string name="ap_back">Back</string>
+    <string name="ap_cancel">Cancel</string>
+    <string name="ap_retry">Retry</string>
+    <string name="ap_refresh">Refresh</string>
+    <string name="ap_run_now">Run now</string>
+    <string name="ap_waiting_data">Loading…</string>
+    <string name="ap_connecting">Connecting to AzurPilot…</string>
+    <string name="ap_runtime_idle">Runtime is not running</string>
+    <string name="ap_open_in_browser">Open in browser</string>
+    <string name="ap_status_running">Running</string>
+    <string name="ap_status_stopped">Stopped</string>
+    <string name="ap_status_error">Error</string>
+    <string name="ap_status_updating">Updating</string>
+    <string name="ap_task_running">Running</string>
+    <string name="ap_task_pending">Pending</string>
+    <string name="ap_task_waiting">Waiting</string>
+    <string name="ap_title_task_config">Task config</string>
+    <string name="ap_title_instances">Instances</string>
+    <string name="ap_title_announcement">Announcement</string>
+    <string name="ap_title_meowfficer">Meowfficer scores</string>
+    <string name="ap_title_updater">Runtime update</string>
+    <string name="ap_title_deploy">Deploy settings</string>
+    <string name="ap_instance_none">No instances yet</string>
+    <string name="ap_instance_manage">Manage</string>
+    <string name="ap_instances_create">New instance</string>
+    <string name="ap_instances_create_confirm">Create</string>
+    <string name="ap_instances_name">Instance name</string>
+    <string name="ap_instances_name_hint">Start with a letter, up to 64 characters</string>
+    <string name="ap_instances_source">Source</string>
+    <string name="ap_instances_source_template">Blank template</string>
+    <string name="ap_instances_source_copy">Copy %1$s</string>
+    <string name="ap_instances_export">Export as JSON</string>
+    <string name="ap_instances_import">Import config</string>
+    <string name="ap_import_default_hint">Settings are imported into the default ap instance. A backup is saved first.</string>
+    <string name="ap_import_overwrite_warning">Editable settings will overwrite the default instance. Stop the scheduler first. Android device connection settings are preserved.</string>
+    <string name="ap_import_completed">Settings imported into the default instance</string>
+    <string name="ap_import_backup_failed">Could not back up the current configuration. Import cancelled.</string>
+    <string name="ap_instances_import_warning">“%1$s” will be imported as a new instance. The Android version uses a special config — a PC config may not work after import. Continue?</string>
+    <string name="ap_instances_import_confirm">Import anyway</string>
+    <string name="ap_instances_import_read_failed">Couldn\'t read the config file, please try again</string>
+    <string name="ap_instances_delete">Delete</string>
+    <string name="ap_instances_delete_title">Delete instance %1$s?</string>
+    <string name="ap_instances_delete_message">The config is moved to config/backup and can be restored by hand.</string>
+    <string name="ap_instances_empty_hint">Create an instance before running AzurPilot</string>
+    <string name="ap_overview_scheduler">Scheduler</string>
+    <string name="ap_overview_counts">Running %1$d · Pending %2$d · Waiting %3$d</string>
+    <string name="ap_overview_revision">Config revision</string>
+    <string name="ap_overview_startup_auto">Run on startup</string>
+    <string name="ap_overview_resources">Resources</string>
+    <string name="ap_overview_resource_limit">Limit %1$s</string>
+    <string name="ap_overview_preview">Live screen</string>
+    <string name="ap_preview_waiting">No frame yet</string>
+    <string name="ap_preview_waiting_hint">The game screen appears here while a task runs</string>
+    <string name="ap_preview_captured_at">Captured at %1$s</string>
+    <string name="ap_overview_tasks">Task plan</string>
+    <string name="ap_overview_no_tasks">No enabled tasks</string>
+    <string name="ap_overview_no_tasks_hint">Enable tasks in Config to add them here</string>
+    <string name="ap_overview_no_instance">No instance selected</string>
+    <string name="ap_resource_oil">Oil</string>
+    <string name="ap_resource_coin">Coins</string>
+    <string name="ap_resource_gem">Gems</string>
+    <string name="ap_resource_cube">Cubes</string>
+    <string name="ap_resource_pt">Event PT</string>
+    <string name="ap_resource_action_point">Action points</string>
+    <string name="ap_resource_yellow_coin">Supply tokens</string>
+    <string name="ap_resource_purple_coin">Special tokens</string>
+    <string name="ap_resource_core">Core data</string>
+    <string name="ap_resource_medal">Medals</string>
+    <string name="ap_resource_merit">Merit</string>
+    <string name="ap_resource_guild_coin">Guild coins</string>
+    <string name="ap_resource_chip">Cognitive chips</string>
+    <string name="ap_config_search">Search settings</string>
+    <string name="ap_config_no_match">No matching settings</string>
+    <string name="ap_config_no_match_hint">Try another keyword, or type the raw key such as Fleet</string>
+    <string name="ap_config_tool_hint">Tool task: runs on its own, outside the scheduler</string>
+    <string name="ap_field_readonly">Read-only</string>
+    <string name="ap_field_saving">Saving</string>
+    <string name="ap_field_saved">Saved</string>
+    <string name="ap_field_retry">Retry</string>
+    <string name="ap_field_clear">Clear</string>
+    <string name="ap_field_invalid">Invalid input</string>
+    <string name="ap_field_datetime_format">Format YYYY-MM-DD HH:mm:ss</string>
+    <string name="ap_field_yaml_hint">Top level must be a mapping</string>
+    <string name="ap_field_script_hint">Restricted script syntax; you can check it first</string>
+    <string name="ap_script_check">Check script</string>
+    <string name="ap_script_checking">Checking…</string>
+    <string name="ap_script_valid">Script is valid</string>
+    <string name="ap_logs_search">Search logs</string>
+    <string name="ap_logs_level_all">All</string>
+    <string name="ap_logs_count">Showing %1$d of %2$d</string>
+    <string name="ap_logs_follow_on">Resume follow</string>
+    <string name="ap_logs_follow_off">Pause follow</string>
+    <string name="ap_logs_order_asc">Show newest first</string>
+    <string name="ap_logs_order_desc">Show oldest first</string>
+    <string name="ap_logs_clear">Clear view</string>
+    <string name="ap_logs_export">Export logs</string>
+    <string name="ap_logs_no_matches">No matching logs</string>
+    <string name="ap_logs_no_matches_hint">Try a different keyword or log level</string>
+    <string name="ap_logs_empty">No logs yet</string>
+    <string name="ap_logs_empty_hint">Logs stream in here once a task runs</string>
+    <string name="ap_stats_cat_resources">Resources</string>
+    <string name="ap_stats_cat_action">Action</string>
+    <string name="ap_stats_cat_opsi">Operation Siren</string>
+    <string name="ap_stats_cat_commission">Commissions</string>
+    <string name="ap_stats_cat_ships">Ships</string>
+    <string name="ap_stats_cat_loot">Loot</string>
+    <string name="ap_stats_cat_research">Research</string>
+    <string name="ap_stats_days">%1$d days</string>
+    <string name="ap_stats_period_day">Today</string>
+    <string name="ap_stats_period_week">This week</string>
+    <string name="ap_stats_period_month">This month</string>
+    <string name="ap_stats_scope_series">By series</string>
+    <string name="ap_stats_scope_consumable">Chips and coins</string>
+    <string name="ap_stats_series_latest">Latest</string>
+    <string name="ap_stats_series_n">Series %1$d</string>
+    <string name="ap_stats_summary">Summary</string>
+    <string name="ap_stats_trend">Trend</string>
+    <string name="ap_stats_no_rows">No records</string>
+    <string name="ap_stats_no_instance">No instance selected</string>
+    <string name="ap_stats_task_all">All tasks</string>
+    <string name="ap_stats_refresh">Recount</string>
+    <string name="ap_stats_refresh_hint">Loot is recorded on claim; recount if it looks stale</string>
+    <string name="ap_settings_instances_manage">Manage instances</string>
+    <string name="ap_settings_instances_count">%1$d total</string>
+    <string name="ap_settings_current_instance">Current instance</string>
+    <string name="ap_settings_announcement_empty">No announcement</string>
+    <string name="ap_settings_meowfficer_hint">Open the meowfficer score report</string>
+    <string name="ap_settings_deploy_open">Open deploy settings</string>
+    <string name="ap_settings_deploy_count">%1$d groups</string>
+    <string name="ap_settings_remote">Remote access</string>
+    <string name="ap_settings_remote_off">Disabled</string>
+    <string name="ap_announcement_id">Announcement %1$s</string>
+    <string name="ap_announcement_empty">No announcement</string>
+    <string name="ap_announcement_empty_hint">Fetched automatically once online</string>
+    <string name="ap_meowfficer_not_generated">No score report yet</string>
+    <string name="ap_meowfficer_hint">Run the Meowfficer score task from the Tool menu first</string>
+    <string name="ap_meowfficer_generated">Generated at %1$s</string>
+    <string name="ap_meowfficer_clear">Clear report</string>
+    <string name="ap_meowfficer_clear_title">Clear the score report?</string>
+    <string name="ap_meowfficer_clear_message">Deletes the report files under log/. This cannot be undone.</string>
+    <string name="ap_meowfficer_level">Lv%1$d</string>
+    <string name="ap_meowfficer_cost">Cost</string>
+    <string name="ap_meowfficer_points">Invested</string>
+    <string name="ap_meowfficer_targets">Suggested targets</string>
+    <string name="ap_meowfficer_inferred"> (inferred)</string>
+    <string name="ap_updater_status">Update status</string>
+    <string name="ap_updater_local">Local commit</string>
+    <string name="ap_updater_upstream">Upstream commit</string>
+    <string name="ap_updater_branch">Branch</string>
+    <string name="ap_updater_divergence">Ahead / behind</string>
+    <string name="ap_updater_ahead_behind">%1$d / %2$d</string>
+    <string name="ap_updater_fetch">Fetch</string>
+    <string name="ap_updater_apply">Update now</string>
+    <string name="ap_updater_cancel">Cancel update</string>
+    <string name="ap_updater_commits">Commits (%1$d)</string>
+    <string name="ap_updater_managed">Updated with the app</string>
+    <string name="ap_updater_managed_hint">On Android the runtime ships with the app, so no in-place update is offered here.</string>
+    <string name="ap_updater_current">Up to date</string>
+    <string name="ap_updater_behind">%1$d new commits</string>
+    <string name="ap_page_prev">Previous</string>
+    <string name="ap_page_next">Next</string>
+    <string name="ap_deploy_save">Save</string>
+    <string name="ap_deploy_saving">Saving…</string>
+    <string name="ap_deploy_pending">%1$d pending changes</string>
+    <string name="ap_deploy_password_hint">Leave empty to keep the current one</string>
+    <string name="ap_deploy_demo">Deploy settings are read-only in demo mode</string>
+    <string name="ap_stats_no_data">No data for this category yet</string>
+    <string name="ap_stats_no_data_hint">Stats appear after a task has run once</string>
+    <string name="ap_deploy_load_failed">Could not read deploy settings</string>
+    <string name="ap_run_title">Run %1$s?</string>
+    <string name="ap_run_warning">This takes over the game screen and runs the task. Make sure nothing else is running.</string>
+    <string name="ap_run_confirm">Run</string>
+    <string name="ap_config_no_config">This task has no settings of its own</string>
+    <string name="ap_config_no_config_hint">Start it with Run tool; its settings live under related tasks</string>
+    <string name="ap_config_run_tool">Run tool</string>
+    <string name="ap_startup_title">Startup</string>
+    <string name="ap_startup_autorun">Run on startup</string>
+    <string name="ap_startup_autorun_help">Runs the current instance whenever AzurPilot starts.</string>
+    <string name="ap_startup_remember">Remember run state</string>
+    <string name="ap_startup_remember_help">If enabled, the instance resumes on next start when it was running at exit, and stays stopped otherwise.</string>
+    <string name="ap_tool_logs">Run log</string>
+    <string name="ap_tool_logs_empty">No output yet</string>
+    <string name="ap_fleet_title">Fleet %1$d</string>
+    <string name="ap_fleet_vanguard">Vanguard</string>
+    <string name="ap_fleet_main">Main fleet</string>
+    <string name="ap_fleet_submarine">Submarines</string>
+    <string name="ap_fleet_empty">No fleet scan yet</string>
+    <string name="ap_fleet_empty_hint">Run Fleet scan once to see the result here</string>
+    <string name="ap_fleet_no_record">No record</string>
+    <string name="ap_fleet_invalid">Fleet record is malformed</string>
+    <string name="ap_fleet_invalid_hint">Run Fleet scan again</string>
+    <string name="ap_fleet_level">Lv.%1$d</string>
+    <string name="ap_field_failed">%1$s Your input was kept.</string>
+    <string name="ap_field_failed_unknown">Save failed; your input was kept.</string>
+    <string name="ap_scheduler_start">Start scheduler</string>
+    <string name="ap_scheduler_stop">Stop scheduler</string>
+    <string name="ap_scheduler_processing">Working…</string>
+    <string name="ap_clear_search">Clear search</string>
+    <string name="ap_config_directory">Sections</string>
+    <string name="ap_bar_search">Search settings</string>
+    <string name="ap_field_notset">Not set</string>
+    <string name="settings_virtual_display_rate_requested">Requested frame rate</string>
+    <string name="settings_virtual_display_rate_value">%.1f FPS</string>
+    <string name="settings_virtual_display_rate_maximum">Current physical display rate (maximum)</string>
+    <string name="settings_virtual_display_rate_hint">Applies the next time the virtual display starts. The highest setting follows the physical display; Android may adjust the actual refresh rate.</string>
+    <string name="settings_virtual_display_rate_unsupported">Custom virtual display frame rates require Android 14 or later.</string>
+    <string name="settings_virtual_display_rate_unavailable">The physical display refresh rate is unavailable. Adjustment is disabled.</string>
+
+    <!-- Persistent keep-alive system -->
+    <string name="settings_keepalive_title">Aggressive Keep-Alive System</string>
+    <string name="settings_keepalive_desc">Integrates seven keep-alive mechanisms — silent audio, 1px foreground overlay, companion device service, accessibility daemon, CPU wakelock, scheduled jobs and alarms, and a dual-process watchdog — against background termination.</string>
+    <string name="settings_keepalive_audio">Silent Audio</string>
+    <string name="settings_keepalive_audio_desc">Loops zero-volume silent audio in AudioFlinger to mark the process as an active media entity</string>
+    <string name="settings_keepalive_pixel">1px Overlay</string>
+    <string name="settings_keepalive_pixel_desc">Mounts a 1x1 transparent overlay to elevate process priority to visible window (requires overlay permission)</string>
+    <string name="settings_keepalive_wakelock">CPU WakeLock</string>
+    <string name="settings_keepalive_wakelock_desc">Holds a system Partial WakeLock to keep the CPU running and prevent deep sleep while screen is off</string>
+    <string name="settings_keepalive_alarm_job">Jobs &amp; Alarms</string>
+    <string name="settings_keepalive_alarm_job_desc">Combines system JobScheduler and AlarmManager to periodically wake up the process in Doze mode</string>
+    <string name="settings_keepalive_daemon_broadcast">Dual-Process Watchdog</string>
+    <string name="settings_keepalive_daemon_broadcast_desc">Independent daemon process mutually monitors Binder death to resurrect each other, listening to boot and power events</string>
+    <string name="settings_keepalive_companion">Companion Service</string>
+    <string name="settings_keepalive_companion_desc">Registers system companion device component for background execution and network exemptions</string>
+    <string name="settings_keepalive_accessibility">Accessibility Daemon</string>
+    <string name="settings_keepalive_accessibility_desc">Leverages system accessibility service to automatically restart the process if terminated</string>
+    <string name="settings_keepalive_status_active">Active</string>
+    <string name="settings_keepalive_status_inactive">Inactive</string>
+    <string name="settings_keepalive_status_need_permission">Overlay Permission Required</string>
+    <string name="settings_keepalive_status_need_accessibility">Accessibility Not Enabled</string>
+
+    <!-- Home screen widgets -->
+    <string name="widget_control_name">AzurPilot Control Panel</string>
+    <string name="widget_control_description">View runner status, current task and toggle quickly from home screen</string>
+    <string name="widget_quick_name">AzurPilot Quick Switch</string>
+    <string name="widget_quick_description">Compact switch on home screen to start or stop runner with one tap</string>
+    <string name="widget_action_start">Start</string>
+    <string name="widget_action_stop">Stop</string>
+    <string name="widget_action_busy">Processing…</string>
+    <string name="widget_status_idle">Stopped</string>
+    <string name="widget_status_running">Running (PID %1$d)</string>
+    <string name="widget_status_running_no_pid">Running</string>
+    <string name="widget_status_preparing">Preparing</string>
+    <string name="widget_status_error">Error</string>
+    <string name="widget_task_idle">No active task</string>
+    <string name="widget_refresh">Refresh</string>
+    <string name="widget_pin_to_home_description">Pin control panel or quick switch to home screen for quick glance and control</string>
+    <string name="widget_pin_control">Add Control Panel (4x2)</string>
+    <string name="widget_pin_quick">Add Quick Switch (2x1)</string>
+    <string name="widget_pin_success">Requested system to add widget to home screen</string>
+    <string name="widget_pin_unsupported">Current launcher does not support pinning widgets; please add manually from home screen</string>
+<!--
+  Launcher shortcuts (res/xml/shortcuts.xml): labels render directly in the
+  long-press menu, so keep them short
+-->
+    <string name="shortcut_toggle_short">Toggle runner</string>
+    <string name="shortcut_toggle_long">Start or stop tasks</string>
+    <string name="shortcut_screen_short">Screen</string>
+    <string name="shortcut_screen_long">Open the virtual display</string>
+    <string name="shortcut_log_short">Runner logs</string>
+    <string name="shortcut_log_long">View runner logs</string>
+    <string name="shortcut_toggle_starting">Starting tasks…</string>
+    <string name="shortcut_toggle_stopping">Stopping tasks…</string>
+
+
+    <!-- App Lock Protection -->
+    <string name="settings_app_lock_title">App Lock Protection</string>
+    <string name="settings_app_lock_desc">Require system lock (PIN/fingerprint/face) on launch and resume; bypassed if no screen lock is set.</string>
+    <string name="settings_app_lock_no_lock_hint">(No screen lock set on device, currently bypassed)</string>
+    <string name="auth_prompt_title_app">Unlock to access AzurPilot</string>
+    <string name="auth_prompt_title_disable">Disable App Lock</string>
+    <string name="auth_prompt_subtitle">Use screen lock or biometrics to verify</string>
+    <string name="app_lock_title">App Locked</string>
+    <string name="app_lock_desc">App lock protection is active. Please verify your identity to continue.</string>
+    <string name="app_lock_unlock_button">Verify and Unlock</string>
+    <string name="app_lock_auth_failed">Authentication failed (code %1$d): %2$s. Try again or check the device lock settings.</string>
+    <string name="host_shizuku_root_uid_error">Shizuku is running as root, so Android rejected the virtual display. Authorize and select the Root startup backend in Settings → Run &amp; Security.</string>
+    <string name="host_root_fallback_failed">The automatic Root backend retry also failed to create the virtual display. Check Root authorization or the app logs.</string>
+    <string name="device_report_title">Submit your device</string>
+    <string name="device_report_description">Detect device details to help improve compatibility</string>
+    <string name="device_report_privacy">Only the device details and compatibility result shown below are submitted and published on GitHub. IMEI, serial numbers, Android ID, accounts and logs are never read.</string>
+    <string name="device_report_manufacturer">Manufacturer</string>
+    <string name="device_report_brand">Brand</string>
+    <string name="device_report_model">Model code</string>
+    <string name="device_report_device">Device codename</string>
+    <string name="device_report_product">Product codename</string>
+    <string name="device_report_hardware">Hardware platform</string>
+    <string name="device_report_soc">Chipset</string>
+    <string name="device_report_unknown">Not available</string>
+    <string name="device_report_android">Android version</string>
+    <string name="device_report_android_value">%1$s (API %2$d)</string>
+    <string name="device_report_patch">Security patch</string>
+    <string name="device_report_abis">Processor architecture</string>
+    <string name="device_report_screen">Display</string>
+    <string name="device_report_screen_value">%1$d × %2$d, %3$d dpi, %4$d Hz</string>
+    <string name="device_report_memory">Memory</string>
+    <string name="device_report_memory_value">About %1$d GiB</string>
+    <string name="device_report_compatibility">Compatibility result</string>
+    <string name="device_report_working">Works correctly</string>
+    <string name="device_report_not_working">Does not work correctly</string>
+    <string name="device_report_consent">I agree to publish these details on GitHub</string>
+    <string name="device_report_submit">Confirm and submit</string>
+    <string name="device_report_collecting">Detecting device details…</string>
+    <string name="device_report_sending">Submitting, please wait…</string>
+    <string name="device_report_success">Submitted to the device support list (issue #1).</string>
+    <string name="device_report_duplicate">This report has already been submitted. You can view the existing record.</string>
+    <string name="device_report_open_issue">View submission</string>
+    <string name="device_report_unavailable">This build has no valid submission certificate. Update the app and try again.</string>
+    <string name="device_report_auth_error">Submission verification failed. Check the device clock or update the app and retry.</string>
+    <string name="device_report_rate_limited">Too many submissions. Try again in an hour.</string>
+    <string name="device_report_server_error">The server is temporarily busy. Retry later; duplicate submissions reuse the existing issue.</string>
+    <string name="device_report_send_error">Submission did not complete. Check your connection and retry; duplicates reuse the existing issue.</string>
+    <string name="device_report_collect_error">Could not detect device details. Go back and try again.</string>
+    <string name="device_report_backend">Privilege method</string>
+    <string name="device_report_run_mode">Run mode</string>
+    <string name="device_report_foreground">Foreground</string>
+    <string name="device_report_background">Background</string>
+    <string name="device_report_marketing_name">Device name</string>
+    <string name="device_report_rom">Vendor OS</string>
+    <string name="device_report_build_incremental">Full system version</string>
+    <string name="device_report_build_display">Build display ID</string>
+    <string name="device_report_complete_title">Submission complete</string>
+    <string name="device_report_done">Done</string>
+    <string name="device_report_test_required">Test the app first, then select the actual result before submitting.</string>
+    <string name="ocr_title">OCR acceleration</string>
+    <string name="ocr_hardware_acceleration">Use hardware acceleration</string>
+    <string name="ocr_hardware_acceleration_hint">On by default. Off uses CPU. When on, runtime errors or unsupported requests fall back to CPU; score differences do not.</string>
+    <string name="ocr_user_disabled">Hardware acceleration is off; using CPU</string>
+    <string name="ocr_score_difference">Maximum score difference (reference only)</string>
+    <string name="ocr_predictions_differ">Some timestep character choices differ from CPU; reference only.</string>
+    <string name="ocr_description">Check actual backends and test models and AP calls</string>
+    <string name="ocr_soc">Chip</string>
+    <string name="ocr_vendor">Chip vendor</string>
+    <string name="ocr_vendor_qualcomm">Qualcomm</string>
+    <string name="ocr_vendor_mediatek">MediaTek</string>
+    <string name="ocr_vendor_hiai">HiSilicon Kirin</string>
+    <string name="ocr_vendor_xring">Xiaomi Xring (unavailable)</string>
+    <string name="ocr_vendor_other">Currently unsupported</string>
+    <string name="ocr_libraries">Acceleration libraries</string>
+    <string name="ocr_ready">Bundled</string>
+    <string name="ocr_unavailable">Unavailable</string>
+    <string name="ocr_npu_state">Acceleration status</string>
+    <string name="ocr_npu_untested">Not verified yet</string>
+    <string name="ocr_npu_verified">Accelerated calls passed</string>
+    <string name="ocr_npu_disabled">Acceleration failed; using CPU</string>
+    <string name="ocr_npu_partial">Some models now use CPU</string>
+    <string name="ocr_ap_runtime">AP runtime</string>
+    <string name="ocr_running">Running</string>
+    <string name="ocr_not_running">Not started</string>
+    <string name="ocr_status_hint">Backends are shown per model. Bundled libraries do not prove NPU use. Test calls and AP task calls are counted separately.</string>
+    <string name="ocr_refresh">Refresh status</string>
+    <string name="ocr_test_model">Test model</string>
+    <string name="ocr_test_hint">Compare model output and timing with a bundled digit image, then check AP recognition calls. Testing may take a few minutes.</string>
+    <string name="ocr_start_ap_hint">Start AzurPilot before testing to verify AP calls. When stopped, only the bundled model is tested.</string>
+    <string name="ocr_test">Run test</string>
+    <string name="ocr_testing">Testing…</string>
+    <string name="ocr_model_test_passed">Model test passed</string>
+    <string name="ocr_backend">Actual backend</string>
+    <string name="ocr_backend_cpu">CPU</string>
+    <string name="ocr_backend_litert">NPU + CPU (LiteRT)</string>
+    <string name="ocr_backend_hiai">NPU (HiAI)</string>
+    <string name="ocr_backend_pending">Not run yet</string>
+    <string name="ocr_cold_time">First-run time</string>
+    <string name="ocr_steady_time">Current backend model average</string>
+    <string name="ocr_cpu_time">Isolated LiteRT CPU average</string>
+    <string name="ocr_precision_passed">Character choices match the CPU baseline at every timestep.</string>
+    <string name="ocr_measurement_hint">Fixed input 1×3×48×320: 3 warmups, then 20 runs, including tensor copies. Excludes AP image processing, transport, and decoding. First run includes setup and validation.</string>
+    <string name="ocr_cpu_verified">The isolated session requests CPU only, has no vendor provider, and has no NPU partitions.</string>
+    <string name="ocr_ap_backend">Last AP business backend</string>
+    <string name="ocr_ap_no_calls">No business calls yet</string>
+    <string name="ocr_ap_shape">Last AP input shape</string>
+    <string name="ocr_ap_test">AP integration test</string>
+    <string name="ocr_ap_test_passed">AP preprocessing, host inference and text decoding are connected.</string>
+    <string name="ocr_recognized_text">Recognized text</string>
+    <string name="ocr_expected_text">Sample text</string>
+    <string name="ocr_ap_time">Full AP call</string>
+    <string name="ocr_text_mismatch">The sample text was not fully recognized. Copy the report and test actual game images.</string>
+    <string name="ocr_ap_requests">AP task calls</string>
+    <string name="ocr_test_requests">Test calls</string>
+    <string name="ocr_last_time">Last inference time</string>
+    <string name="ocr_cpu_detector">The current model runs on LiteRT CPU.</string>
+    <string name="ocr_cpu_shape">The current image dimensions use CPU.</string>
+    <string name="ocr_cpu_unavailable">Acceleration libraries or system support are unavailable; using CPU.</string>
+    <string name="ocr_cpu_failed">Hardware loading, compilation or inference failed; using CPU.</string>
+    <string name="ocr_copy_report">Copy test report</string>
+    <string name="ocr_milliseconds">%1$.1f ms</string>
+    <string name="ocr_backend_litert_gpu_softmax">NPU + GPU Softmax (LiteRT)</string>
+    <string name="nav_rail_collapse">Collapse navigation rail</string>
+    <string name="nav_rail_expand">Expand navigation rail</string>
+<string name="ksu_color_amber">Amber</string>
+<string name="ksu_color_blue">Blue</string>
+<string name="ksu_color_blue_grey">Blue Grey</string>
+<string name="ksu_color_brown">Brown</string>
+<string name="ksu_color_cyan">Cyan</string>
+<string name="ksu_color_deep_purple">Deep Purple</string>
+<string name="ksu_color_green">Green</string>
+<string name="ksu_color_indigo">Indigo</string>
+<string name="ksu_color_orange">Orange</string>
+<string name="ksu_color_pink">Pink</string>
+<string name="ksu_color_purple">Purple</string>
+<string name="ksu_color_red">Red</string>
+<string name="ksu_color_sakura">Sakura</string>
+<string name="ksu_color_teal">Teal</string>
+<string name="ksu_color_yellow">Yellow</string>
+<string name="ksu_settings_color_spec">Color Spec</string>
+<string name="ksu_settings_color_style">Color Style</string>
+<string name="ksu_settings_enable_blur">Blur</string>
+<string name="ksu_settings_enable_blur_summary">Enable blur effect for top and bottom bars.</string>
+<string name="ksu_settings_enable_glass">Liquid glass</string>
+<string name="ksu_settings_enable_glass_summary">Enable liquid glass effect for floating bottom bar.</string>
+<string name="ksu_settings_enable_predictive_back">Predictive back gesture</string>
+<string name="ksu_settings_enable_predictive_back_summary">Enable predictive back gesture support.</string>
+<string name="ksu_settings_enable_swipe_dismiss">Swipe back gesture</string>
+<string name="ksu_settings_enable_swipe_dismiss_summary">Swipe from the edge to return to the previous page.</string>
+<string name="ksu_settings_floating_bottom_bar">Floating bottom bar</string>
+<string name="ksu_settings_floating_bottom_bar_summary">Use Apple style floating bottom bar.</string>
+<string name="ksu_settings_key_color">Key color</string>
+<string name="ksu_settings_key_color_default">Default</string>
+<string name="ksu_settings_monet">Enable Monet</string>
+<string name="ksu_settings_page_scale">Page Scale</string>
+<string name="ksu_settings_page_scale_summary">Adjust the global display scale.</string>
+<string name="ksu_settings_pager_gesture_cross_axis">Cross-axis</string>
+<string name="ksu_settings_pager_gesture_ios_like">iOS-like</string>
+<string name="ksu_settings_pager_gesture_mode">Pager gesture mode</string>
+<string name="ksu_settings_pager_gesture_native">Default</string>
+<string name="ksu_settings_theme">Theme</string>
+<string name="ksu_settings_theme_mode_dark">Dark</string>
+<string name="ksu_settings_theme_mode_light">Light</string>
+<string name="ksu_settings_theme_mode_system">Follow system</string>
+<string name="ksu_settings_ui_mode">UI Style</string>
+
+
+    <string name="home_status_label">Current status</string>
+    <string name="home_ready_title">Ready to run</string>
+    <string name="home_ready_description">Start to execute your configured tasks.</string>
+    <string name="home_running_title">Running</string>
+    <string name="home_running_description">Automation is active. Tasks will run as scheduled.</string>
+    <string name="home_starting_title">Starting</string>
+    <string name="home_stopping_title">Stopping</string>
+    <string name="home_busy_description">Please wait. The status will update automatically.</string>
+    <string name="home_preparing_title">Preparing</string>
+    <string name="home_preparing_description">Starting the required components…</string>
+    <string name="home_updating_title">Updating</string>
+    <string name="home_updating_description">Updating the runtime. Please wait.</string>
+    <string name="home_failed_title">Could not start</string>
+    <string name="home_failed_description">The runtime failed to start. Please retry.</string>
+    <string name="home_connecting_title">Connecting</string>
+    <string name="home_connecting_description">Waiting for the runtime to respond.</string>
+    <string name="home_attention_title">Check settings</string>
+    <string name="home_attention_description">This device cannot create the required display. Check the startup mode and permissions.</string>
+    <string name="home_attention_settings">Open settings</string>
+    <string name="home_tool_active_title">Another operation is active</string>
+    <string name="home_tool_active_description">Finish the current operation before starting automation.</string>
+    <string name="home_retry">Retry startup</string>
+    <string name="home_wait_button">Please wait</string>
+    <string name="home_tasks_title">Recent tasks</string>
+    <string name="home_tasks_collapse">Show less</string>
+    <string name="home_needs_binding_title">No AzurPilot selected</string>
+    <string name="home_needs_binding_description">Use Bind in the top-right to select a saved device or bind AzurPilot.</string>
+    <string name="home_remote_offline_title">AzurPilot is offline</string>
+    <string name="home_remote_offline_description">Reconnecting. Make sure AzurPilot is running and online.</string>
+    <string name="home_remote_no_instance_description">Create or select a configuration in AzurPilot before starting.</string>
+    <string name="home_runtime_start_description">Download Runtime to start tasks on this device.</string>
+    <string name="home_task_schedule">%1$s · %2$s</string>
+    <string name="home_tasks_view_all">View all</string>
+    <string name="home_tasks_unavailable">Task details appear once connected.</string>
+    <string name="home_tasks_empty">No tasks enabled</string>
+    <string name="home_tasks_current">In progress</string>
+    <string name="home_tasks_next">Up next</string>
+    <string name="home_tasks_count">Total tasks</string>
+    <string name="home_tasks_count_value">%1$d tasks</string>
+    <string name="home_running_interrupted_title">Running with limited access</string>
+    <string name="home_running_interrupted_description">Automation is still running, but device control is unavailable. Please check it.</string>
+    <string name="home_preparing_device_title">Preparing device</string>
+    <string name="home_preparing_device_description">Setting up the display and connection required to run.</string>
+    <string name="home_needs_shizuku_title">Not ready to run</string>
+    <string name="home_needs_shizuku_description">Activate embedded Shizuku, then return here.</string>
+    <string name="home_needs_install_title">Shizuku required</string>
+    <string name="home_needs_install_description">Install and start Shizuku before controlling the device.</string>
+    <string name="home_needs_auth_title">Permission required</string>
+    <string name="home_needs_auth_description">Allow AzurPilot to control your device to continue.</string>
+    <string name="home_needs_connection_title">Device control disconnected</string>
+    <string name="home_needs_connection_description">Permission may be granted, but device control is not connected.</string>
+    <string name="home_open_shizuku">Activate embedded Shizuku</string>
+    <string name="home_install_shizuku">Get Shizuku</string>
+    <string name="home_grant_access">Grant access</string>
+    <string name="home_reconnect">Reconnect</string>
+    <string name="ap_deploy_save_failed">Could not save. Check the Runtime connection and retry.</string>
+    <string name="ap_deploy_host_help">127.0.0.1 allows local access; 0.0.0.0 allows LAN access. For IPv6, use ::1 or ::.</string>
+    <string name="settings_virtual_display_resolution">Resolution</string>
+    <string name="settings_virtual_display_device_dpi">Current device DPI</string>
+    <string name="settings_virtual_display_dpi">Virtual display DPI</string>
+    <string name="settings_virtual_display_dpi_value">%d DPI</string>
+    <string name="settings_virtual_display_dpi_auto">Follow device</string>
+    <string name="settings_virtual_display_dpi_invalid">Enter 0 to follow the device, or a value from 72 to 960.</string>
+    <string name="settings_virtual_display_dpi_hint">DPI follows the device by default. Resolution stays at 1280×720. Saved changes apply the next time the virtual display starts.</string>
+    <string name="settings_virtual_display_dpi_save_failed">Could not save. Please try again.</string>
+    <string name="adb_title">Embedded Shizuku</string>
+    <string name="adb_setup_message">Activation and pairing are built in. Activate to connect this app automatically.</string>
+    <string name="adb_setup_confirm">Activate</string>
+    <string name="adb_guide">First use: enable wireless debugging, tap notification pairing, then enter the six-digit code in the notification while the system pairing dialog stays open. If USB approval appears, select always allow.</string>
+    <string name="adb_legacy_guide">On Android 9–10, first run adb tcpip 5555 from a computer, then activate and approve system debugging.</string>
+    <string name="adb_idle">Once started, offline reconnection works for this boot. Start again after restarting the device.</string>
+    <string name="adb_working">Connecting. If the system asks for debugging approval, select always allow.</string>
+    <string name="adb_ready">Return to the app. No additional grant is needed.</string>
+    <string name="adb_failed">Enable wireless debugging, finish pairing and approve system debugging, then retry.</string>
+    <string name="adb_start">Start service</string>
+    <string name="adb_pair_notification">Pair via notification</string>
+    <string name="adb_open_settings">Open wireless debugging settings</string>
+    <string name="adb_manual_pair_guide">Keep the system pairing dialog open in split screen. Enter the port and six-digit code from that dialog.</string>
+    <string name="adb_pair_port">Pairing port</string>
+    <string name="adb_pair_code">Six-digit pairing code</string>
+    <string name="adb_pair_start">Pair and activate</string>
+    <string name="adb_manual_connect_guide">If paired but automatic discovery fails, enter the connection port on the wireless debugging main page. It differs from the pairing port.</string>
+    <string name="adb_connect_port">Connection port</string>
+    <string name="adb_notification_denied">Notifications are disabled. Expand Device pairing and select Enter pairing code manually.</string>
+    <string name="adb_settings_failed">Could not open settings. Open Developer options manually.</string>
+    <string name="adb_pair_searching">Open Pair device with pairing code in wireless debugging.</string>
+    <string name="adb_pair_enter_code">Local pairing port found. Enter the system six-digit code in this notification.</string>
+    <string name="adb_pair_failed">Pairing or connection failed. Open a new system pairing dialog and try again.</string>
+    <string name="adb_network_note">Offline reconnection enables debugging port 5555, which may be reachable on your local network and still requires system approval. Disable debugging when no longer needed.</string>
+    <string name="adb_status_idle">Not started</string>
+    <string name="adb_status_working">Connecting</string>
+    <string name="adb_status_ready">Ready to use</string>
+    <string name="adb_status_failed">Could not connect</string>
+    <string name="adb_status_subtitle">Built-in permission service</string>
+    <string name="adb_return">Return to app</string>
+    <string name="adb_reconnect">Reconnect</string>
+    <string name="adb_reconnect_summary">Reconnect offline during this boot after pairing</string>
+    <string name="adb_pairing_title">Device pairing</string>
+    <string name="adb_pairing_summary">Follow these three steps on first use</string>
+    <string name="adb_pairing_ready_summary">Ready to use. Pair again if needed</string>
+    <string name="adb_pair_step_settings">Enable wireless debugging in Developer options.</string>
+    <string name="adb_pair_step_dialog">Tap notification pairing below, then open Pair device with pairing code in system settings.</string>
+    <string name="adb_pair_step_notification">Keep the dialog open and enter its six-digit code in the notification.</string>
+    <string name="adb_manual_pair_title">Enter pairing code manually</string>
+    <string name="adb_manual_connect_title">Connect to a specific port</string>
+    <string name="adb_manual_connect_summary">Use when automatic connection fails</string>
+    <string name="adb_connect">Connect and start</string>
+    <string name="adb_expanded">Expanded</string>
+    <string name="adb_collapsed">Collapsed</string>
+    <string name="common_clear">Clear</string>
+    <string name="settings_license_copy_action">Copy full license text</string>
+    <string name="overlay_ball_action_expand">Open control panel</string>
+    <string name="tool_stop_named">Stop %1$s</string>
+    <string name="log_preview_close_action">Close preview</string>
+    <string name="screen_preview_desc">Live game screen preview</string>
+    <string name="status_starting">Starting</string>
+    <string name="status_running">Running</string>
+    <string name="status_stopping">Stopping</string>
+
+    <!-- OOBE Setup Wizard -->
+    <string name="oobe_step_welcome">Welcome</string>
+    <string name="oobe_priv_status_root_unavailable">Root unavailable. Use wireless debugging.</string>
+    <string name="oobe_priv_requesting">Requesting access…</string>
+    <string name="oobe_priv_grant_failed">Access was not granted. Check permissions and try again, or configure later.</string>
+    <string name="oobe_ready_summary_style">Interface style: %1$s</string>
+    <string name="oobe_ready_pending_title">Settings saved</string>
+    <string name="oobe_ready_pending_subtitle">You can finish permission setup later.</string>
+    <string name="oobe_step_preferences">Appearance</string>
+    <string name="oobe_step_privileged">Permissions</string>
+    <string name="oobe_step_tutorial">Tips</string>
+    <string name="oobe_step_ready">Complete</string>
+    <string name="oobe_action_next">Next</string>
+    <string name="oobe_action_prev">Previous</string>
+    <string name="oobe_action_skip">Skip</string>
+    <string name="oobe_action_start">Get started</string>
+    <string name="oobe_progress_format">Step %1$d of %2$d</string>
+    <string name="settings_reopen_oobe">Setup wizard</string>
+    <string name="settings_reopen_oobe_summary">Revisit the initial setup wizard and beginner guide</string>
+
+    <string name="oobe_welcome_title">Welcome to\nAzurPilot</string>
+    <string name="oobe_welcome_subtitle">Let’s set up a few basics.</string>
+    <string name="oobe_welcome_features_title">Basic features</string>
+    <string name="oobe_welcome_feature_local">Local operation: tasks and configuration are stored on this device.</string>
+    <string name="oobe_welcome_feature_vd">Virtual display: keep using your device while tasks run.</string>
+    <string name="oobe_welcome_guidelines_title">Terms and agreements</string>
+    <string name="oobe_welcome_guidelines_desc">Read the terms, privacy policy and open-source license to understand the risks and data processing.</string>
+    <string name="oobe_welcome_guidelines_acknowledged">You have acknowledged the terms and privacy policy. You can read them here at any time.</string>
+    <string name="oobe_welcome_guidelines_accept">I have read and agree to the terms and privacy policy</string>
+
+    <string name="oobe_pref_title">Make it yours</string>
+    <string name="oobe_pref_subtitle">Choose an interface and theme. You can change them later in Settings.</string>
+    <string name="oobe_pref_lang_title">Interface Language</string>
+    <string name="oobe_pref_theme_title">Theme Mode</string>
+    <string name="oobe_pref_theme_system">Follow system</string>
+    <string name="oobe_pref_theme_light">Light</string>
+    <string name="oobe_pref_theme_dark">Dark</string>
+    <string name="oobe_pref_monet_title">Wallpaper colors</string>
+    <string name="oobe_pref_monet_desc">Use colors from your system wallpaper.</string>
+
+    <string name="oobe_priv_title">Set up permissions</string>
+    <string name="oobe_priv_subtitle">Allow the app to run on a separate screen and carry out the actions you configure.</string>
+    <string name="oobe_priv_mode_title">Authorization method</string>
+    <string name="oobe_priv_mode_shizuku">Shizuku (recommended)</string>
+    <string name="oobe_priv_mode_root">Root</string>
+    <string name="oobe_priv_status_ready">Permissions are ready</string>
+    <string name="oobe_priv_status_need_auth">Waiting for authorization</string>
+    <string name="oobe_priv_status_not_running">Permission service is disconnected</string>
+    <string name="oobe_priv_action_auth">Authorize Now</string>
+    <string name="oobe_priv_action_pair">Configure Wireless Debugging</string>
+    <string name="oobe_priv_action_root">Request Root</string>
+    <string name="oobe_priv_delegate_note">Once connected, the app helps configure floating windows and background permissions.</string>
+    <string name="oobe_priv_skip_tip">You can also set this up later on the home screen.</string>
+
+    <string name="oobe_tut_title">Getting started</string>
+    <string name="oobe_tut_subtitle">Learn a few common actions.</string>
+    <string name="oobe_tut_vd_title">Separate screen</string>
+    <string name="oobe_tut_vd_desc">Tasks run separately while you use your phone.</string>
+    <string name="oobe_tut_task_title">Task management</string>
+    <string name="oobe_tut_task_desc">Check settings, then start or stop tasks on Home.</string>
+    <string name="oobe_tut_overlay_title">Floating controls</string>
+    <string name="oobe_tut_overlay_desc">Tap the floating ball for status and task controls.</string>
+    <string name="oobe_tut_saver_title">Dim screen mode</string>
+    <string name="oobe_tut_saver_desc">Reduce accidental touches. Drag the slider to return.</string>
+
+    <string name="oobe_ready_title">Setup complete</string>
+    <string name="oobe_ready_subtitle">You can start using the app.</string>
+    <string name="oobe_ready_summary_title">Your settings</string>
+    <string name="oobe_ready_summary_lang">Language: %1$s</string>
+    <string name="oobe_ready_summary_theme">Theme: %1$s</string>
+    <string name="oobe_ready_summary_priv">Permissions: %1$s</string>
+    <string name="oobe_ready_launch_note">If the runtime is not installed, the next step downloads or extracts about 1 GB of files. Keep the app in the foreground.</string>
+    <string name="oobe_legal_terms">Terms of use and disclaimer</string>
+    <string name="oobe_legal_privacy">Privacy policy</string>
+    <string name="oobe_legal_agpl">AGPL-3.0 license</string>
+    <string name="oobe_legal_agpl_note">The complete original English AGPL-3.0 follows, including every section and its application instructions. Software rights are governed by the applicable open-source license.</string>
+    <string name="oobe_legal_risk">Automation may cause loss of game resources, unintended purchases or account bans. Results are not guaranteed. Liability that cannot legally be waived is unaffected.</string>
+</resources>

@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Shizuku 后端：由 Shizuku 服务校验，未装时无副作用 -->
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+
+    <!--
+      后台跑任务期间 app 进程必须活着：进程一死，特权进程的看门狗就自杀并释放虚拟屏
+      实测 MIUI 的 ProcessManager SwipeUpClean 会按 Adj=905 直接 force-stop
+      前台服务本体是 .service.RunForegroundService，通知与电池白名单是它的前提
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!--
+      前台模式的控制层：屏幕让给了目标应用，没有悬浮球或音量键就没法停任务
+      两项都由特权进程代授（AppOps / Settings.Secure），用户不必逐个去系统页点
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- 存储访问：与上面两项一样由特权进程代授，对齐 参考实现 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
+
+    <uses-permission
+        android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- 伴侣设备相关权限：只有系统已有 app 发起且经用户确认的关联时，服务才可能收到回调；不保证后台或网络豁免。 -->
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND" />
+
+    <!-- 保活增强：CPU 防休眠唤醒锁、开机自启广播与精准闹钟唤醒 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <application
+        android:name=".AzurPilotApp"
+        android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="${appIcon}"
+        android:label="${appLabel}"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:roundIcon="${appRoundIcon}"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AzurPilotApp"
+        android:localeConfig="@xml/locales_config"
+        tools:targetApi="33">
+
+        <activity android:name=".remoteaccess.QrScanActivity" android:exported="false" />
+
+
+        <activity android:name=".privileged.AdbActivationActivity" android:exported="false" />
+        <service
+            android:name=".privileged.AdbPairingService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- LiteRT 已声明新款 RPC 和 NeuroPilot 库；旧款 DSP 的可选 RPC 库还需补充声明。 -->
+        <uses-native-library android:name="libadsprpc.so" android:required="false" />
+        <!-- NeuroPilot 的初始化会查询 APU 配置；Android 12+ 必须声明公开的工具库。 -->
+        <uses-native-library android:name="libapuwareutils_v2.mtk.so" android:required="false" />
+        <uses-native-library android:name="libapuwareutils.mtk.so" android:required="false" />
+        <!-- SDK 还会动态加载执行和编译目标库；漏声明会在创建 MDLA 设备时 abort。 -->
+        <uses-native-library android:name="libapuwareapusys_v2.mtk.so" android:required="false" />
+        <uses-native-library android:name="libapuwarexrp.mtk.so" android:required="false" />
+        <uses-native-library android:name="libapuwarexrp_v2.mtk.so" android:required="false" />
+        <uses-native-library android:name="libapuwarehmp.mtk.so" android:required="false" />
+        <uses-native-library android:name="libcmdl_ndk.mtk.so" android:required="false" />
+        <uses-native-library android:name="libcmdl_ndk.mtk.vndk.so" android:required="false" />
+        <uses-native-library android:name="libnir_neon_driver_ndk.mtk.so" android:required="false" />
+        <uses-native-library android:name="libnir_neon_driver_ndk.mtk.vndk.so" android:required="false" />
+
+        <!-- 厂商原生代码独立运行，信号退出不会连带关闭 UI、PRoot 和特权桥。 -->
+        <service android:name=".ocr.OcrWorkerService"
+            android:exported="false" android:process=":ocr" />
+
+        <!-- ADB 通过系统 DUMP 权限调用固定诊断命令；call 内还会再次校验 Binder 调用者。 -->
+        <provider
+            android:name=".diagnostics.AdbDebugProvider"
+            android:authorities="${applicationId}.debug"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:grantUriPermissions="false" />
+
+        <!-- HiAI 客户端按系统版本加载服务库；Android 12+ 需要声明公开的非 NDK 库。 -->
+        <uses-native-library android:name="libai_client.so" android:required="false" />
+        <uses-native-library android:name="libhiai_foundation.huawei.so" android:required="false" />
+        <uses-native-library android:name="libai_fmk_hcl_model_runtime.so" android:required="false" />
+        <uses-native-library android:name="libai_om_event_manager.so" android:required="false" />
+        <uses-native-library android:name="libhiai_om.so" android:required="false" />
+
+        <!--
+          允许支持该能力的系统在范围内调整窗口尺寸，界面随窗口尺寸更新。
+          走 property 而非 meta-data；ENABLED 只能挂在 application，MODE=1 全无极（2 竖无极 / 3 横无极），
+          若某 activity 另配 MODE 则以该 activity 为准。全 UI 仅 MainActivity，其已按可任意缩放窗口设计
+        -->
+        <property
+            android:name="miui.window.CVW_ENABLED"
+            android:value="true" />
+        <property
+            android:name="miui.window.CVW_MODE"
+            android:value="1" />
+
+        <!-- 独立宿主才能隐藏导航栏；普通应用悬浮窗的层级低于系统栏。 -->
+        <activity
+            android:name=".overlay.screensaver.ScreenSaverActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.AzurPilotApp.ScreenSaver" />
+
+        <!-- 只有启动 Activity 挂启动主题；application 那层保持 Theme.AzurPilotApp，
+             否则别的窗口也会顶着首屏底色起来 -->
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:exported="true"
+            android:label="${appLabel}"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.AzurPilotApp.Starting"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!--
+              桌面长按快捷方式的隐式入口：shortcuts.xml 的 intent 不写 targetPackage，
+              applicationId 会被构建 profile 追加后缀（基准测试还有 .benchmark 变体），
+              写死包名会指错目标，按 action 匹配则包名怎么变都能命中
+            -->
+            <intent-filter>
+                <action android:name="com.azurpilot.ghio.action.SHORTCUT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- 静态快捷方式清单：长按桌面图标时由桌面读取 -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!-- API 32- 的 per-app locale 由 appcompat 持久化并在 Activity 附着前回放（33+ 走系统） -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <!--
+          虚拟屏存续期间的保活前台服务
+          specialUse：现有 FGS 类型没有一个对得上「守护另一块屏上的运行环境」，
+          dataSync / mediaProjection 都不是这回事，硬套会在 34+ 被判类型不符
+        -->
+        <service
+            android:name=".service.RunForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Guards the AzurPilot runtime environment, privileged bridge and virtual display; keeps the app process alive for background automation" />
+        </service>
+
+        <!-- 只过滤按键，不读窗口内容；用途见 AccessibilityHelperService -->
+        <service
+            android:name=".service.AccessibilityHelperService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_helper_service_config" />
+        </service>
+
+        <!--
+          伴侣设备系统回调服务：仅在已有伴侣关联时可由系统绑定；本工程不创建关联，不能将此声明
+          视为后台执行、网络或进程存活保证。
+        -->
+        <service
+            android:name=".keepalive.KeepAliveCompanionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_COMPANION_DEVICE_SERVICE">
+            <intent-filter>
+                <action android:name="android.companion.CompanionDeviceService" />
+            </intent-filter>
+        </service>
+
+        <!-- 粘性守护服务：START_STICKY 自愈 -->
+        <service
+            android:name=".keepalive.KeepAliveStickyService"
+            android:exported="false" />
+
+        <!-- 系统作业保活服务：JobScheduler 周期性拉活 -->
+        <service
+            android:name=".keepalive.KeepAliveJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
+
+        <!-- 定时精准闹钟接收器：AllowWhileIdle 唤醒 -->
+        <receiver
+            android:name=".keepalive.KeepAliveAlarmReceiver"
+            android:exported="false" />
+
+        <!-- 系统事件多广播接收器：开机自启、解锁与电源监听 -->
+        <receiver
+            android:name=".keepalive.KeepAliveBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+                <action android:name="android.intent.action.REBOOT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 双进程互相守护：主进程端服务 -->
+        <service
+            android:name=".keepalive.KeepAliveLocalService"
+            android:exported="false" />
+
+        <!-- 双进程互相守护：独立守护子进程端服务 -->
+        <service
+            android:name=".keepalive.KeepAliveDaemonService"
+            android:process=":daemon"
+            android:exported="false" />
+
+        <!-- 桌面小组件：全功能控制面板 (4x2) -->
+        <receiver
+            android:name=".widget.AzurPilotControlWidgetReceiver"
+            android:label="@string/widget_control_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_control_info" />
+        </receiver>
+
+        <!-- 桌面小组件：极简快捷开关 (2x1) -->
+        <receiver
+            android:name=".widget.AzurPilotQuickWidgetReceiver"
+            android:label="@string/widget_quick_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_info" />
+        </receiver>
+
+        <!-- 桌面小组件用户点击操作接收器 -->
+        <receiver
+            android:name=".widget.AzurPilotWidgetActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.azurpilot.ghio.action.WIDGET_TOGGLE_RUNNER" />
+                <action android:name="com.azurpilot.ghio.action.WIDGET_REFRESH" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false" />
+
+        <!-- Root 后端的 binder 回投口：特权进程经 getContentProviderExternal 打到这里，
+             provider 内按 uid ∈ {0, 2000} 与一次性 token 校验（见 root/RootServiceBootstrapProvider.kt） -->
+        <provider
+            android:name=".root.RootServiceBootstrapProvider"
+            android:authorities="${applicationId}.root.bootstrap"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false" />
+
+        <!-- 把随包的 shizuku.apk 交给系统安装器：API 24 起 file:// 直接抛 FileUriExposedException -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+    </application>
+
+    <queries>
+        <package android:name="moe.shizuku.privileged.api" />
+    </queries>
+
+</manifest>

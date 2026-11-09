@@ -1,0 +1,112 @@
+[
+  {
+    "path": "opt/azurpilot-venv/lib/python3.14/site-packages/rapidocr/models/ch_ppocr_mobile_v2.0_cls_mobile.onnx",
+    "sha256": "e47acedf663230f8863ff1ab0e64dd2d82b838fceb5957146dab185a89d6215c",
+    "size": 585532
+  },
+  {
+    "path": "opt/azurpilot-venv/lib/python3.14/site-packages/rapidocr/models/PP-OCRv6_det_small.onnx",
+    "sha256": "090f04abcd9d9a7498bc4ebf677e4cb9bdce1fe4197ddb7e529f1ef44e1ff94f",
+    "size": 9929594
+  },
+  {
+    "path": "opt/azurpilot-venv/lib/python3.14/site-packages/rapidocr/models/PP-OCRv6_rec_small.onnx",
+    "sha256": "6f327246b50388f3c176ae304bd95767ea6dc0c9ae92153ef8cbe210b3c14884",
+    "size": 21234383
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/det/PP-OCRv6_tiny_det.onnx",
+    "sha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+    "size": 1780590
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/det/PP-OCRv6_small_det.onnx",
+    "sha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+    "size": 9880512
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/det/PP-OCRv6_medium_det.onnx",
+    "sha256": "eb13b44b25bb36f89528b68720af8a61d9cf381176107f465db1757b65d086e1",
+    "size": 62032837
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ppocr-v6/PP-OCRv6_tiny_rec.onnx",
+    "sha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+    "size": 4462639
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx",
+    "sha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+    "size": 21159378
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ppocr-v6/PP-OCRv6_medium_rec.onnx",
+    "sha256": "9c09abf0957f7968c7586464b7397b84ad2387a0497a351af40e9acc71b673ba",
+    "size": 76554979
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/zh-CN/alocr-zh-cn-v3.dtk.onnx",
+    "sha256": "d0cd4977b80b1138239f88ce6b5de8e421d508fdf6da63b744e6077a4e2af0f3",
+    "size": 16534192
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/azur_lane/alocr-en-us-v2.6.nvc.onnx",
+    "sha256": "35413805f63b5fb13a0060b1cf3d5fcefb2fba6b88a3e85a1e1ae236533af5f6",
+    "size": 7682786
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ncnn/ppocr_v6_lite.param",
+    "sha256": "a0602237ffcfbf745bce35f6eb40893fe68df2cd76a9290575779b1ec52833a6",
+    "size": 7803
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ncnn/ppocr_v6_pro.bin",
+    "sha256": "069827485f92fa65addd0f17e00d90c3a89a43cbd3ca91edc7d6eb6f0211fbe5",
+    "size": 76454040
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ncnn/ppocr_v6_lite.bin",
+    "sha256": "c33d959c5eb3937eed6039ee5080734c83639399ddf5acfed2ee4feaabcdd919",
+    "size": 4417276
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ncnn/ppocr_v6_pro.param",
+    "sha256": "108e0e36406595e6493720960277495869975e576324ac4758879bdabd9844af",
+    "size": 14875
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ncnn/ppocr_v6_standard.param",
+    "sha256": "3e193de0eb751d4551c5326c68bfc1ad8fd02110eefe68f876378b81b5f9d326",
+    "size": 13852
+  },
+  {
+    "path": "opt/azurpilot/bin/ocr_models/ncnn/ppocr_v6_standard.bin",
+    "sha256": "40f8afb7b9d835e8f5b7d03bd08d74d0f762b27999d05ffdf4644c1c4b24f798",
+    "size": 21066500
+  },
+  {
+    "path": "opt/azurpilot/bin/cnocr_models/cnocr/cnocr-v1.2.0-densenet-lite-gru-0039.params",
+    "sha256": "118c31cb13c9eb5d34f8c0d9c2781e4529ee0dfdb7ad57416d987845885d386b",
+    "size": 9977338
+  },
+  {
+    "path": "opt/azurpilot/bin/cnocr_models/jp/cnocr-v1.2.0-densenet-lite-gru-0125.params",
+    "sha256": "95fce550f57ac00eac4121fb8fbb970896c1b3474d91d9d42bf9cc2d1f4b3c94",
+    "size": 6508866
+  },
+  {
+    "path": "opt/azurpilot/bin/cnocr_models/azur_lane_jp/cnocr-v1.2.0-densenet-lite-gru-0093.params",
+    "sha256": "c391194d770166a142e2353a58a2082457de48d6523ea041a945e5d03c5d19a3",
+    "size": 3411502
+  },
+  {
+    "path": "opt/azurpilot/bin/cnocr_models/tw/cnocr-v1.2.0-densenet-lite-gru-0063.params",
+    "sha256": "accd092c6b9633b784f502f77b5e7c81b5a87183d53cd6240b1f6b2e25a31fbb",
+    "size": 8842426
+  },
+  {
+    "path": "opt/azurpilot/bin/cnocr_models/azur_lane/cnocr-v1.2.0-densenet-lite-gru-0015.params",
+    "sha256": "4e107680e4bcb4a0577a967207733cd2c8832cfcd94af39c7be449d72937d412",
+    "size": 3411502
+  }
+]

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  启动画面图标动画：人物基态摆在遮罩左下探头位（见 splash_icon_scene 的 group 常驻
+  translate），本动画只做一件事——把它弹回圆心。不用 keyframes：AVD 对多段 keyframes
+  的时长在部分系统上会失效（实测 700ms 缩成 26ms），单段 valueFrom→valueTo 稳定。
+  API 31+ 系统可能自动播放；无论播没播，SplashExitAnimator 都会在退出阶段补播一遍。
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_icon_scene">
+    <target android:name="character">
+        <objectAnimator
+            android:duration="700"
+            android:interpolator="@anim/splash_peek_overshoot">
+            <propertyValuesHolder android:propertyName="translateX" android:valueType="floatType" android:valueFrom="-140" android:valueTo="0"/>
+            <propertyValuesHolder android:propertyName="translateY" android:valueType="floatType" android:valueFrom="55" android:valueTo="0"/>
+            <propertyValuesHolder android:propertyName="rotation" android:valueType="floatType" android:valueFrom="-6" android:valueTo="0"/>
+        </objectAnimator>
+    </target>
+</animated-vector>

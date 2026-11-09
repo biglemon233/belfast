@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(azurpilot_adb LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(boringssl REQUIRED CONFIG)
+add_library(azurpilot_adb SHARED adb_pairing.cpp)
+target_link_libraries(azurpilot_adb boringssl::crypto_static log)

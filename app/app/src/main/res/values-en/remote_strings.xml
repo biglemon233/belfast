@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="remote_pair_camera_permission">Allow camera access, or go back to use the six-digit code.</string>
+    <string name="remote_pair_current">Connected to: %1$s</string>
+    <string name="remote_pair_local">Return to local AzurPilot</string>
+    <string name="remote_pair_auth_failed">Pairing authorization expired. Pair again in settings.</string>
+    <string name="remote_pair_try_tunnel">Try Quick Tunnel (restart required)</string>
+    <string name="remote_pair_title">Connect to remote AzurPilot</string>
+    <string name="remote_client_hint">Scan or enter a pairing code to use a remote AzurPilot. No local Runtime installation, startup, or Shizuku permission is required.</string>
+    <string name="remote_pair_hint">Select Pair on the AzurPilot remote access page to get a QR code and six-digit pairing code.</string>
+    <string name="remote_pair_code_alternative">Or use a pairing code</string>
+    <string name="remote_pair_saved_devices">Bound devices</string>
+    <string name="remote_pair_device">AzurPilot device</string>
+    <string name="remote_pair_connected">Connected</string>
+    <string name="remote_pair_selected">Current device, waiting to connect</string>
+    <string name="remote_pair_tap_connect">Tap to connect</string>
+    <string name="remote_pair_remove_device">Remove %1$s</string>
+    <string name="remote_pair_scan">Scan QR code</string>
+    <string name="remote_pair_scan_hint">Point at your AzurPilot pairing QR code to scan automatically</string>
+    <string name="remote_pair_scan_detected">QR code recognized</string>
+    <string name="remote_pair_torch_on">Turn on flashlight</string>
+    <string name="remote_pair_torch_off">Turn off flashlight</string>
+    <string name="remote_pair_camera_allow">Allow camera access</string>
+    <string name="remote_pair_camera_failed">Cannot open the camera. Go back to retry or use the six-digit pairing code.</string>
+    <string name="remote_pair_code">Six-digit pairing code</string>
+    <string name="remote_pair_connect">Bind and connect</string>
+    <string name="remote_pair_busy">Binding…</string>
+    <string name="remote_pair_failed">Pairing failed. Check the network and code, then retry.</string>
+    <string name="remote_pair_code_unavailable">This code is invalid, already used, or expired. Generate a new code in AzurPilot and enter it again.</string>
+    <string name="remote_pair_device_offline">AzurPilot is offline. Wait for its remote access to be ready, then retry the current code.</string>
+    <string name="remote_pair_rate_limited">Too many pairing attempts. Try again in one minute.</string>
+    <string name="remote_pair_api_mismatch">The pairing API was not found (HTTP 404). Update AzurPilot and AFA, then retry.</string>
+    <string name="remote_pair_open_failed">Remote AzurPilot is offline. Open it again later.</string>
+    <string name="remote_pair_remove">Remove</string>
+</resources>

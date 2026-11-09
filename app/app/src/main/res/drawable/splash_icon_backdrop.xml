@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  启动画面图标圆形底图：720x720 视口，对应自适应图标中央 72dp 圆形裁切区域。
+  外层以 clip-path 自裁圆形，避免在无系统遮罩环境下直出变为方形。
+  包含底色渐变、几何明暗块、浅色圆角终端窗口及 >_ 符号。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="720"
+    android:viewportHeight="720">
+    <group>
+        <clip-path android:pathData="M360,0 a360,360 0 1,0 0,720 a360,360 0 1,0 0,-720"/>
+        <path android:pathData="M-180,-180 H900 V900 H-180 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="-180" android:startY="-180" android:endX="900" android:endY="900" android:startColor="#DDE6F0" android:endColor="#A9BACF"/>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M-180,-180 H250 L440,120 L190,200 L-180,0 Z" android:fillColor="#D5E0EC"/>
+        <path android:pathData="M280,-180 H900 V30 L470,120 Z" android:fillColor="#B7C8DB"/>
+        <path android:pathData="M-180,470 L0,200 L210,240 L-180,780 Z" android:fillColor="#BCCBDD"/>
+        <path android:pathData="M160,60 H580 Q680,60 680,160 V580 Q680,680 580,680 H160 Q60,680 60,580 V160 Q60,60 160,60 Z" android:strokeColor="#FCFDFF" android:strokeWidth="8.5">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="60" android:startY="60" android:endX="680" android:endY="900" android:startColor="#F6F9FD" android:endColor="#E2EBF5"/>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M520,100 L560,130 L520,160" android:fillColor="#00000000" android:strokeColor="#596473" android:strokeWidth="15" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M579.5,152 H610.5 Q615,152 615,156.5 V160.5 Q615,165 610.5,165 H579.5 Q575,165 575,160.5 V156.5 Q575,152 579.5,152 Z" android:fillColor="#596473"/>
+    </group>
+</vector>

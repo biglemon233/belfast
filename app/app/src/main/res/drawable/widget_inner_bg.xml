@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 小组件内部卡与刷新按钮底：MD3 14dp 圆角（28dp 尺寸下即为圆形） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_inner_background" />
+    <corners android:radius="14dp" />
+</shape>

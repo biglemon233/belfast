@@ -1,0 +1,23 @@
+<!--
+  快捷方式图标：品牌深蓝圆底 + 白色列表纹样（运行日志）
+  不用自适应图标：长按菜单里的快捷方式图标尺寸很小，自带圆形底色
+  在任何桌面下呈现一致，无需依赖桌面的遮罩形状
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M12,1a11,11 0 1,0 0,22a11,11 0 1,0 0,-22z" />
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:pivotX="12"
+        android:pivotY="12">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M3,13h2v-2H3V13z M3,17h2v-2H3V17z M3,9h2V7H3V9z M7,13h14v-2H7V13z M7,17h14v-2H7V17z M7,7v2h14V7H7z" />
+    </group>
+</vector>

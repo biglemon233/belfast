@@ -1,0 +1,19 @@
+{
+  "version": "2.1.0rc1",
+  "source": "https://raw.githubusercontent.com/google-ai-edge/LiteRT/v2.1.0rc1/",
+  "file_sources": {
+    "litert/build_common/build_config.h": "litert/build_common/config/build_config_gpu_npu.h"
+  },
+  "files": {
+    "litert/c/litert_tensor_buffer_requirements.h": "15eb6045cbf73e1b882cc53d9f426b7138ee0fedc5ecdab3d39c156b1d8c492a",
+    "litert/c/litert_tensor_buffer_types.h": "4e4501b42ab55783909c777eba5255e7313dc37408f673275815d66bf807b73f",
+    "litert/c/litert_common.h": "19e7dca8a18118af66c8cb9423a5236be606d9ea57ee0c380b737293f4ff824d",
+    "litert/build_common/build_config.h": "6e69a0cab0a4743d12c5c365784b0faed0d66e39f83b6abe0338e525e508e493",
+    "litert/vendors/c/litert_dispatch_api.h": "f9f0bf9850f8d4b491caf4d8c2a329439431464a75d6af8ddddc90f9f9186df8",
+    "litert/vendors/c/litert_dispatch.h": "39acf2e87411cebf92d55ecfd094e68f9e7ffe2236ffc1494b7f1ef462bcb227",
+    "litert/c/litert_model_types.h": "ded747e7c41f641e0ea7b70144d7bb10e184cf8e30eadfd6c835afbd9065821e",
+    "litert/c/litert_layout.h": "8c8a9c07417a2c71db9ca2bdc8de296dccc45c49fa03c6aa204a19778363f3b9",
+    "litert/c/litert_metrics.h": "2a60f41c652d8a2c4de6cf6de99805b53e448463926581adc0f1d94078e00e63",
+    "litert/c/litert_any.h": "830cbe58cc5620b61510627d414e749a6aa402d67d5e19e7c02d62724d2c334d"
+  }
+}

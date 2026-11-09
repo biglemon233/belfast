@@ -1,0 +1,39 @@
+# 提供与 Gradle 守护进程一致的 JDK 25 和 Android SDK。
+# Provides JDK 25 matching the Gradle daemon and the Android SDK.
+# uv 从 GitHub Releases 直接安装：CNB 构建机无法通过 TLS 校验 ghcr.io 的令牌端点，
+# 拉取 ghcr.io/astral-sh/uv 会因 x509 证书不受信而失败。
+# uv is installed from GitHub Releases: CNB runners cannot verify ghcr.io's token
+# endpoint over TLS, so pulling ghcr.io/astral-sh/uv fails with an untrusted x509 chain.
+FROM eclipse-temurin:25-jdk-noble
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    ANDROID_HOME=/opt/android-sdk \
+    ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git python3 unzip xz-utils binutils openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && case "$(dpkg --print-architecture)" in \
+         arm64) UV_ARCH=aarch64 ;; \
+         amd64) UV_ARCH=x86_64 ;; \
+         *) echo "Unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+       esac \
+    && curl -fL --retry 3 \
+      "https://github.com/astral-sh/uv/releases/latest/download/uv-${UV_ARCH}-unknown-linux-gnu.tar.gz" \
+      -o /tmp/uv.tar.gz \
+    && tar -xzf /tmp/uv.tar.gz -C /tmp \
+    && install -m 0755 "/tmp/uv-${UV_ARCH}-unknown-linux-gnu/uv" /usr/local/bin/uv \
+    && install -m 0755 "/tmp/uv-${UV_ARCH}-unknown-linux-gnu/uvx" /usr/local/bin/uvx \
+    && rm -rf /tmp/uv.tar.gz "/tmp/uv-${UV_ARCH}-unknown-linux-gnu" \
+    && uv --version \
+    && mkdir -p "${ANDROID_HOME}/cmdline-tools" \
+    && curl -fL --retry 3 \
+      https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip \
+      -o /tmp/android-tools.zip \
+    && unzip -q /tmp/android-tools.zip -d "${ANDROID_HOME}/cmdline-tools" \
+    && mv "${ANDROID_HOME}/cmdline-tools/cmdline-tools" "${ANDROID_HOME}/cmdline-tools/latest" \
+    && rm /tmp/android-tools.zip \
+    && yes | sdkmanager --licenses >/dev/null
+# SDK 37 的官方包名包含次版本，需使用支持该格式的新版命令行工具。
+# NDK 由 AGP 按其默认版本安装，避免另装不一致的版本。
+RUN sdkmanager "platforms;android-37.0" "build-tools;36.0.0" "cmake;3.22.1" "platform-tools"

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 探头回弹：默认张力 2 太弹，1.8 让人物到位时轻晃一下即停 -->
+<overshootInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tension="1.8"/>

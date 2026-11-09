@@ -1,0 +1,47 @@
+name: Android background NTP
+
+on:
+  pull_request:
+    paths:
+      - 'rootfs/overlays/**'
+      - 'rootfs/tests/test_android_ntp.py'
+      - 'rootfs/tests/test_android_equipment.py'
+      - 'rootfs/build/build-azurpilot.sh'
+      - 'app/app/build.gradle.kts'
+      - 'app/app/src/main/kotlin/com/azurpilot/ghio/proot/ProotHost.kt'
+      - '.github/azurpilot-upstream.txt'
+      - '.github/workflows/ntp-tests.yml'
+  push:
+    branches: [main, fix/android-ntp-background-sync]
+    paths:
+      - 'rootfs/**'
+      - 'app/app/build.gradle.kts'
+      - 'app/app/src/main/kotlin/com/azurpilot/ghio/proot/ProotHost.kt'
+      - '.github/azurpilot-upstream.txt'
+      - '.github/workflows/ntp-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - id: core
+        run: echo "ref=$(cat .github/azurpilot-upstream.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: wess09/AzurPilot
+          ref: ${{ steps.core.outputs.ref }}
+          path: upstream-core
+          sparse-checkout: module/config
+      - name: Test NTP against pinned core
+        env:
+          AZURPILOT_SOURCE: ${{ github.workspace }}/upstream-core
+        run: python3 rootfs/tests/test_android_ntp.py -v
+      - name: Check Python and shell syntax
+        run: |
+          python3 -m py_compile rootfs/overlays/android_ntp.py rootfs/overlays/sitecustomize.py
+          bash -n rootfs/build/build-azurpilot.sh
+          git diff --check

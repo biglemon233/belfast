@@ -1,0 +1,3 @@
+# 已有产物补传使用 GitHub 的 Publish existing GitHub release to CNB 工作流。
+# Backfill releases with the GitHub release mirror workflow.
+branch: []

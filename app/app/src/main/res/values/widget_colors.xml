@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 小组件静态色板（亮色）：RemoteViews 背景 shape 引用，不能走 GlanceTheme 动态取色
+     （cornerRadius 修饰符在 API 31 以下不生效，MIUI 12.5 = API 30，圆角必须由 shape drawable 提供） -->
+<resources>
+    <color name="widget_card_background">#F2F4F8</color>
+    <color name="widget_inner_background">#E7EAF0</color>
+    <color name="widget_btn_primary">#4A5E8C</color>
+    <color name="widget_btn_error_container">#F9DEDC</color>
+</resources>

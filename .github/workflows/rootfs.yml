@@ -1,0 +1,666 @@
+name: AzurPilot for Android build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      azurpilot_ref:
+        description: AzurPilot dev commit SHA; blank uses current dev head
+        required: false
+        type: string
+      reuse_rootfs_run_id:
+        description: Existing successful rootfs run ID (matrix runs only); blank rebuilds everything
+        required: false
+        type: string
+      publish_update:
+        description: Publish APK to the in-app dev update channel
+        required: false
+        default: false
+        type: boolean
+      force:
+        description: Rebuild even when upstream AzurPilot has not changed
+        required: false
+        default: false
+        type: boolean
+      apk_runner:
+        description: Runner for the APK job (ubuntu-24.04 measured ~2x faster than macos-26)
+        required: false
+        default: ubuntu-24.04
+        type: choice
+        options:
+          - ubuntu-24.04
+          - macos-26
+          - macos-15
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: azurpilot-android-update
+  # 运行时构建可能超过一小时；后续计划任务不能取消正在进行的构建。
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      ref: ${{ steps.resolve.outputs.ref }}
+      should_build: ${{ steps.resolve.outputs.should_build }}
+      publish: ${{ steps.resolve.outputs.publish }}
+      signing_ready: ${{ steps.resolve.outputs.signing_ready }}
+      build_apk: ${{ steps.resolve.outputs.build_apk }}
+      version_code: ${{ steps.resolve.outputs.version_code }}
+      version_name: ${{ steps.resolve.outputs.version_name }}
+      app_commit: ${{ steps.resolve.outputs.app_commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify CNB release synchronization
+        run: python3 tools/tests/test_cnb_release.py
+      - id: resolve
+        env:
+          INPUT_REF: ${{ inputs.azurpilot_ref }}
+          INPUT_PUBLISH: ${{ inputs.publish_update }}
+          INPUT_FORCE: ${{ inputs.force }}
+          EVENT_NAME: ${{ github.event_name }}
+          SIGNING_KEY: ${{ secrets.AZURPILOT_ANDROID_KEYSTORE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.AZURPILOT_ANDROID_KEYSTORE_PASSWORD }}
+          SIGNING_ALIAS: ${{ secrets.AZURPILOT_ANDROID_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.AZURPILOT_ANDROID_KEY_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ref="${INPUT_REF:-}"
+          if [[ -z "$ref" ]]; then
+            ref="$(git ls-remote https://github.com/wess09/AzurPilot.git refs/heads/dev | awk '{print $1}')"
+          fi
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { echo "invalid AzurPilot ref: $ref" >&2; exit 1; }
+          publish=false
+          if [[ "$EVENT_NAME" == push || "$INPUT_PUBLISH" == true ]]; then publish=true; fi
+          signing_ready=false
+          if [[ -n "$SIGNING_KEY" && -n "$SIGNING_PASSWORD" && -n "$SIGNING_ALIAS" && -n "$SIGNING_KEY_PASSWORD" ]]; then
+            signing_ready=true
+          elif [[ "$publish" == true ]]; then
+            echo 'Release signing secrets are incomplete; cannot publish all APKs.' >&2
+            exit 1
+          fi
+          # 上游不变时，推送仍可能改动 Android 或运行时产物输入；启动耗时任务前须与上次发布比较。
+          should_build=true
+          artifact_inputs_changed=true
+          app_inputs_changed=true
+          mkdir -p .tmp/previous-release
+          previous_ap_commit=''
+          previous_version_code=''
+          previous_version_name=''
+          previous_host_commit=''
+          app_commit=''
+          if gh release view azurpilot-android-latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release download azurpilot-android-latest --repo "$GITHUB_REPOSITORY" \
+              --pattern latest.json --dir .tmp/previous-release
+            previous_ap_commit="$(jq -r '.azurpilotCommit // empty' .tmp/previous-release/latest.json)"
+            app_commit="$(jq -r '.appCommit // empty' .tmp/previous-release/latest.json)"
+            previous_version_code="$(jq -r '.versionCode // empty' .tmp/previous-release/latest.json)"
+            previous_version_name="$(jq -r '.versionName // empty' .tmp/previous-release/latest.json)"
+            previous_host_commit="$(jq -r '.androidHostCommit // empty' .tmp/previous-release/latest.json)"
+          fi
+          # 运行时变更也需重建完整 APK；只有 Android 工程变更才前进应用包版本。
+          version_code="$(git log -1 --format=%ct HEAD)"
+          version_count="$(git rev-list --count HEAD)"
+          version_name="1.3.$(( version_count > 303 ? version_count - 303 : 0 ))"
+          if [[ "$previous_version_code" =~ ^[0-9]+$ && "$previous_version_name" =~ ^1\.(1|2|3)\.([0-9]+)$ &&
+                "$app_commit" =~ ^[0-9a-f]{40}$ ]] &&
+              git cat-file -e "${app_commit}^{commit}" 2>/dev/null &&
+              git merge-base --is-ancestor "$app_commit" HEAD; then
+            if git diff --quiet "$app_commit" HEAD -- app; then
+              app_inputs_changed=false
+              version_code="$previous_version_code"
+              version_name="$previous_version_name"
+            else
+              # 既要高于上一发布版，也要不低于当前提交时间。只取上一版 +1 会让
+              # 历史上由本地构建（按提交时间编号）安装的包拒绝 CI 更新为“降级”。
+              version_code="$(( previous_version_code >= version_code ? previous_version_code + 1 : version_code ))"
+              # 版本格式为 1.3.<X>；X 由 GitVersion.kt 的 VERSION_SCHEME_START_COUNT
+              # 对提交数做基线平移，版本计算本身不因发布次数递增。
+              version_name="$version_name"
+              app_commit="$GITHUB_SHA"
+            fi
+          else
+            app_commit="$GITHUB_SHA"
+          fi
+          # 应用、运行时和当前构建流程都会影响发布产物；基线不可比较时宁可重建。
+          if [[ "$previous_host_commit" =~ ^[0-9a-f]{40}$ ]] &&
+              git cat-file -e "${previous_host_commit}^{commit}" 2>/dev/null &&
+              git merge-base --is-ancestor "$previous_host_commit" HEAD; then
+            if git diff --quiet "$previous_host_commit" HEAD -- app rootfs .github/workflows/rootfs.yml; then
+              artifact_inputs_changed=false
+            fi
+          fi
+          if [[ "$INPUT_FORCE" != true && "$previous_ap_commit" == "$ref" && "$artifact_inputs_changed" == false ]]; then
+            should_build=false
+          fi
+          echo "Upstream dev: $ref; published: ${previous_ap_commit:-none}; artifact inputs changed: $artifact_inputs_changed; APK inputs changed: $app_inputs_changed; build: $should_build"
+          {
+            echo '### AzurPilot build decision'
+            echo "- Trigger: $EVENT_NAME"
+            echo "- Upstream dev: \`$ref\`"
+            echo "- Published commit: \`${previous_ap_commit:-none}\`"
+            echo "- Artifact inputs changed: **$artifact_inputs_changed**"
+            echo "- APK inputs changed: **$app_inputs_changed**"
+            echo "- Build rootfs and APKs: **$should_build**"
+            echo "- APK version: \`$version_name ($version_code)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          (( version_code > 0 && version_code <= 2147483647 )) || { echo 'Invalid APK version code' >&2; exit 1; }
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "signing_ready=$signing_ready" >> "$GITHUB_OUTPUT"
+          echo "should_build=$should_build" >> "$GITHUB_OUTPUT"
+          echo "build_apk=$should_build" >> "$GITHUB_OUTPUT"
+          echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
+          echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
+          echo "app_commit=$app_commit" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: resolve
+    if: ${{ needs.resolve.outputs.should_build == 'true' && inputs.reuse_rootfs_run_id == '' }}
+    # 运行时必须在相应架构的原生 runner 上构建（chroot 执行目标架构用户态，不经 proot 或模拟器）：
+    # arm64-v8a 使用 ubuntu-24.04-arm（Graviton 不支持 32 位，armv7 既无原生 runner 也不需 qemu），
+    # x86_64 使用 ubuntu-24.04。
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            runner: ubuntu-24.04-arm
+          - abi: x86_64
+            runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: ./.github/actions/runner-info
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/cache@v4
+        with:
+          # uv / npm 缓存都是内容寻址的：restore-keys 命中上一次的条目就能复用绝大部分
+          # wheel 与包，只会补差额；key 里带上游 ref 是为了每次上游更新后能重新存一份最新的。
+          # 版本与哈希仍由 uv.lock / package-lock.json 校验，旧缓存不会串味。
+          path: |
+            .tmp/azurpilot-build/ubuntu-base.tar.gz
+            .tmp/azurpilot-build/uv-cache
+            .tmp/azurpilot-build/npm-cache
+            .tmp/azurpilot-build/node-*.tar.xz
+          key: rootfs-${{ runner.os }}-${{ runner.arch }}-${{ needs.resolve.outputs.ref }}
+          restore-keys: |
+            rootfs-${{ runner.os }}-${{ runner.arch }}-
+      - name: Verify runtime packaging
+        run: |
+          python3 rootfs/tests/test_compact_runtime.py
+          python3 rootfs/tests/test_compact_ocr_models.py
+      - name: Build rootfs
+        env:
+          AZURPILOT_REF: ${{ needs.resolve.outputs.ref }}
+          AZURPILOT_ABI: ${{ matrix.abi }}
+        run: bash rootfs/build/build-azurpilot.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rootfs-${{ matrix.abi }}
+          path: |
+            dist/rootfs.tar.xz
+            dist/BUILD_MANIFEST
+            dist/frontend-*.tar.xz
+            dist/frontend-*.tar.xz.sha256
+          retention-days: 14
+
+  apk:
+    needs: [resolve, build]
+    outputs:
+      # 版本号由 Gradle 从代码算出，这里从构建产物元数据读回，供发布步骤写进更新清单
+      version_code: ${{ steps.version.outputs.version_code }}
+      version_name: ${{ steps.version.outputs.version_name }}
+    if: ${{ always() && needs.resolve.outputs.build_apk == 'true' && (needs.build.result == 'success' || inputs.reuse_rootfs_run_id != '') }}
+    # APK 编译走 x64 Linux。实测 macos-26（虚拟化 M1，3 核 / 7168MB，单核基准 7.2 Miter/s）
+    # 第一次全量构建 11m34s，ubuntu-24.04 同一步约 4 分钟，慢一倍多，故默认仍是 ubuntu；
+    # macos-26 / macos-15 留在 dispatch 输入里，需要时随时切。
+    runs-on: ${{ inputs.apk_runner || 'ubuntu-24.04' }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 版本名第三段取本仓提交数：浅克隆下 `git rev-list --count HEAD` 只回 1，
+          # 会让 CI 与本地算出不同的版本号，必须取全量历史
+          fetch-depth: 0
+      # 本地 action 必须在 checkout 之后：机器规格每次构建都留在日志里
+      - uses: ./.github/actions/runner-info
+      - uses: actions/download-artifact@v4
+        with:
+          name: rootfs-arm64-v8a
+          path: .tmp/azurpilot-artifact/arm64-v8a
+          run-id: ${{ inputs.reuse_rootfs_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: rootfs-x86_64
+          path: .tmp/azurpilot-artifact/x86_64
+          run-id: ${{ inputs.reuse_rootfs_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/cache@v4
+        with:
+          # 依赖和构建缓存都在 GRADLE_USER_HOME，冷启动会重新下载 AGP、Kotlin 与 Compose。
+          path: .tmp/gradle-home
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('app/gradle/libs.versions.toml', 'app/gradle/wrapper/gradle-wrapper.properties', 'app/**/*.gradle.kts', 'app/build-logic/**/*.kt') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-
+      # Termux 池会滚动删除旧版本包（pcre2 10.47 即被删导致 CI 断供），把下载的 deb
+      # 缓存一层：命中时不再依赖上游实时可用；哈希校验在脚本内，缓存投毒拦不住。
+      # restore-keys 允许脚本小改后复用未变包；key 随脚本哈希变化触发重下。
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/fetch-proot-libs-x86_64
+          key: proot-debs-x86_64-${{ hashFiles('app/scripts/fetch-proot-libs.sh') }}
+          restore-keys: |
+            proot-debs-x86_64-
+      - name: Fetch proot native libs for x86_64
+        run: bash app/scripts/fetch-proot-libs.sh
+      - name: Prepare signing key
+        if: ${{ needs.resolve.outputs.publish == 'true' && needs.resolve.outputs.signing_ready == 'true' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.AZURPILOT_ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64" || { echo 'AZURPILOT_ANDROID_KEYSTORE_BASE64 is missing' >&2; exit 1; }
+          mkdir -p .tmp/signing
+          # macOS 的 base64 不支持 -d，两个镜像都自带 python3。
+          printf '%s' "$KEYSTORE_BASE64" | python3 -c 'import base64,sys; sys.stdout.buffer.write(base64.b64decode(sys.stdin.read()))' > .tmp/signing/azurpilot.jks
+      - name: Build offline device name catalog
+        run: |
+          python3 app/scripts/test_build_device_catalog.py
+          python3 app/scripts/build_device_catalog.py
+
+      - uses: astral-sh/setup-uv@v6
+      - name: Prepare pinned OCR NPU runtime
+        run: |
+          python3 app/scripts/fetch_ocr_runtime.py
+          python3 app/scripts/test_verify_ocr_assets.py
+          python3 rootfs/tests/test_android_ocr_adapter.py
+          uv run --no-project --python 3.12 --with numpy==2.2.6 --with onnx==1.20.1 --with onnxruntime==1.26.0 rootfs/tests/test_android_ocr.py
+
+      - name: Verify OCR native interfaces
+        if: runner.os == 'Linux'
+        run: |
+          python3 app/scripts/test_ocr_jni.py
+          python3 app/scripts/test_ocr_mtk_dispatch.py
+
+      - name: Inject device reporting mTLS credentials
+        env:
+          REPORT_CERT_BASE64: ${{ secrets.AZURPILOT_DEVICE_REPORT_CERT_BASE64 }}
+          REPORT_KEY_BASE64: ${{ secrets.AZURPILOT_DEVICE_REPORT_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$REPORT_CERT_BASE64" && test -n "$REPORT_KEY_BASE64" || {
+            echo 'Device reporting mTLS secrets are missing' >&2
+            exit 1
+          }
+          mkdir -p .tmp/report-credentials
+          umask 077
+          printf '%s' "$REPORT_CERT_BASE64" | python3 -c 'import base64,sys; sys.stdout.buffer.write(base64.b64decode(sys.stdin.read(), validate=True))' > .tmp/report-credentials/client-cert.pem
+          printf '%s' "$REPORT_KEY_BASE64" | python3 -c 'import base64,sys; sys.stdout.buffer.write(base64.b64decode(sys.stdin.read(), validate=True))' > .tmp/report-credentials/client-key.pem
+          openssl x509 -in .tmp/report-credentials/client-cert.pem -checkend 0 -noout
+          openssl x509 -in .tmp/report-credentials/client-cert.pem -pubkey -noout | openssl pkey -pubin -outform DER > .tmp/report-credentials/cert-public.der
+          openssl pkey -in .tmp/report-credentials/client-key.pem -pubout -outform DER > .tmp/report-credentials/key-public.der
+          cmp .tmp/report-credentials/cert-public.der .tmp/report-credentials/key-public.der
+      - name: Bundle runtime and build APKs
+        env:
+          GRADLE_USER_HOME: ${{ github.workspace }}/.tmp/gradle-home
+          KEYSTORE_PATH: ${{ github.workspace }}/.tmp/signing/azurpilot.jks
+          KEYSTORE_PASSWORD: ${{ secrets.AZURPILOT_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.AZURPILOT_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.AZURPILOT_ANDROID_KEY_PASSWORD }}
+          SIGNING_READY: ${{ needs.resolve.outputs.signing_ready }}
+          APP_VERSION_CODE: ${{ needs.resolve.outputs.version_code }}
+          APP_VERSION_NAME: ${{ needs.resolve.outputs.version_name }}
+        run: |
+          set -euo pipefail
+          cd app
+          chmod +x gradlew
+          # 此处已 cd 到 Gradle 工程根（仓库的 app/），:app 模块在 app/ 子目录
+          mkdir -p ../dist app/src/main/assets/rootfs
+          # 编译期 Kotlin/KSP/Compose 吃内存：给足堆，Kotlin 守护进程单独定额
+          gradle_args=(--console=plain --stacktrace --no-build-cache)
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            # 7GB 的 M1 runner：默认 4GB 堆加 Kotlin 守护进程会互相挤爆
+            gradle_args+=("-Dorg.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=1g" "-Pkotlin.daemon.jvmargs=-Xmx1536m")
+          else
+            # x64 runner 有 16GB 内存：gradle.properties 里的 4096m 偏保守
+            gradle_args+=("-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g" "-Pkotlin.daemon.jvmargs=-Xmx3g")
+          fi
+          if [[ "$SIGNING_READY" != true ]]; then
+            unset KEYSTORE_PATH KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD
+          fi
+          variant=release
+          [[ "$SIGNING_READY" == true ]] || variant=debug
+          build_variant=":app:assemble${variant^}"
+
+          # ① per-arch full APK：收窄 ABI 并内置同架构 rootfs（verify 任务会核对 rootfs_arch）
+          for abi in arm64-v8a x86_64; do
+            cp "../.tmp/azurpilot-artifact/$abi/rootfs.tar.xz" app/src/main/assets/rootfs/rootfs.tar.xz
+            cp "../.tmp/azurpilot-artifact/$abi/BUILD_MANIFEST" app/src/main/assets/rootfs/BUILD_MANIFEST
+            ./gradlew "$build_variant" -Pazurpilot.releaseAbi="$abi" "${gradle_args[@]}"
+            cp "app/build/outputs/apk/$variant/"*.apk "../dist/azurpilot-full-$abi.apk"
+            rm app/src/main/assets/rootfs/rootfs.tar.xz app/src/main/assets/rootfs/BUILD_MANIFEST
+          done
+
+          # ② 通用轻量包（更新通道）：双 ABI 的 proot 库、不内置 rootfs。
+          # 第二次不带 clean：assets 变了 Gradle 自己会重跑 merge/package，
+          # 把 Kotlin/KSP/CMake 全部重编一遍纯属白烧
+          ./gradlew "$build_variant" -Pazurpilot.slimApk=true "${gradle_args[@]}"
+          cp "app/build/outputs/apk/$variant/"*.apk ../dist/azurpilot-update.apk
+          # ③ 按架构轻量包：模拟器安装通用包时可能优先选择 ARM 转译。
+          for abi in arm64-v8a x86_64; do
+            ./gradlew "$build_variant" -Pazurpilot.slimApk=true -Pazurpilot.releaseAbi="$abi" "${gradle_args[@]}"
+            cp "app/build/outputs/apk/$variant/"*.apk "../dist/azurpilot-update-$abi.apk"
+          done
+          # 模型和厂商运行库增大轻量包；直接检查 tarball 条目，防止误发布完整 rootfs。
+          python3 scripts/verify_ocr_assets.py ../dist/*.apk
+          python3 - <<'PY'
+          import pathlib, zipfile
+          for path in pathlib.Path('../dist').glob('azurpilot-update*.apk'):
+              with zipfile.ZipFile(path) as archive:
+                  names = archive.namelist()
+                  assert 'assets/rootfs/rootfs.tar.xz' not in names, path
+                  for abi in ('arm64-v8a', 'x86_64'):
+                      if path.name == f'azurpilot-update-{abi}.apk':
+                          assert {name.split('/')[1] for name in names if name.startswith('lib/')} == {abi}, path
+          PY
+          python3 scripts/verify_device_report_assets.py --credentials-dir ../.tmp/report-credentials ../dist/*.apk
+      - name: Clear temporary device reporting credentials
+        if: always()
+        run: |
+          rm -f .tmp/report-credentials/client-cert.pem .tmp/report-credentials/client-key.pem \
+            .tmp/report-credentials/cert-public.der .tmp/report-credentials/key-public.der \
+            app/app/build/generated/deviceReportCredentials/device-report/client-cert.pem \
+            app/app/build/generated/deviceReportCredentials/device-report/client-key.pem
+      - name: Read version from build output
+        id: version
+        run: |
+          set -euo pipefail
+          # 不用 find -quit / ls|head：BSD 与 GNU 行为不一致，且 set -o pipefail 下 head 会 SIGPIPE
+          meta=''
+          for candidate in app/app/build/outputs/apk/release/output-metadata.json \
+                           app/app/build/outputs/apk/debug/output-metadata.json; do
+            if [ -f "$candidate" ]; then meta="$candidate"; break; fi
+          done
+          test -n "$meta"
+          code="$(jq -r '.elements[0].versionCode' "$meta")"
+          name="$(jq -r '.elements[0].versionName' "$meta")"
+          test -n "$code" && test "$code" != null
+          echo "version_code=$code" >> "$GITHUB_OUTPUT"
+          echo "version_name=$name" >> "$GITHUB_OUTPUT"
+          echo "APK version: $name ($code)"
+      - name: Verify release APK signature
+        if: ${{ needs.resolve.outputs.signing_ready == 'true' }}
+        run: |
+          set -euo pipefail
+          signer="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
+          for apk in dist/*.apk; do
+            # 签名工具按给定 Android API 范围报告适用的签名方案。
+            # APK 的最低支持 API 为 28，默认校验只会显示 v3。
+            for entry in 'v1 23 23' 'v2 24 27' 'v3 28 36'; do
+              read -r scheme min_sdk max_sdk <<< "$entry"
+              result="$("$signer" verify --verbose --min-sdk-version "$min_sdk" --max-sdk-version "$max_sdk" "$apk")"
+              grep -Eq "^Verified using ${scheme} scheme .*: true$" <<< "$result" || {
+                printf '%s\n' "$result" >&2
+                echo "$apk is missing a valid $scheme signature" >&2
+                exit 1
+              }
+              echo "$apk: $scheme verified for Android API $min_sdk-$max_sdk"
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: azurpilot-android-apk
+          path: dist/*.apk
+          retention-days: 14
+
+  publish:
+    needs: [resolve, build, apk]
+    if: ${{ always() && needs.resolve.outputs.should_build == 'true' && needs.resolve.outputs.publish == 'true' && (needs.build.result == 'success' || inputs.reuse_rootfs_run_id != '') && needs.apk.result == 'success' }}
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: cnb-release-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # CNB release tag sync pushes this commit; shallow checkout is rejected.
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        if: ${{ needs.apk.result == 'success' }}
+        with:
+          name: azurpilot-android-apk
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: rootfs-arm64-v8a
+          path: .tmp/publish-rootfs/arm64-v8a
+          run-id: ${{ inputs.reuse_rootfs_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: rootfs-x86_64
+          path: .tmp/publish-rootfs/x86_64
+          run-id: ${{ inputs.reuse_rootfs_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish in-app update channel
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AP_REF: ${{ needs.resolve.outputs.ref }}
+          HOST_SHA: ${{ github.sha }}
+          VERSION_CODE: ${{ needs.apk.outputs.version_code }}
+          VERSION_NAME: ${{ needs.apk.outputs.version_name }}
+          SIGNING_READY: ${{ needs.resolve.outputs.signing_ready }}
+          APK_BUILT: ${{ needs.apk.result == 'success' }}
+          APP_COMMIT: ${{ needs.resolve.outputs.app_commit }}
+        run: |
+          set -euo pipefail
+          export RUNTIME_JSON_ARM64_V8A='' RUNTIME_JSON_X86_64=''
+          export FULL_JSON_ARM64_V8A='' FULL_JSON_X86_64=''
+          export UPDATE_JSON_ARM64_V8A='' UPDATE_JSON_X86_64=''
+          if [[ "$SIGNING_READY" == true && "$APK_BUILT" == true ]]; then
+            apk="dist/azurpilot-update.apk"
+            test -s "$apk"
+            asset="AzurPilot-Android-${VERSION_NAME}-update.apk"
+            cp "$apk" "$asset"
+            sha="$(sha256sum "$asset" | awk '{print $1}')"
+            size="$(stat -c %s "$asset")"
+            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/azurpilot-android-latest/$asset"
+            export APK_JSON
+            APK_JSON="$(jq -n --arg url "$url" --arg sha256 "$sha" --argjson size "$size" '{url:$url,sha256:$sha256,size:$size}')"
+          fi
+          # 每个架构一份发布资产与清单条目。旧版 App 只读扁平 rootfs* 字段（历史上一直是
+          # arm64 包），继续指向 arm64 条目，保证旧包的运行时更新不断供。
+          for abi in arm64-v8a x86_64; do
+            key="$(echo "$abi" | tr 'a-z-' 'A-Z_')"
+            cp ".tmp/publish-rootfs/$abi/rootfs.tar.xz" "rootfs-$abi.tar.xz"
+            cp ".tmp/publish-rootfs/$abi/BUILD_MANIFEST" "BUILD_MANIFEST-$abi.json"
+            rsha="$(sha256sum "rootfs-$abi.tar.xz" | awk '{print $1}')"
+            rsize="$(stat -c %s "rootfs-$abi.tar.xz")"
+            rversion="$(jq -r '.rootfs_version' ".tmp/publish-rootfs/$abi/BUILD_MANIFEST")"
+            test -n "$rversion" && test "$rversion" != null
+            rurl="https://github.com/${GITHUB_REPOSITORY}/releases/download/azurpilot-android-latest/rootfs-$abi.tar.xz"
+            json="$(jq -n --arg version "$rversion" --arg url "$rurl" --arg sha256 "$rsha" --argjson size "$rsize" \
+              '{version:$version,url:$url,sha256:$sha256,size:$size}')"
+            export "RUNTIME_JSON_$key=$json"
+            if [[ "$SIGNING_READY" == true && "$APK_BUILT" == true ]]; then
+              full="dist/azurpilot-full-$abi.apk"
+              test -s "$full"
+              full_asset="AzurPilot-Android-${VERSION_NAME}-${abi}-full.apk"
+              cp "$full" "$full_asset"
+              fsha="$(sha256sum "$full_asset" | awk '{print $1}')"
+              fsize="$(stat -c %s "$full_asset")"
+              furl="https://github.com/${GITHUB_REPOSITORY}/releases/download/azurpilot-android-latest/$full_asset"
+              fjson="$(jq -n --arg url "$furl" --arg sha256 "$fsha" --argjson size "$fsize" '{url:$url,sha256:$sha256,size:$size}')"
+              export "FULL_JSON_$key=$fjson"
+              update="dist/azurpilot-update-$abi.apk"
+              test -s "$update"
+              update_asset="AzurPilot-Android-${VERSION_NAME}-${abi}-update.apk"
+              cp "$update" "$update_asset"
+              usha="$(sha256sum "$update_asset" | awk '{print $1}')"
+              usize="$(stat -c %s "$update_asset")"
+              uurl="https://github.com/${GITHUB_REPOSITORY}/releases/download/azurpilot-android-latest/$update_asset"
+              ujson="$(jq -n --arg url "$uurl" --arg sha256 "$usha" --argjson size "$usize" '{url:$url,sha256:$sha256,size:$size}')"
+              export "UPDATE_JSON_$key=$ujson"
+            fi
+          done
+          if ! gh release download azurpilot-android-latest --repo "$GITHUB_REPOSITORY" \
+              --pattern latest.json --dir . >/dev/null 2>&1; then
+            echo '{}' > latest.json
+          fi
+          python3 - <<'PY'
+          import json, os
+
+          with open('latest.json', encoding='utf-8') as f:
+              manifest = json.load(f)
+
+          def env_json(name):
+              raw = os.environ.get(name, '')
+              return json.loads(raw) if raw else None
+
+          runtimes = {}
+          for abi, key in (('arm64-v8a', 'ARM64_V8A'), ('x86_64', 'X86_64')):
+              entry = env_json(f'RUNTIME_JSON_{key}')
+              if entry is not None:
+                  runtimes[abi] = entry
+          if runtimes:
+              manifest['runtimes'] = runtimes
+              arm64 = runtimes.get('arm64-v8a')
+              if arm64:
+                  # 旧版 App 的扁平字段继续指向 arm64
+                  manifest['rootfsVersion'] = arm64['version']
+                  manifest['rootfsUrl'] = arm64['url']
+                  manifest['rootfsSha256'] = arm64['sha256']
+                  manifest['rootfsSize'] = arm64['size']
+          manifest['azurpilotCommit'] = os.environ['AP_REF']
+          manifest['androidHostCommit'] = os.environ['HOST_SHA']
+
+          apk = env_json('APK_JSON')
+          if apk is not None:
+              manifest['versionCode'] = int(os.environ['VERSION_CODE'])
+              manifest['versionName'] = os.environ['VERSION_NAME']
+              manifest['appCommit'] = os.environ['APP_COMMIT']
+              manifest['apkUrl'] = apk['url']
+              manifest['apkSha256'] = apk['sha256']
+              manifest['apkSize'] = apk['size']
+          full_apks = {}
+          for abi, key in (('arm64-v8a', 'ARM64_V8A'), ('x86_64', 'X86_64')):
+              entry = env_json(f'FULL_JSON_{key}')
+              if entry is not None:
+                  full_apks[abi] = entry
+          if full_apks:
+              manifest['fullApks'] = full_apks
+          update_apks = {}
+          for abi, key in (('arm64-v8a', 'ARM64_V8A'), ('x86_64', 'X86_64')):
+              entry = env_json(f'UPDATE_JSON_{key}')
+              if entry is not None:
+                  update_apks[abi] = entry
+          if update_apks:
+              manifest['updateApks'] = update_apks
+
+          with open('latest.json', 'w', encoding='utf-8') as f:
+              json.dump(manifest, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          PY
+          gh release view azurpilot-android-latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create azurpilot-android-latest --repo "$GITHUB_REPOSITORY" --draft \
+              --title 'AzurPilot for Android 自动构建' \
+              --notes '每 30 分钟检查 AzurPilot dev 更新；更新后按架构构建 rootfs 与两种签名 APK。'
+          assets=(latest.json rootfs-arm64-v8a.tar.xz rootfs-x86_64.tar.xz BUILD_MANIFEST-arm64-v8a.json BUILD_MANIFEST-x86_64.json)
+          # 预构建前端资产与 ABI 无关，任取一份（arm64）。命名带上游提交，运行时
+          # 旧热更服务按提交探测；新镜像已改用内置 Node.js 本地构建。旧 run 复用的产物里没有
+          # 该资产时跳过上传，热更探测会视作暂不可更新，不影响发布其余资产。
+          ftar="frontend-$(jq -r '.azurpilot_commit' .tmp/publish-rootfs/arm64-v8a/BUILD_MANIFEST).tar.xz"
+          if [[ -s ".tmp/publish-rootfs/arm64-v8a/$ftar" && -s ".tmp/publish-rootfs/arm64-v8a/$ftar.sha256" ]]; then
+            cp ".tmp/publish-rootfs/arm64-v8a/$ftar" "$ftar"
+            cp ".tmp/publish-rootfs/arm64-v8a/$ftar.sha256" "$ftar.sha256"
+            assets+=("$ftar" "$ftar.sha256")
+          else
+            echo "skip frontend dist asset: $ftar not present in artifact"
+          fi
+          if [[ "$SIGNING_READY" == true && "$APK_BUILT" == true ]]; then
+            assets+=("$asset" "AzurPilot-Android-${VERSION_NAME}-arm64-v8a-full.apk" "AzurPilot-Android-${VERSION_NAME}-x86_64-full.apk")
+            assets+=("AzurPilot-Android-${VERSION_NAME}-arm64-v8a-update.apk" "AzurPilot-Android-${VERSION_NAME}-x86_64-update.apk")
+          fi
+          sha256sum "${assets[@]}" > SHA256SUMS
+          assets+=(SHA256SUMS)
+          gh release upload azurpilot-android-latest "${assets[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          gh release edit azurpilot-android-latest --repo "$GITHUB_REPOSITORY" --draft=false --latest
+      - name: Prune stale release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_NAME: ${{ needs.apk.outputs.version_name }}
+          AP_REF: ${{ needs.resolve.outputs.ref }}
+        run: |
+          set -euo pipefail
+          # 滚动 release 的 APK / frontend 资产名带版本号或上游提交，--clobber 只覆盖
+          # 同名文件，历史资产会无限堆积，而 GitHub 不会自动清理 release 资产。发布
+          # 后按名删旧：保留 latest.json、全部 rootfs-<abi>.tar.xz、当前上游提交的
+          # frontend 包（运行时热更按提交探测）与最近 3 个版本的 APK（留回滚余地）；
+          # 旧版本 APK、旧提交 frontend、多架构改造前的遗留 rootfs.tar.xz 一律删除。
+          # 未识别的文件不动，避免误删手动上传的资产。
+          # frontend 提交取 BUILD_MANIFEST：复用旧 rootfs run 时它可能落后于 AP_REF，
+          # 刚上传的 frontend 资产名以 BUILD_MANIFEST 为准，不能按 AP_REF 清掉。
+          ap_commit="$(jq -r '.azurpilot_commit // empty' .tmp/publish-rootfs/arm64-v8a/BUILD_MANIFEST 2>/dev/null || true)"
+          ap_commit="${ap_commit:-$AP_REF}"
+          assets_json="$(gh release view azurpilot-android-latest --repo "$GITHUB_REPOSITORY" --json assets)"
+          # 现存资产里的版本号并上当前版本，取最高 3 个；版本名由提交数推出，单调递增。
+          versions="$(
+            {
+              jq -r '.assets[].name' <<<"$assets_json" |
+                sed -n 's/^AzurPilot-Android-\([0-9][0-9.]*\)-.*\.apk$/\1/p'
+              echo "$VERSION_NAME"
+            } | sort -uV | tail -n 3
+          )"
+          jq -r '.assets[].name' <<<"$assets_json" | while IFS= read -r name; do
+            delete=false
+            case "$name" in
+              # 多架构改造前的扁平 rootfs 资产，latest.json 早已改指 rootfs-<abi>.tar.xz
+              rootfs.tar.xz)
+                delete=true
+                ;;
+              frontend-*.tar.xz | frontend-*.tar.xz.sha256)
+                if [[ "$name" != "frontend-$ap_commit.tar.xz" &&
+                      "$name" != "frontend-$ap_commit.tar.xz.sha256" ]]; then
+                  delete=true
+                fi
+                ;;
+              AzurPilot-Android-*.apk)
+                v="${name#AzurPilot-Android-}"
+                v="${v%%-*}"
+                if [[ "$v" =~ ^[0-9][0-9.]*$ ]] && ! grep -Fxq -- "$v" <<<"$versions"; then
+                  delete=true
+                fi
+                ;;
+            esac
+            if [[ "$delete" == true ]]; then
+              # 单个删除失败只告警不阻塞：发布已完成，残留资产下一轮会再被清理。
+              gh release delete-asset azurpilot-android-latest "$name" --repo "$GITHUB_REPOSITORY" --yes \
+                || echo "::warning::failed to delete asset $name"
+            else
+              echo "keep: $name"
+            fi
+          done
+      - name: Mirror verified GitHub artifacts to CNB Releases
+        if: ${{ needs.resolve.outputs.signing_ready == 'true' }}
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          HOST_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 tools/cnb_release.py publish --source-dir . \
+            --output-dir .tmp/cnb-release --expected-host-commit "$HOST_SHA"

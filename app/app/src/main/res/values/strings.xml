@@ -1,0 +1,992 @@
+<resources>
+    <string name="app_name">AzurPilot</string>
+
+    <!-- 通用 -->
+    <string name="common_close">关闭</string>
+    <string name="common_back">返回</string>
+    <string name="common_delete">删除</string>
+    <string name="common_loading">加载中…</string>
+    <string name="dialog_confirm">确定</string>
+    <string name="dialog_cancel">取消</string>
+
+    <!-- 任务页 -->
+
+    <!-- 运行开关 -->
+
+    <!-- 配置 sheet -->
+
+    <!-- 添加任务 sheet -->
+
+    <!-- 首页 -->
+
+    <!-- 设置页；分组命名沿用上游 AzurPilotApp 系的 settings_section_* 约定 -->
+    <string name="settings_theme">主题</string>
+    <string name="settings_cat_display">显示与语言</string>
+    <string name="settings_cat_display_desc">主题与语言</string>
+    <string name="settings_cat_screen">虚拟屏</string>
+    <string name="settings_cat_screen_desc">虚拟屏刷新率</string>
+    <string name="settings_cat_logs">日志</string>
+    <string name="settings_cat_logs_desc">查看与导出运行日志</string>
+    <string name="settings_cat_keep_alive">后台保活</string>
+    <string name="settings_cat_keep_alive_desc">防杀策略与运行状态</string>
+    <string name="settings_cat_advanced">运行与安全</string>
+    <string name="settings_cat_advanced_desc">提权后端与锁屏保护</string>
+    <string name="settings_cat_widget">小组件</string>
+    <string name="settings_cat_widget_desc">添加桌面小组件</string>
+    <string name="settings_cat_runtime">Runtime</string>
+    <string name="settings_cat_runtime_desc">版本与下载镜像</string>
+    <string name="settings_cat_about">关于</string>
+    <string name="settings_cat_about_desc">版本、许可与开源组件</string>
+    <string name="settings_follow_system">跟随系统</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_hint">切换语言会重新加载项目，运行期间不可切换</string>
+    <string name="settings_about_description">AzurPilot for Android 是 AzurPilot 的安卓客户端。它提供挂机控制、虚拟屏预览、应用内原生界面与日志查看，支持 arm64-v8a 与 x86_64 设备；App 与 Runtime 分开更新，Runtime 下载支持多镜像与多线程。</string>
+    <string name="settings_version">版本</string>
+    <string name="settings_build">构建</string>
+    <string name="settings_project">项目</string>
+    <string name="settings_about_license">开源许可</string>
+    <string name="settings_about_repository">项目仓库</string>
+    <string name="settings_about_source_project">来源项目</string>
+    <string name="settings_about_components_summary">共 %1$d 个开源组件，点击查看全部及协议原文</string>
+    <string name="settings_open_source_licenses">开源组件与许可证</string>
+    <string name="settings_license_search_placeholder">搜索组件名、组织或协议…</string>
+    <string name="settings_license_filter_all">全部</string>
+    <string name="settings_license_filter_core">核心与内置</string>
+    <string name="settings_license_filter_libs">运行库</string>
+    <string name="settings_license_view_source">访问项目主页</string>
+    <string name="settings_license_text_title">协议原文</string>
+    <string name="settings_license_copied">已复制协议正文到剪贴板</string>
+    <string name="settings_license_component_not_found">未找到该组件的开源信息</string>
+    <string name="settings_license_spdx">开源协议</string>
+    <string name="settings_feedback_bug">反馈 Bug</string>
+    <string name="settings_feedback_bug_desc">到 GitHub 提交问题或查看已知问题</string>
+    <string name="settings_feedback_group">加群反馈</string>
+    <string name="settings_feedback_group_desc">加入 QQ 群，交流使用问题和建议</string>
+    <string name="compat_notice_title">来登记你的机型</string>
+    <string name="compat_notice_message">不同设备能不能正常运行，差别很大。欢迎到 GitHub 的「机型支持列表」提交一条：品牌、型号、系统版本、能不能用。你的一条记录，能让后来的人少踩坑。</string>
+    <string name="compat_notice_dont_ask_again">不再弹出</string>
+    <string name="compat_notice_go">去提交</string>
+    <string name="compat_notice_later">暂不</string>
+    <string name="community_warning_title">警告</string>
+    <string name="community_warning_message">严禁在 AzurPilot 仓库（wess09/AzurPilot）\n以及在非 AzurPilot for Android QQ 群内反馈或咨询任何问题\n包括 AzurPilot QQ 群\n\n违者永久踢出相应群聊 GitHub 永久拉黑</string>
+    <string name="community_warning_confirm_read">我已阅读并理解</string>
+    <string name="community_warning_continue">继续</string>
+    <string name="settings_hot_update">热更新</string>
+    <string name="settings_hot_update_desc">只更新源码和页面资源，不重装运行时；更新中任务会先停止，完成后自动恢复。</string>
+    <string name="settings_hot_update_check">检查更新</string>
+    <string name="settings_hot_update_apply">立即更新</string>
+    <string name="settings_hot_update_latest">已是最新</string>
+    <string name="settings_hot_update_available">发现新版本 %1$s</string>
+    <string name="settings_hot_update_wait_build">新版本资源还在准备中，稍后再试</string>
+    <string name="settings_hot_update_updating">正在更新：%1$s</string>
+    <string name="settings_hot_update_failed">上次更新失败：%1$s</string>
+    <string name="settings_hot_update_disabled">下载渠道未就绪，重启运行时后生效</string>
+    <string name="settings_hot_update_unreachable">运行时未连接或版本较旧，暂无法增量更新；请先整包更新运行时</string>
+    <string name="settings_hot_update_phase_git">拉取源码</string>
+    <string name="settings_hot_update_phase_dist">准备页面资源</string>
+    <string name="settings_hot_update_phase_manifest">写入版本信息</string>
+    <string name="settings_hot_update_phase_reload">重启运行时</string>
+    <string name="settings_auto_update_hour">自动更新时间</string>
+    <string name="settings_auto_update_hour_desc">每天在此时间自动检测并应用更新，不打断运行中任务</string>
+    <string name="settings_auto_update_hour_format">每天 %1$02d:00</string>
+    <string name="settings_auto_update_hour_dialog_title">选择每日自动更新时间</string>
+
+    <!-- 通知 -->
+    <string name="notification_channel_run">AzurPilot Runtime 守护</string>
+    <string name="notification_channel_run_desc">守护虚拟屏与桥服务，避免应用被系统回收</string>
+    <string name="notification_host_title">AzurPilot Runtime 守护中</string>
+    <string name="notification_host_content_ok">虚拟屏 #%1$d · 桥服务正常</string>
+    <string name="notification_host_content_degraded">虚拟屏 #%1$d · 桥服务不可达</string>
+    <string name="notification_host_content_proot">内置 AzurPilot Runtime 运行中（未建虚拟屏）</string>
+
+    <!-- 悬浮控制层 -->
+    <string name="accessibility_service_description">前台模式下同时按音量 + 与音量 − 唤起控制面板。只拦按键，不读取屏幕内容</string>
+    <string name="overlay_panel_title">操作面板</string>
+    <string name="overlay_back_to_app">回到应用</string>
+    <string name="overlay_lock">锁定位置</string>
+    <string name="overlay_unlock">解除锁定</string>
+    <string name="overlay_ball_idle">空闲</string>
+    <string name="overlay_ball_running">运行中</string>
+    <string name="overlay_host_start">启动 Runtime</string>
+    <string name="overlay_host_stop">停止 Runtime</string>
+    <string name="overlay_host_privileged">Main 进程：%1$s</string>
+    <string name="overlay_host_bridge">Bridge：%1$s</string>
+    <string name="overlay_host_display">Virtual Display：%1$s</string>
+    <string name="overlay_azurpilot_status">AzurPilot 调度器：%1$s</string>
+    <string name="overlay_azurpilot_running">运行中 · pid %1$d</string>
+    <string name="overlay_azurpilot_stopped">已停止</string>
+    <string name="overlay_azurpilot_unreachable">Runtime 未就绪</string>
+    <string name="overlay_azurpilot_preparing">Runtime 准备中 · %1$s</string>
+    <string name="overlay_azurpilot_preparing_generic">Runtime 准备中…</string>
+    <string name="overlay_azurpilot_start_failed">启动失败：%1$s</string>
+    <string name="overlay_azurpilot_start">开始</string>
+    <string name="overlay_azurpilot_stop">停止</string>
+    <string name="overlay_azurpilot_log_empty">暂无日志</string>
+    <string name="overlay_azurpilot_hint">高频操作在此面板；完整配置请回应用内的 AzurPilot 控制台</string>
+    <string name="host_state_connected">已连接</string>
+    <string name="host_state_disconnected">未连接</string>
+    <string name="host_state_ok">正常</string>
+    <string name="host_state_unreachable">不可达</string>
+    <string name="host_state_display_none">未创建</string>
+
+    <!-- 运行期屏保 -->
+    <string name="screensaver_idle">等待任务</string>
+    <string name="screensaver_swipe_to_unlock">拖到最右侧解锁</string>
+    <string name="screensaver_title">息屏运行</string>
+    <string name="screensaver_auto">任务启动时自动进入</string>
+    <string name="screensaver_brightness">息屏亮度：%1$d%%</string>
+    <string name="screensaver_description">息屏运行使用黑色背景与可调亮度，防止误触并隐藏导航栏。时间和任务状态在闲置时每 30 秒微移，触摸时暂停，拖动滑块解锁。</string>
+    <string name="screensaver_running">正在运行</string>
+    <string name="screensaver_connecting">正在连接运行环境</string>
+    <string name="screensaver_battery">%1$d%%</string>
+    <string name="screensaver_charging">正在充电</string>
+    <string name="screensaver_show_failed">无法开启息屏运行，请检查悬浮窗权限</string>
+
+    <!-- 定时任务 -->
+
+
+
+
+
+    <!-- 导航与对话框 -->
+    <string name="nav_azurpilot">AzurPilot</string>
+    <string name="nav_settings">设置</string>
+
+    <!-- AzurPilot tab：WebUI 容器 -->
+    <string name="proot_phase_preparing">正在准备 Runtime…</string>
+    <string name="proot_phase_updating">正在热更新 AzurPilot…</string>
+    <string name="proot_phase_starting">正在启动 AzurPilot 服务…</string>
+    <string name="proot_phase_failed">AzurPilot Runtime 启动失败：%1$s</string>
+
+    <!-- 主页 tab：运行配置 + 控制面板 + 运行日志 -->
+    <string name="nav_hangar">主页</string>
+    <string name="nav_screen">虚拟屏</string>
+    <string name="screen_waiting">正在接入画面…</string>
+    <string name="screen_hint">在画面上直接点按或滑动即可操作虚拟屏</string>
+    <string name="screen_idle_title">虚拟屏已就绪</string>
+    <string name="screen_idle_message">启动挂机或工具后，画面会出现在这里</string>
+    <string name="hangar_config_label">运行配置</string>
+    <string name="hangar_start">开始运行</string>
+    <string name="hangar_stop">停止运行</string>
+    <string name="hangar_status_ready">挂机队列待命</string>
+    <string name="hangar_status_running">挂机调度运行中</string>
+    <string name="hangar_tasks_standby">已就绪 %1$d 个任务 · 点击下方开始</string>
+    <string name="hangar_tasks_running">共 %1$d 个任务 · 正在执行</string>
+    <string name="hangar_gateway_idle">调度队列就绪</string>
+    <string name="hangar_gateway_waiting">等待运行时网关就绪</string>
+    <string name="hangar_task_running">正在运行：%1$s</string>
+    <string name="hangar_env_privileged">特权服务：%1$s</string>
+    <string name="hangar_env_bridge">通信桥接：%1$s</string>
+    <string name="hangar_env_display">虚拟屏幕：%1$s</string>
+    <string name="hangar_env_gateway">调度网关：%1$s</string>
+    <string name="tool_label">工具</string>
+    <string name="tool_semi_auto">半自动点击</string>
+    <string name="tool_event_story">活动剧情</string>
+    <string name="tool_stop">停止</string>
+
+    <!-- option 编辑器 -->
+
+    <!-- 跨层结构化语义的展示文案（domain/VM -> ui/i18n/DomainStrings） -->
+
+    <!-- Runner 拒绝/失败原因：reason 现为 UiText，不再当 %s 拼接 -->
+
+    <!-- 资源切换与运行选项 -->
+
+    <!-- 提权授权（首页权限卡 + Shizuku 引导） -->
+    <string name="permission_section">权限管理</string>
+    <string name="permission_backend">启动模式</string>
+    <string name="permission_request">请求权限</string>
+    <string name="permission_requesting">授权中…</string>
+
+    <!-- 服务状态行：连接态 / 项目加载 / 运行态归约成一句 -->
+    <string name="dialog_shizuku_not_installed_title">未检测到 shizuku-m</string>
+    <string name="dialog_shizuku_not_installed_message">本应用依赖 shizuku-m（修改版 Shizuku）提供的特权服务，检测到设备未安装。点下方按钮前往下载页安装，装完切回本应用会自动重新检测。</string>
+    <string name="dialog_shizuku_download_confirm">前往下载 shizuku-m</string>
+    <string name="dialog_shizuku_switch_to_root">切换至 Root 模式</string>
+    <string name="dialog_shizuku_skip_check">跳过检查（不推荐）</string>
+    <string name="dialog_shizuku_not_running_title">Shizuku 未启动</string>
+    <string name="dialog_shizuku_not_running_message">检测到 Shizuku 已安装但服务未启动。每次重启设备后都需要重新激活：打开 shizuku-m 点「启动」（无需连接 WLAN 或电脑），启动成功后返回本应用即可自动继续。</string>
+    <string name="dialog_shizuku_open_app">打开 Shizuku</string>
+    <string name="dialog_sui_detected_title">检测到 Sui</string>
+    <string name="dialog_sui_detected_message">当前由 Sui 提供 Shizuku 服务。Sui 以 Root 身份运行，本应用可能无法正常工作，请以实际测试为准。</string>
+    <string name="dialog_shizuku_need_auth_title">Shizuku 未授权</string>
+    <string name="dialog_shizuku_need_auth_message">Shizuku 服务正在运行但尚未授权本应用，请完成授权。授权成功前会持续提示。</string>
+    <string name="dialog_shizuku_official_conflict_title">检测到官方版 Shizuku</string>
+    <string name="dialog_shizuku_official_conflict_message">本应用配套的特权服务是魔改版 shizuku-m：重启设备后可离线自连，无需 WLAN 或电脑。它与官方 Shizuku 包名相同但签名不同，无法覆盖安装——请先在系统中卸载官方 Shizuku，再按提示安装 shizuku-m。卸载官方版不影响本应用的数据。</string>
+    <string name="dialog_shizuku_uninstall_confirm">去卸载官方版</string>
+    <string name="common_got_it">知道了</string>
+
+
+    <!-- 历史日志：每轮运行落盘一份 -->
+
+    <!-- 启动器日志：log/ 目录递归（AppLogWriter 落盘的 app.log 系列、session.log、crash） -->
+    <string name="app_log_title">启动器日志</string>
+    <string name="app_log_empty">还没有启动器日志</string>
+    <string name="app_log_clear">全部清除</string>
+    <!-- 大小 · 最后写入时间 -->
+    <string name="app_log_meta">%1$s · %2$s</string>
+    <string name="app_log_clear_title">清除启动器日志</string>
+    <string name="app_log_clear_message">仅删除 app.log 系列滚动文件；session.log 与崩溃记录会保留。此操作无法撤销。</string>
+
+    <!-- AzurPilot 日志（rootfs/opt/azurpilot/log）：错误现场 + 按天日志 -->
+    <string name="azurpilot_log_title">AzurPilot日志</string>
+    <string name="azurpilot_log_empty">还没有 AzurPilot 日志</string>
+    <string name="azurpilot_log_section_errors">错误记录</string>
+    <string name="azurpilot_log_section_daily">按天日志</string>
+    <string name="azurpilot_log_error_meta">%1$d 个文件</string>
+
+    <!-- 日志查看器（尾部加载） -->
+    <string name="log_tail_load_earlier">加载更早</string>
+    <string name="log_tail_empty">这份日志是空的</string>
+    <string name="log_tail_missing">文件不存在或已被清理</string>
+
+    <!-- 导出 -->
+    <string name="log_export_azurpilot_title">导出AzurPilot日志</string>
+    <string name="log_export_launcher_title">导出启动器日志</string>
+    <string name="log_export_share">分享</string>
+    <string name="log_export_save">保存到设备</string>
+    <string name="log_export_running">正在打包…</string>
+    <string name="log_export_failed">导出失败：没有可导出的日志</string>
+    <string name="log_export_saved">已保存为 %1$s</string>
+    <string name="log_export_subject">AzurPilot for Android 日志</string>
+
+    <!-- 设置页「日志」分组入口 -->
+    <string name="settings_log_launcher_desc">查看启动器运行日志与崩溃记录</string>
+    <string name="settings_log_azurpilot_desc">查看 AzurPilot 按天日志与错误现场</string>
+    <string name="settings_log_export_azurpilot_desc">打包近 7 天的 AzurPilot 日志与错误现场</string>
+    <string name="settings_log_export_launcher_desc">打包启动器全部日志与设备属性</string>
+    <string name="settings_auto_clean_logs">自动清理日志</string>
+    <string name="settings_auto_clean_logs_desc">冷启动时自动删除 7 天前的 AzurPilot 日志，并截断过期的会话日志</string>
+    <string name="dialog_disable_auto_clean_title">关闭自动清理</string>
+    <string name="dialog_disable_auto_clean_message">关闭后过期日志将不再自动清理，长期使用可能占用大量存储空间。</string>
+
+    <!-- 诊断文案；构造点在 domain/Diagnostics.kt 的 DiagnosticMessages -->
+
+    <!-- PI 解压 -->
+
+
+    <!-- 前台模式：主屏分辨率与操作面板 -->
+    <string name="foreground_resolution_apply_failed">修改分辨率失败，该设备可能不允许</string>
+    <string name="foreground_resolution_reset_failed">重置分辨率失败，该设备可能不允许</string>
+    <string name="foreground_resolution_too_small">屏幕 %1$s 太小，放不下 16:9 的画面</string>
+
+    <!-- 设置页「通知」分组入口 -->
+
+    <!-- 通知设置页 -->
+
+    <!-- 推送渠道名 -->
+
+    <!-- 渠道配置项 -->
+
+    <!-- 测试推送的逐条反馈 -->
+
+    <!-- 运行事件通知；channel 名与说明会出现在系统的通知设置里 -->
+
+    <!-- 推送失败原因；由各渠道产出，展示在测试反馈里 -->
+    <!-- 首启 rootfs 部署 -->
+    <string name="provision_title">部署 Runtime</string>
+    <string name="provision_subtitle">本机运行需要安装约 1GB Runtime：完整版解压内置包，轻量版从所选下载源获取，只需一次。</string>
+    <string name="provision_back_home">返回主页</string>
+    <string name="home_runtime_title">本机 Runtime 尚未安装</string>
+    <string name="home_runtime_description">在本机运行前，请先下载 Runtime。连接远程 AzurPilot 可点击右上角绑定，无需下载。</string>
+    <string name="home_runtime_download">下载 Runtime</string>
+    <string name="remote_pair_bind">绑定</string>
+    <string name="provision_checking">正在检查 Runtime…</string>
+    <string name="provision_extracting">解压中 %1$d%%（%2$d / %3$d MB）</string>
+    <string name="provision_downloading">正在下载 Runtime %1$d%%…</string>
+    <string name="provision_low_disk">磁盘空间不足：仅剩 %1$d MB，需要至少 2 GB 余量</string>
+    <string name="provision_not_bundled">当前下载源暂无可用 Runtime。请换源重试，或改用与设备架构匹配的完整版 APK</string>
+    <string name="provision_failed">部署失败：%1$s</string>
+    <string name="provision_retry">重试</string>
+    <string name="provision_skip">跳过（仅调试用）</string>
+    <string name="provision_source">下载源</string>
+    <string name="provision_source_direct">直连 GitHub</string>
+    <string name="provision_source_cnb">CNB 国内源（推荐）</string>
+    <string name="provision_source_custom">自定义</string>
+    <string name="provision_source_desc">内置镜像可直接选用，自定义前缀在设置里填写；切换后会立即重新下载</string>
+    <string name="app_update_title">AzurPilot for Android 有新版本</string>
+    <string name="app_update_message">App 版本 %1$s 已就绪，安装后会保留 App 数据和已安装的 Runtime。</string>
+    <string name="app_update_downloading">正在下载安装包…</string>
+    <string name="app_update_verifying">正在校验安装包…</string>
+    <string name="app_update_progress">%1$d%% · %2$s / %3$s</string>
+    <string name="app_update_error">更新失败：%1$s</string>
+    <string name="app_update_install">下载并安装</string>
+    <string name="app_update_later">稍后</string>
+    <string name="gateway_startup_auto">启动后自动开始挂机</string>
+    <string name="gateway_overview_empty">暂无调度任务</string>
+    <string name="gateway_overview_next">下一个任务：%1$s · %2$s（共 %3$d 个）</string>
+    <string name="settings_runtime_commit">AzurPilot 提交</string>
+    <string name="settings_runtime_unknown">未知</string>
+    <string name="settings_runtime_installed">已安装版本</string>
+    <string name="settings_runtime_latest">Latest 版本</string>
+    <string name="runtime_update_title">发现 Runtime 更新</string>
+    <string name="runtime_update_message">已安装：%1$s\nLatest：%2$s\n现在下载并更新 Runtime 吗？</string>
+    <string name="runtime_update_now">立即更新</string>
+    <string name="settings_runtime_managed">启动时检查 GitHub Latest；发现新版本会先询问，只有确认后才下载并更新 Runtime。手动检查可查看版本，重启 App 时可选择更新。</string>
+    <string name="settings_github_mirror">下载源</string>
+    <string name="settings_github_mirror_desc">用于 App、Runtime 和前端更新。CNB 为国内直连源，文件会校验大小和 SHA-256。</string>
+    <string name="settings_mirror_custom_save">保存</string>
+    <string name="settings_mirror_custom_hint">自定义镜像前缀，如 https://your-proxy.example.com/</string>
+    <string name="settings_runtime_check">检查 Runtime 更新</string>
+    <string name="settings_runtime_checking">正在检查 Runtime…</string>
+    <string name="settings_runtime_current">AP 已是 Latest 版本，Runtime 无需更新</string>
+    <string name="settings_runtime_commit_only">源码有新版本，可通过热更获取</string>
+    <string name="settings_runtime_new_version">发现新版本；重启 App 时可选择更新</string>
+    <string name="settings_runtime_check_failed">检查失败：%1$s</string>
+    <string name="settings_app_check">检查 App 更新</string>
+    <string name="settings_lan_control">局域网控制</string>
+    <string name="settings_lan_control_desc">开启后，同一 Wi-Fi 下的电脑可用浏览器打开下面的地址控制挂机。改动需重启 Runtime 生效；访问口令会自动生成。</string>
+    <string name="settings_lan_control_address">局域网访问地址</string>
+    <string name="settings_lan_control_password">访问口令</string>
+    <string name="settings_lan_control_password_hint">重启 Runtime 后自动生成访问口令</string>
+    <string name="settings_runtime_restart">重启 Runtime</string>
+    <string name="settings_runtime_restart_desc">重启运行时进程；正在运行的任务会停止，不会自动恢复。</string>
+    <string name="settings_runtime_restart_title">重启 Runtime？</string>
+    <string name="settings_runtime_restart_message">正在运行的任务会被中断，确定继续吗？</string>
+    <string name="settings_runtime_restarting">正在重启 Runtime…</string>
+    <string name="settings_remote_access">远程访问</string>
+    <string name="settings_remote_access_desc">开启并重启 Runtime 后，会生成一条可从公网访问的入口，出门也能用网页控制挂机。访问口令务必保管好，泄露即等于交出控制权。</string>
+    <string name="settings_remote_access_state">连接状态</string>
+    <string name="settings_remote_access_address">远程访问地址</string>
+    <string name="settings_remote_access_password">访问口令</string>
+    <string name="settings_remote_state_ready">已就绪</string>
+    <string name="settings_remote_state_waiting">正在建立连接…</string>
+    <string name="settings_remote_state_stopped">未连接</string>
+    <string name="settings_remote_state_unreachable">运行时未就绪</string>
+    <string name="settings_info_copy">复制</string>
+    <string name="settings_info_copied">已复制到剪贴板</string>
+    <!-- AzurPilot 原生界面（原 WebUI 的功能面） -->
+    <string name="ap_section_overview">总览</string>
+    <string name="ap_section_config">配置</string>
+    <string name="ap_section_logs">日志</string>
+    <string name="ap_section_stats">统计</string>
+    <string name="ap_section_settings">设置</string>
+    <string name="ap_back">返回</string>
+    <string name="ap_cancel">取消</string>
+    <string name="ap_retry">重试</string>
+    <string name="ap_refresh">刷新</string>
+    <string name="ap_run_now">立即运行</string>
+    <string name="ap_waiting_data">正在读取…</string>
+    <string name="ap_connecting">正在连接 AzurPilot…</string>
+    <string name="ap_runtime_idle">运行环境未启动</string>
+    <string name="ap_open_in_browser">在浏览器打开</string>
+    <string name="ap_status_running">运行中</string>
+    <string name="ap_status_stopped">已停止</string>
+    <string name="ap_status_error">异常</string>
+    <string name="ap_status_updating">更新中</string>
+    <string name="ap_task_running">运行中</string>
+    <string name="ap_task_pending">待运行</string>
+    <string name="ap_task_waiting">等待中</string>
+    <string name="ap_title_task_config">任务配置</string>
+    <string name="ap_title_instances">实例管理</string>
+    <string name="ap_title_announcement">公告</string>
+    <string name="ap_title_meowfficer">指挥喵评分</string>
+    <string name="ap_title_updater">运行时更新</string>
+    <string name="ap_title_deploy">部署设置</string>
+    <string name="ap_instance_none">还没有实例</string>
+    <string name="ap_instance_manage">管理</string>
+    <string name="ap_instances_create">新建实例</string>
+    <string name="ap_instances_create_confirm">创建</string>
+    <string name="ap_instances_name">实例名</string>
+    <string name="ap_instances_name_hint">首字符须为字母或汉字，最长 64 位</string>
+    <string name="ap_instances_source">来源</string>
+    <string name="ap_instances_source_template">空白模板</string>
+    <string name="ap_instances_source_copy">复制 %1$s</string>
+    <string name="ap_instances_export">导出为 JSON</string>
+    <string name="ap_instances_import">导入配置</string>
+    <string name="ap_import_default_hint">配置仅写入默认实例 ap，覆盖前会保存备份。</string>
+    <string name="ap_import_overwrite_warning">将用文件中的可编辑参数覆盖默认实例。请先停止调度器，Android 设备连接参数会保留。</string>
+    <string name="ap_import_completed">配置已导入默认实例</string>
+    <string name="ap_import_backup_failed">无法备份当前配置，已取消导入</string>
+    <string name="ap_instances_import_warning">将把「%1$s」导入为新实例。安卓版使用特殊配置，电脑版配置直接导入可能无法使用，确定继续吗？</string>
+    <string name="ap_instances_import_confirm">继续导入</string>
+    <string name="ap_instances_import_read_failed">配置文件读取失败，请重试</string>
+    <string name="ap_instances_delete">删除</string>
+    <string name="ap_instances_delete_title">删除实例 %1$s？</string>
+    <string name="ap_instances_delete_message">配置会移到 config/backup 备份目录，可以之后手动恢复。</string>
+    <string name="ap_instances_empty_hint">新建一个实例后才能运行 AzurPilot</string>
+    <string name="ap_overview_scheduler">调度器</string>
+    <string name="ap_overview_counts">运行 %1$d · 待运行 %2$d · 等待 %3$d</string>
+    <string name="ap_overview_revision">配置版本</string>
+    <string name="ap_overview_startup_auto">启动后自动运行</string>
+    <string name="ap_overview_resources">资源</string>
+    <string name="ap_overview_resource_limit">上限 %1$s</string>
+    <string name="ap_overview_preview">实时画面</string>
+    <string name="ap_preview_waiting">还没有画面</string>
+    <string name="ap_preview_waiting_hint">任务运行时这里会显示游戏画面</string>
+    <string name="ap_preview_captured_at">抓取于 %1$s</string>
+    <string name="ap_overview_tasks">任务计划</string>
+    <string name="ap_overview_no_tasks">没有已启用的任务</string>
+    <string name="ap_overview_no_tasks_hint">到「配置」里把任务加进调度器</string>
+    <string name="ap_overview_no_instance">未选择实例</string>
+    <string name="ap_resource_oil">石油</string>
+    <string name="ap_resource_coin">物资</string>
+    <string name="ap_resource_gem">钻石</string>
+    <string name="ap_resource_cube">心智魔方</string>
+    <string name="ap_resource_pt">活动 PT</string>
+    <string name="ap_resource_action_point">行动力</string>
+    <string name="ap_resource_yellow_coin">作战补给凭证</string>
+    <string name="ap_resource_purple_coin">特别兑换凭证</string>
+    <string name="ap_resource_core">核心数据</string>
+    <string name="ap_resource_medal">荣誉勋章</string>
+    <string name="ap_resource_merit">功勋</string>
+    <string name="ap_resource_guild_coin">舰队币</string>
+    <string name="ap_resource_chip">心智单元</string>
+    <string name="ap_config_search">搜索参数</string>
+    <string name="ap_config_no_match">没有匹配的参数</string>
+    <string name="ap_config_no_match_hint">换个关键词，或直接输入参数名（如 Fleet）</string>
+    <string name="ap_config_tool_hint">工具任务：单独运行，不进入调度器</string>
+    <string name="ap_field_readonly">只读</string>
+    <string name="ap_field_saving">保存中</string>
+    <string name="ap_field_saved">已保存</string>
+    <string name="ap_field_retry">重试</string>
+    <string name="ap_field_clear">清空</string>
+    <string name="ap_field_invalid">输入不合法</string>
+    <string name="ap_field_datetime_format">格式 YYYY-MM-DD HH:mm:ss</string>
+    <string name="ap_field_yaml_hint">顶层必须是键值映射</string>
+    <string name="ap_field_script_hint">受限脚本语法，可先检查</string>
+    <string name="ap_script_check">检查脚本</string>
+    <string name="ap_script_checking">正在检查…</string>
+    <string name="ap_script_valid">脚本有效</string>
+    <string name="ap_logs_search">搜索日志</string>
+    <string name="ap_logs_level_all">全部</string>
+    <string name="ap_logs_count">显示 %1$d 条，共 %2$d 条</string>
+    <string name="ap_logs_follow_on">继续跟随</string>
+    <string name="ap_logs_follow_off">暂停跟随</string>
+    <string name="ap_logs_order_asc">改为倒序</string>
+    <string name="ap_logs_order_desc">改为正序</string>
+    <string name="ap_logs_clear">清空视图</string>
+    <string name="ap_logs_export">导出日志</string>
+    <string name="ap_logs_no_matches">还没有符合筛选条件的日志</string>
+    <string name="ap_logs_no_matches_hint">请调整关键词或日志级别</string>
+    <string name="ap_logs_empty">还没有日志</string>
+    <string name="ap_logs_empty_hint">运行任务后这里会实时刷新</string>
+    <string name="ap_stats_cat_resources">资源</string>
+    <string name="ap_stats_cat_action">行动力</string>
+    <string name="ap_stats_cat_opsi">大世界</string>
+    <string name="ap_stats_cat_commission">委托</string>
+    <string name="ap_stats_cat_ships">舰船</string>
+    <string name="ap_stats_cat_loot">掉落</string>
+    <string name="ap_stats_cat_research">科研</string>
+    <string name="ap_stats_days">%1$d 天</string>
+    <string name="ap_stats_period_day">今天</string>
+    <string name="ap_stats_period_week">本周</string>
+    <string name="ap_stats_period_month">本月</string>
+    <string name="ap_stats_scope_series">按期数</string>
+    <string name="ap_stats_scope_consumable">心智/物资</string>
+    <string name="ap_stats_series_latest">最新</string>
+    <string name="ap_stats_series_n">第 %1$d 期</string>
+    <string name="ap_stats_summary">概览</string>
+    <string name="ap_stats_trend">趋势</string>
+    <string name="ap_stats_no_rows">没有记录</string>
+    <string name="ap_stats_no_instance">未选择实例</string>
+    <string name="ap_stats_task_all">全部任务</string>
+    <string name="ap_stats_refresh">重新统计</string>
+    <string name="ap_stats_refresh_hint">掉落数据在领奖时落库，需要时重新统计一次</string>
+    <string name="ap_settings_instances_manage">管理实例</string>
+    <string name="ap_settings_instances_count">共 %1$d 个</string>
+    <string name="ap_settings_current_instance">当前实例</string>
+    <string name="ap_settings_announcement_empty">暂无公告</string>
+    <string name="ap_settings_meowfficer_hint">查看指挥喵评分报告</string>
+    <string name="ap_settings_deploy_open">打开部署设置</string>
+    <string name="ap_settings_deploy_count">共 %1$d 组</string>
+    <string name="ap_settings_remote">远程访问</string>
+    <string name="ap_settings_remote_off">未启用</string>
+    <string name="ap_announcement_id">公告 %1$s</string>
+    <string name="ap_announcement_empty">暂无公告</string>
+    <string name="ap_announcement_empty_hint">连上网络后会自动获取</string>
+    <string name="ap_meowfficer_not_generated">还没有评分报告</string>
+    <string name="ap_meowfficer_hint">先在「工具」里运行一次「指挥喵评分」</string>
+    <string name="ap_meowfficer_generated">生成于 %1$s</string>
+    <string name="ap_meowfficer_clear">清除报告</string>
+    <string name="ap_meowfficer_clear_title">清除评分报告？</string>
+    <string name="ap_meowfficer_clear_message">会删除 log/ 下的评分报告文件，不能撤销。</string>
+    <string name="ap_meowfficer_level">Lv%1$d</string>
+    <string name="ap_meowfficer_cost">消耗</string>
+    <string name="ap_meowfficer_points">已投入</string>
+    <string name="ap_meowfficer_targets">建议目标</string>
+    <string name="ap_meowfficer_inferred">（推断）</string>
+    <string name="ap_updater_status">更新状态</string>
+    <string name="ap_updater_local">本地提交</string>
+    <string name="ap_updater_upstream">远端提交</string>
+    <string name="ap_updater_branch">分支</string>
+    <string name="ap_updater_divergence">领先 / 落后</string>
+    <string name="ap_updater_ahead_behind">%1$d / %2$d</string>
+    <string name="ap_updater_fetch">获取更新</string>
+    <string name="ap_updater_apply">立即更新</string>
+    <string name="ap_updater_cancel">取消更新</string>
+    <string name="ap_updater_commits">提交记录（共 %1$d）</string>
+    <string name="ap_updater_managed">由 App 整包更新</string>
+    <string name="ap_updater_managed_hint">Android 版的运行时会随 App 一起更新，这里不提供热更。</string>
+    <string name="ap_updater_current">已是最新</string>
+    <string name="ap_updater_behind">有 %1$d 个新提交</string>
+    <string name="ap_page_prev">上一页</string>
+    <string name="ap_page_next">下一页</string>
+    <string name="ap_deploy_save">保存</string>
+    <string name="ap_deploy_saving">正在保存…</string>
+    <string name="ap_deploy_pending">有 %1$d 项待保存</string>
+    <string name="ap_deploy_password_hint">留空表示不修改</string>
+    <string name="ap_deploy_demo">演示模式下不能修改部署设置</string>
+    <string name="ap_stats_no_data">这一类还没有数据</string>
+    <string name="ap_stats_no_data_hint">任务跑过一轮之后统计才会出现</string>
+    <string name="ap_deploy_load_failed">读取部署设置失败</string>
+    <string name="ap_run_title">运行 %1$s？</string>
+    <string name="ap_run_warning">此操作会接管游戏画面并执行该任务。请确认当前没有正在运行的其他任务。</string>
+    <string name="ap_run_confirm">确认运行</string>
+    <string name="ap_config_no_config">此任务没有独立配置</string>
+    <string name="ap_config_no_config_hint">它靠「运行工具」直接启动，参数在相关任务里</string>
+    <string name="ap_config_run_tool">运行工具</string>
+    <string name="ap_startup_title">启动</string>
+    <string name="ap_startup_autorun">启动时自动运行</string>
+    <string name="ap_startup_autorun_help">启用后，AzurPilot 启动时自动运行当前实例。</string>
+    <string name="ap_startup_remember">启动时记忆运行</string>
+    <string name="ap_startup_remember_help">启用后，退出时若实例正在运行则下次启动自动运行，已停止则保持停止。</string>
+    <string name="ap_tool_logs">运行日志</string>
+    <string name="ap_tool_logs_empty">还没有输出</string>
+    <string name="ap_fleet_title">第 %1$d 舰队</string>
+    <string name="ap_fleet_vanguard">先锋舰队</string>
+    <string name="ap_fleet_main">主力舰队</string>
+    <string name="ap_fleet_submarine">潜艇舰队</string>
+    <string name="ap_fleet_empty">还没有舰队扫描记录</string>
+    <string name="ap_fleet_empty_hint">运行一次「舰队扫描」后在这里查看</string>
+    <string name="ap_fleet_no_record">暂无记录</string>
+    <string name="ap_fleet_invalid">舰队记录格式不正确</string>
+    <string name="ap_fleet_invalid_hint">重新运行一次「舰队扫描」</string>
+    <string name="ap_fleet_level">Lv.%1$d</string>
+    <string name="ap_field_failed">%1$s 输入已保留。</string>
+    <string name="ap_field_failed_unknown">保存失败，输入已保留。</string>
+    <string name="ap_scheduler_start">启动调度器</string>
+    <string name="ap_scheduler_stop">停止调度器</string>
+    <string name="ap_scheduler_processing">处理中…</string>
+    <string name="ap_clear_search">清除搜索</string>
+    <string name="ap_config_directory">分组目录</string>
+    <string name="ap_bar_search">搜索配置项</string>
+    <string name="ap_field_notset">未设置</string>
+    <string name="settings_virtual_display_rate_requested">请求帧率</string>
+    <string name="settings_virtual_display_rate_value">%.1f FPS</string>
+    <string name="settings_virtual_display_rate_maximum">物理屏当前帧率（上限）</string>
+    <string name="settings_virtual_display_rate_hint">下次启动虚拟屏时生效。最大档跟随物理屏；系统可能调整实际刷新率。</string>
+    <string name="settings_virtual_display_rate_unsupported">自定义虚拟屏帧率需要 Android 14 或更高版本。</string>
+    <string name="settings_virtual_display_rate_unavailable">无法读取物理屏刷新率，暂时无法调节。</string>
+
+    <!-- 后台保活系统 -->
+    <string name="settings_keepalive_title">激进保活系统</string>
+    <string name="settings_keepalive_desc">整合后台无音量音频、1px 前台浮窗、伴侣设备服务、无障碍守护、CPU 唤醒锁、定时作业与闹钟、双进程守护七路保活机制，防止应用在后台被系统杀死。</string>
+    <string name="settings_keepalive_audio">后台无音量音频</string>
+    <string name="settings_keepalive_audio_desc">在底层循环播放零音量静音数据，将应用标记为活跃媒体播放实体</string>
+    <string name="settings_keepalive_pixel">前台 1px 浮窗</string>
+    <string name="settings_keepalive_pixel_desc">挂载 1x1 像素透明悬浮窗，提升进程为可见窗口优先级（需悬浮窗权限）</string>
+    <string name="settings_keepalive_wakelock">CPU 防休眠唤醒锁</string>
+    <string name="settings_keepalive_wakelock_desc">持有系统 Partial WakeLock 保证 CPU 持续运行，防止在息屏时进入深度休眠</string>
+    <string name="settings_keepalive_alarm_job">定时作业与精准闹钟</string>
+    <string name="settings_keepalive_alarm_job_desc">结合 JobScheduler 系统作业与 AlarmManager 闹钟在 Doze 模式下周期性唤醒进程</string>
+    <string name="settings_keepalive_daemon_broadcast">双进程守护</string>
+    <string name="settings_keepalive_daemon_broadcast_desc">独立守护子进程与主进程互相监听 Binder 死亡并拉活，同时监听开机、解锁与电源事件</string>
+    <string name="settings_keepalive_companion">伴侣设备服务</string>
+    <string name="settings_keepalive_companion_desc">注册系统伴侣设备组件，享有系统级免杀与后台网络唤醒豁免</string>
+    <string name="settings_keepalive_accessibility">无障碍守护联动</string>
+    <string name="settings_keepalive_accessibility_desc">利用系统无障碍机制，在异常退出时由系统自动重拉应用进程</string>
+    <string name="settings_keepalive_status_active">运行中</string>
+    <string name="settings_keepalive_status_inactive">未启用</string>
+    <string name="settings_keepalive_status_need_permission">未授权悬浮窗</string>
+    <string name="settings_keepalive_status_need_accessibility">无障碍未开启</string>
+
+    <!-- 桌面小组件 -->
+    <string name="widget_control_name">AzurPilot 控制面板</string>
+    <string name="widget_control_description">在桌面查看运行状态、当前任务并快速启停</string>
+    <string name="widget_quick_name">AzurPilot 快捷开关</string>
+    <string name="widget_quick_description">紧凑桌面开关，随时一键启动或停止自动化任务</string>
+    <string name="widget_action_start">启动</string>
+    <string name="widget_action_stop">停止</string>
+    <string name="widget_action_busy">处理中…</string>
+    <string name="widget_status_idle">已停止</string>
+    <string name="widget_status_running">运行中 (PID %1$d)</string>
+    <string name="widget_status_running_no_pid">运行中</string>
+    <string name="widget_status_preparing">准备中</string>
+    <string name="widget_status_error">启动异常</string>
+    <string name="widget_task_idle">无正在执行的任务</string>
+    <string name="widget_refresh">刷新</string>
+    <string name="widget_pin_to_home_description">将控制面板或快捷开关添加至桌面，随时查看状态并操作</string>
+    <string name="widget_pin_control">添加控制面板 (4x2)</string>
+    <string name="widget_pin_quick">添加快捷开关 (2x1)</string>
+    <string name="widget_pin_success">已请求系统添加小组件到桌面</string>
+    <string name="widget_pin_unsupported">当前桌面启动器不支持自动添加，请长按桌面手动添加</string>
+<!--
+  桌面长按快捷方式（res/xml/shortcuts.xml）：标签在桌面菜单里直接可读，长度受限
+-->
+    <string name="shortcut_toggle_short">一键启停</string>
+    <string name="shortcut_toggle_long">启动或停止任务</string>
+    <string name="shortcut_screen_short">虚拟屏</string>
+    <string name="shortcut_screen_long">查看虚拟屏画面</string>
+    <string name="shortcut_log_short">运行日志</string>
+    <string name="shortcut_log_long">查看运行日志</string>
+    <string name="shortcut_toggle_starting">正在启动任务…</string>
+    <string name="shortcut_toggle_stopping">正在停止任务…</string>
+
+
+    <!-- 应用锁屏保护 -->
+    <string name="settings_app_lock_title">应用锁屏保护</string>
+    <string name="settings_app_lock_desc">冷启动及从后台返回时需验证系统锁（PIN 码/指纹/面部）；未设置锁屏时免密。</string>
+    <string name="settings_app_lock_no_lock_hint">（系统未设置锁屏密码，当前免密）</string>
+    <string name="auth_prompt_title_app">验证以进入应用</string>
+    <string name="auth_prompt_title_disable">关闭应用锁屏保护</string>
+    <string name="auth_prompt_subtitle">请使用锁屏密码或生物识别验证身份</string>
+    <string name="app_lock_title">应用已锁定</string>
+    <string name="app_lock_desc">已开启应用锁屏保护，请验证身份后继续使用。</string>
+    <string name="app_lock_unlock_button">验证身份并解锁</string>
+    <string name="app_lock_auth_failed">验证失败（代码 %1$d）：%2$s。请重试或检查系统锁屏设置。</string>
+    <string name="host_shizuku_root_uid_error">Shizuku 服务以 root 身份运行，系统拒绝创建虚拟屏。请在“设置 → 运行与安全”中授权并切换至 Root 启动模式。</string>
+    <string name="host_root_fallback_failed">已自动尝试 Root 启动模式，但虚拟屏仍创建失败。请检查 Root 授权或查看应用日志。</string>
+    <string name="device_report_title">提交你的机型</string>
+    <string name="device_report_description">自动检测机型，帮助完善适配</string>
+    <string name="device_report_privacy">仅提交下方机型参数和使用结果，并公开到 GitHub。不读取 IMEI、序列号、Android ID、账户或日志。</string>
+    <string name="device_report_manufacturer">厂商</string>
+    <string name="device_report_brand">品牌</string>
+    <string name="device_report_model">型号代码</string>
+    <string name="device_report_device">机型代号</string>
+    <string name="device_report_product">产品代号</string>
+    <string name="device_report_hardware">硬件平台</string>
+    <string name="device_report_soc">芯片</string>
+    <string name="device_report_unknown">未提供</string>
+    <string name="device_report_android">系统版本</string>
+    <string name="device_report_android_value">%1$s（API %2$d）</string>
+    <string name="device_report_patch">安全补丁</string>
+    <string name="device_report_abis">处理器架构</string>
+    <string name="device_report_screen">屏幕</string>
+    <string name="device_report_screen_value">%1$d × %2$d，%3$d dpi，%4$d Hz</string>
+    <string name="device_report_memory">内存</string>
+    <string name="device_report_memory_value">约 %1$d GiB</string>
+    <string name="device_report_compatibility">使用结果</string>
+    <string name="device_report_working">可正常使用</string>
+    <string name="device_report_not_working">无法正常使用</string>
+    <string name="device_report_consent">我同意将以上信息公开到 GitHub</string>
+    <string name="device_report_submit">确认并提交</string>
+    <string name="device_report_collecting">正在检测机型…</string>
+    <string name="device_report_sending">正在提交，请稍候…</string>
+    <string name="device_report_success">提交成功，已发布到机型支持列表（Issue #1）。</string>
+    <string name="device_report_duplicate">这份报告已提交过，可直接查看已有记录。</string>
+    <string name="device_report_open_issue">查看提交内容</string>
+    <string name="device_report_unavailable">此安装包未配置提交证书，或证书已过期。请更新 App 后重试。</string>
+    <string name="device_report_auth_error">提交验证失败。请检查系统时间，或更新 App 后重试。</string>
+    <string name="device_report_rate_limited">提交较多，请一小时后再试。</string>
+    <string name="device_report_server_error">服务器暂时繁忙，请稍后重试。重复提交会复用已有工单。</string>
+    <string name="device_report_send_error">提交未完成。请检查网络后重试，重复提交会复用已有工单。</string>
+    <string name="device_report_collect_error">无法检测机型，请返回后重试。</string>
+    <string name="device_report_backend">提权方式</string>
+    <string name="device_report_run_mode">运行模式</string>
+    <string name="device_report_foreground">前台</string>
+    <string name="device_report_background">后台</string>
+    <string name="device_report_marketing_name">机型名称</string>
+    <string name="device_report_rom">厂商系统</string>
+    <string name="device_report_build_incremental">完整系统版本</string>
+    <string name="device_report_build_display">构建编号</string>
+    <string name="device_report_complete_title">提交成功</string>
+    <string name="device_report_done">完成</string>
+    <string name="device_report_test_required">请实际测试后，选择使用结果再提交。</string>
+    <string name="ocr_title">OCR 加速</string>
+    <string name="ocr_hardware_acceleration">使用硬件加速</string>
+    <string name="ocr_hardware_acceleration_hint">默认开启。关闭后使用 CPU；开启后仅在硬件运行出错或不支持时回退，分数差不触发回退。</string>
+    <string name="ocr_user_disabled">已关闭硬件加速，使用 CPU</string>
+    <string name="ocr_score_difference">最大分数差（仅供参考）</string>
+    <string name="ocr_predictions_differ">部分时间步字符选择与 CPU 对照不同，仅供参考。</string>
+    <string name="ocr_description">查看实际后端，测试模型和 AP 调用</string>
+    <string name="ocr_soc">芯片</string>
+    <string name="ocr_vendor">芯片厂商</string>
+    <string name="ocr_vendor_qualcomm">高通</string>
+    <string name="ocr_vendor_mediatek">联发科</string>
+    <string name="ocr_vendor_hiai">海思麒麟</string>
+    <string name="ocr_vendor_xring">小米玄戒（暂未接入）</string>
+    <string name="ocr_vendor_other">暂未支持</string>
+    <string name="ocr_libraries">加速库</string>
+    <string name="ocr_ready">已内置</string>
+    <string name="ocr_unavailable">不可用</string>
+    <string name="ocr_npu_state">加速状态</string>
+    <string name="ocr_npu_untested">尚未验证</string>
+    <string name="ocr_npu_verified">加速调用已通过</string>
+    <string name="ocr_npu_disabled">加速失败，已改用 CPU</string>
+    <string name="ocr_npu_partial">部分模型已改用 CPU</string>
+    <string name="ocr_ap_runtime">AP 运行环境</string>
+    <string name="ocr_running">运行中</string>
+    <string name="ocr_not_running">未启动</string>
+    <string name="ocr_status_hint">后端按模型显示。库已内置不代表已使用 NPU；测试调用与 AP 业务调用分别计数。</string>
+    <string name="ocr_refresh">刷新状态</string>
+    <string name="ocr_test_model">测试模型</string>
+    <string name="ocr_test_hint">使用内置数字图片比较模型输出和耗时，再检查 AP 的识别调用。测试可能需要几分钟。</string>
+    <string name="ocr_start_ap_hint">先启动 AzurPilot，再运行测试，才能验证 AP 调用。未启动时仅测试内置模型。</string>
+    <string name="ocr_test">运行测试</string>
+    <string name="ocr_testing">正在测试…</string>
+    <string name="ocr_model_test_passed">模型测试通过</string>
+    <string name="ocr_backend">实际后端</string>
+    <string name="ocr_backend_cpu">CPU</string>
+    <string name="ocr_backend_litert">NPU + CPU（LiteRT）</string>
+    <string name="ocr_backend_hiai">NPU（HiAI）</string>
+    <string name="ocr_backend_pending">尚未运行</string>
+    <string name="ocr_cold_time">首次耗时</string>
+    <string name="ocr_steady_time">当前后端单模型平均</string>
+    <string name="ocr_cpu_time">独立 LiteRT CPU 平均</string>
+    <string name="ocr_precision_passed">各时间步字符选择与 CPU 对照一致。</string>
+    <string name="ocr_measurement_hint">固定输入 1×3×48×320，预热 3 次后测 20 次，含张量复制。不含 AP 图片处理、通信和解码；首次含初始化和校验。</string>
+    <string name="ocr_cpu_verified">独立会话只请求 CPU，未加载厂商插件，且没有 NPU 分区。</string>
+    <string name="ocr_ap_backend">最近 AP 业务后端</string>
+    <string name="ocr_ap_no_calls">尚无业务调用</string>
+    <string name="ocr_ap_shape">最近 AP 输入尺寸</string>
+    <string name="ocr_ap_test">AP 调用测试</string>
+    <string name="ocr_ap_test_passed">AP 预处理、宿主推理和字符解码已接通。</string>
+    <string name="ocr_recognized_text">识别结果</string>
+    <string name="ocr_expected_text">示例文字</string>
+    <string name="ocr_ap_time">AP 完整调用</string>
+    <string name="ocr_text_mismatch">示例文字未完全识别，请复制报告并测试实际游戏画面。</string>
+    <string name="ocr_ap_requests">AP 业务调用</string>
+    <string name="ocr_test_requests">测试调用</string>
+    <string name="ocr_last_time">最近推理耗时</string>
+    <string name="ocr_cpu_detector">当前模型由 LiteRT CPU 执行。</string>
+    <string name="ocr_cpu_shape">当前图片尺寸未适配加速，使用 CPU。</string>
+    <string name="ocr_cpu_unavailable">此设备的加速库或系统支持不可用，使用 CPU。</string>
+    <string name="ocr_cpu_failed">硬件加载、编译或推理出错，已回退 CPU。</string>
+    <string name="ocr_copy_report">复制测试报告</string>
+    <string name="ocr_milliseconds">%1$.1f 毫秒</string>
+    <string name="ocr_backend_litert_gpu_softmax">NPU + GPU Softmax（LiteRT）</string>
+    <string name="nav_rail_collapse">收起导航栏</string>
+    <string name="nav_rail_expand">展开导航栏</string>
+<string name="ksu_color_amber">琥珀</string>
+<string name="ksu_color_blue">蓝色</string>
+<string name="ksu_color_blue_grey">灰蓝</string>
+<string name="ksu_color_brown">棕色</string>
+<string name="ksu_color_cyan">青色</string>
+<string name="ksu_color_deep_purple">深紫</string>
+<string name="ksu_color_green">绿色</string>
+<string name="ksu_color_indigo">靛青</string>
+<string name="ksu_color_orange">橙色</string>
+<string name="ksu_color_pink">粉色</string>
+<string name="ksu_color_purple">紫色</string>
+<string name="ksu_color_red">红色</string>
+<string name="ksu_color_sakura">樱花</string>
+<string name="ksu_color_teal">青绿</string>
+<string name="ksu_color_yellow">黄色</string>
+<string name="ksu_settings_color_spec">色彩标准</string>
+<string name="ksu_settings_color_style">色彩风格</string>
+<string name="ksu_settings_enable_blur">模糊</string>
+<string name="ksu_settings_enable_blur_summary">启用顶栏和底栏的模糊效果</string>
+<string name="ksu_settings_enable_glass">液态玻璃</string>
+<string name="ksu_settings_enable_glass_summary">启用悬浮底栏的液态玻璃效果</string>
+<string name="ksu_settings_enable_predictive_back">预测性返回手势</string>
+<string name="ksu_settings_enable_predictive_back_summary">启用对预测性返回手势的支持</string>
+<string name="ksu_settings_enable_swipe_dismiss">横移返回手势</string>
+<string name="ksu_settings_enable_swipe_dismiss_summary">从屏幕边缘横移返回上一页</string>
+<string name="ksu_settings_floating_bottom_bar">悬浮底栏</string>
+<string name="ksu_settings_floating_bottom_bar_summary">使用 Apple 风格的悬浮底栏</string>
+<string name="ksu_settings_key_color">强调色</string>
+<string name="ksu_settings_key_color_default">默认</string>
+<string name="ksu_settings_monet">启用 Monet 颜色</string>
+<string name="ksu_settings_page_scale">界面缩放</string>
+<string name="ksu_settings_page_scale_summary">调整全局显示比例</string>
+<string name="ksu_settings_pager_gesture_cross_axis">跨轴拦截</string>
+<string name="ksu_settings_pager_gesture_ios_like">iOS 风格</string>
+<string name="ksu_settings_pager_gesture_mode">页面切换手势</string>
+<string name="ksu_settings_pager_gesture_native">默认</string>
+<string name="ksu_settings_theme">主题设置</string>
+<string name="ksu_settings_theme_mode_dark">深色</string>
+<string name="ksu_settings_theme_mode_light">浅色</string>
+<string name="ksu_settings_theme_mode_system">跟随系统</string>
+<string name="ksu_settings_ui_mode">界面风格</string>
+
+
+    <string name="home_status_label">当前状态</string>
+    <string name="home_ready_title">准备就绪</string>
+    <string name="home_ready_description">点击开始运行，执行已设置的任务。</string>
+    <string name="home_running_title">正在运行</string>
+    <string name="home_running_description">自动执行已启动，任务会按计划进行。</string>
+    <string name="home_starting_title">正在启动</string>
+    <string name="home_stopping_title">正在停止</string>
+    <string name="home_busy_description">请稍候，完成后会自动更新状态。</string>
+    <string name="home_preparing_title">正在准备</string>
+    <string name="home_preparing_description">正在启动所需组件，请稍候。</string>
+    <string name="home_updating_title">正在更新</string>
+    <string name="home_updating_description">正在更新运行环境，请稍候。</string>
+    <string name="home_failed_title">启动未完成</string>
+    <string name="home_failed_description">运行环境启动失败，请重试。</string>
+    <string name="home_connecting_title">正在连接</string>
+    <string name="home_connecting_description">正在等待运行环境响应。</string>
+    <string name="home_attention_title">需要检查设置</string>
+    <string name="home_attention_description">当前设备无法正常创建运行画面，请检查启动方式或授权。</string>
+    <string name="home_attention_settings">打开设置</string>
+    <string name="home_tool_active_title">其他操作正在运行</string>
+    <string name="home_tool_active_description">请先结束当前操作，再开始自动运行。</string>
+    <string name="home_retry">重试启动</string>
+    <string name="home_wait_button">请稍候</string>
+    <string name="home_tasks_title">最近任务</string>
+    <string name="home_needs_binding_title">尚未选择 AzurPilot</string>
+    <string name="home_needs_binding_description">点击右上角绑定，选择已绑定设备或添加 AzurPilot。</string>
+    <string name="home_remote_offline_title">AzurPilot 未连接</string>
+    <string name="home_remote_offline_description">正在尝试重新连接，请确认 AzurPilot 已启动并联网。</string>
+    <string name="home_remote_no_instance_description">请在 AzurPilot 中创建或选择配置后再启动。</string>
+    <string name="home_runtime_start_description">下载 Runtime 后，即可在本机启动任务。</string>
+    <string name="home_task_schedule">%1$s · %2$s</string>
+    <string name="home_tasks_view_all">查看全部</string>
+    <string name="home_tasks_collapse">收起</string>
+    <string name="home_tasks_unavailable">连接后显示任务信息</string>
+    <string name="home_tasks_empty">暂无已启用的任务</string>
+    <string name="home_tasks_current">正在执行</string>
+    <string name="home_tasks_next">接下来</string>
+    <string name="home_tasks_count">任务总数</string>
+    <string name="home_tasks_count_value">%1$d 项</string>
+    <string name="home_running_interrupted_title">运行可能受到影响</string>
+    <string name="home_running_interrupted_description">运行程序仍在，但设备控制暂不可用。请检查后再继续。</string>
+    <string name="home_preparing_device_title">正在准备设备</string>
+    <string name="home_preparing_device_description">正在建立运行所需的画面和连接。</string>
+    <string name="home_needs_shizuku_title">还不能开始运行</string>
+    <string name="home_needs_shizuku_description">请先激活内置 Shizuku，完成后返回这里。</string>
+    <string name="home_needs_install_title">需要安装 Shizuku</string>
+    <string name="home_needs_install_description">先安装并启动 Shizuku，才能控制设备。</string>
+    <string name="home_needs_auth_title">还需要授权</string>
+    <string name="home_needs_auth_description">请允许 AzurPilot 控制设备，然后即可继续。</string>
+    <string name="home_needs_connection_title">设备控制未连接</string>
+    <string name="home_needs_connection_description">授权可能已完成，但设备控制尚未连接。</string>
+    <string name="home_open_shizuku">激活内置 Shizuku</string>
+    <string name="home_install_shizuku">获取 Shizuku</string>
+    <string name="home_grant_access">去授权</string>
+    <string name="home_reconnect">重新连接</string>
+    <string name="ap_deploy_save_failed">保存失败，请检查 Runtime 连接后重试</string>
+    <string name="ap_deploy_host_help">127.0.0.1 仅本机；0.0.0.0 允许局域网访问。IPv6 可用 ::1 或 ::。</string>
+    <string name="settings_virtual_display_resolution">分辨率</string>
+    <string name="settings_virtual_display_device_dpi">设备当前 DPI</string>
+    <string name="settings_virtual_display_dpi">虚拟屏 DPI</string>
+    <string name="settings_virtual_display_dpi_value">%d DPI</string>
+    <string name="settings_virtual_display_dpi_auto">跟随设备</string>
+    <string name="settings_virtual_display_dpi_invalid">输入 0 跟随设备，或输入 72–960。</string>
+    <string name="settings_virtual_display_dpi_hint">默认跟随设备 DPI，分辨率固定为 1280×720。保存后，下次启动虚拟屏生效。</string>
+    <string name="settings_virtual_display_dpi_save_failed">保存失败，请重试</string>
+    <string name="adb_title">内置 Shizuku</string>
+    <string name="adb_setup_message">已内置启动和配对功能，无需另装 Shizuku。激活后自动连接本应用。</string>
+    <string name="adb_setup_confirm">去激活</string>
+    <string name="adb_guide">首次使用：开启无线调试，点通知配对，在系统配对码页面的通知中输入六位配对码。启动时如弹出 USB 调试确认，请勾选始终允许。</string>
+    <string name="adb_legacy_guide">Android 9–10 需先在电脑执行 adb tcpip 5555，再点启动并允许系统调试确认。</string>
+    <string name="adb_idle">启动后，本次开机内可离线重连。设备重启后需再次启动。</string>
+    <string name="adb_working">正在连接，请稍候。若系统弹出调试确认，请选择始终允许。</string>
+    <string name="adb_ready">返回应用即可使用，无需再次授权。</string>
+    <string name="adb_failed">请确认无线调试已开启、配对已完成，并允许系统调试确认，再重试连接。</string>
+    <string name="adb_start">启动服务</string>
+    <string name="adb_pair_notification">通过通知配对</string>
+    <string name="adb_open_settings">打开无线调试设置</string>
+    <string name="adb_manual_pair_guide">分屏保留系统配对码窗口，输入该窗口里的端口和六位配对码。</string>
+    <string name="adb_pair_port">配对端口</string>
+    <string name="adb_pair_code">六位配对码</string>
+    <string name="adb_pair_start">配对并启动</string>
+    <string name="adb_manual_connect_guide">已配对但自动发现失败时，填写无线调试首页显示的连接端口。它与配对端口不同。</string>
+    <string name="adb_connect_port">连接端口</string>
+    <string name="adb_notification_denied">未允许通知，请展开设备配对，选择手动输入配对码。</string>
+    <string name="adb_settings_failed">无法打开设置，请手动进入开发者选项。</string>
+    <string name="adb_pair_searching">请在无线调试中打开“使用配对码配对设备”。</string>
+    <string name="adb_pair_enter_code">已找到本机配对端口，请在此通知中输入系统显示的六位配对码。</string>
+    <string name="adb_pair_failed">配对或连接失败，请重新打开系统配对码页面并再试一次。</string>
+    <string name="adb_network_note">离线重连会开启 5555 调试端口，局域网也可访问，但仍需系统授权。不再需要时可关闭系统调试。</string>
+    <string name="adb_status_idle">尚未启动</string>
+    <string name="adb_status_working">正在连接</string>
+    <string name="adb_status_ready">已就绪</string>
+    <string name="adb_status_failed">连接未成功</string>
+    <string name="adb_status_subtitle">内置权限服务</string>
+    <string name="adb_return">返回应用</string>
+    <string name="adb_reconnect">重新连接</string>
+    <string name="adb_reconnect_summary">配对后，本次开机内可离线重连</string>
+    <string name="adb_pairing_title">设备配对</string>
+    <string name="adb_pairing_summary">首次使用，跟随下面三步完成配对</string>
+    <string name="adb_pairing_ready_summary">已可使用，需要时可重新配对</string>
+    <string name="adb_pair_step_settings">在开发者选项中开启无线调试。</string>
+    <string name="adb_pair_step_dialog">点下方通知配对，在系统中打开“使用配对码配对设备”。</string>
+    <string name="adb_pair_step_notification">保留配对窗口，在通知中输入六位配对码。</string>
+    <string name="adb_manual_pair_title">手动输入配对码</string>
+    <string name="adb_manual_connect_title">指定端口连接</string>
+    <string name="adb_manual_connect_summary">自动连接失败时使用</string>
+    <string name="adb_connect">连接并启动</string>
+    <string name="adb_expanded">已展开</string>
+    <string name="adb_collapsed">已收起</string>
+    <string name="common_clear">清除</string>
+    <string name="settings_license_copy_action">复制许可证全文</string>
+    <string name="overlay_ball_action_expand">展开控制面板</string>
+    <string name="tool_stop_named">停止%1$s</string>
+    <string name="log_preview_close_action">关闭预览</string>
+    <string name="screen_preview_desc">游戏画面实时预览</string>
+    <string name="status_starting">启动中</string>
+    <string name="status_running">运行中</string>
+    <string name="status_stopping">停止中</string>
+
+    <!-- OOBE 开箱即用体验引导向导 -->
+    <string name="oobe_step_welcome">欢迎</string>
+    <string name="oobe_priv_status_root_unavailable">未检测到 Root，请使用无线调试</string>
+    <string name="oobe_priv_requesting">正在请求授权…</string>
+    <string name="oobe_priv_grant_failed">未获得授权，请检查权限后重试，或稍后配置。</string>
+    <string name="oobe_ready_summary_style">界面风格：%1$s</string>
+    <string name="oobe_ready_pending_title">设置已保存</string>
+    <string name="oobe_ready_pending_subtitle">运行权限还可稍后配置。</string>
+    <string name="oobe_step_preferences">外观</string>
+    <string name="oobe_step_privileged">权限</string>
+    <string name="oobe_step_tutorial">使用提示</string>
+    <string name="oobe_step_ready">完成</string>
+    <string name="oobe_action_next">下一步</string>
+    <string name="oobe_action_prev">上一步</string>
+    <string name="oobe_action_skip">跳过</string>
+    <string name="oobe_action_start">开始使用</string>
+    <string name="oobe_progress_format">第 %1$d 步，共 %2$d 步</string>
+    <string name="settings_reopen_oobe">首次启动向导</string>
+    <string name="settings_reopen_oobe_summary">重新查看新手教程与初始化配置向导</string>
+
+    <string name="oobe_welcome_title">欢迎使用\nAzurPilot</string>
+    <string name="oobe_welcome_subtitle">先完成几项简单设置。</string>
+    <string name="oobe_welcome_features_title">基本功能</string>
+    <string name="oobe_welcome_feature_local">本地运行：任务与配置保存在本机。</string>
+    <string name="oobe_welcome_feature_vd">独立虚拟屏：运行任务时可继续使用设备。</string>
+    <string name="oobe_welcome_guidelines_title">协议与条款</string>
+    <string name="oobe_welcome_guidelines_desc">请阅读使用协议、隐私政策和开源许可，了解使用风险与数据处理方式。</string>
+    <string name="oobe_welcome_guidelines_acknowledged">你已确认使用协议与隐私政策，可随时在此查看全文。</string>
+    <string name="oobe_welcome_guidelines_accept">我已阅读并同意使用协议与隐私政策</string>
+
+    <string name="oobe_pref_title">选择外观</string>
+    <string name="oobe_pref_subtitle">选择界面风格和主题，之后可在设置中更改。</string>
+    <string name="oobe_pref_lang_title">界面语言</string>
+    <string name="oobe_pref_theme_title">主题模式</string>
+    <string name="oobe_pref_theme_system">跟随系统</string>
+    <string name="oobe_pref_theme_light">浅色</string>
+    <string name="oobe_pref_theme_dark">深色</string>
+    <string name="oobe_pref_monet_title">壁纸配色</string>
+    <string name="oobe_pref_monet_desc">使用系统壁纸的颜色。</string>
+
+    <string name="oobe_priv_title">设置运行权限</string>
+    <string name="oobe_priv_subtitle">允许应用在独立屏幕中运行，并执行你配置的操作。</string>
+    <string name="oobe_priv_mode_title">授权方式</string>
+    <string name="oobe_priv_mode_shizuku">Shizuku（推荐）</string>
+    <string name="oobe_priv_mode_root">Root</string>
+    <string name="oobe_priv_status_ready">运行权限已就绪</string>
+    <string name="oobe_priv_status_need_auth">等待授权</string>
+    <string name="oobe_priv_status_not_running">权限服务未连接</string>
+    <string name="oobe_priv_action_auth">立即授权</string>
+    <string name="oobe_priv_action_pair">配置无线调试</string>
+    <string name="oobe_priv_action_root">请求 Root 权限</string>
+    <string name="oobe_priv_delegate_note">连接后，应用会协助配置悬浮窗和后台运行权限。</string>
+    <string name="oobe_priv_skip_tip">也可以稍后在主页设置。</string>
+
+    <string name="oobe_tut_title">快速上手</string>
+    <string name="oobe_tut_subtitle">了解几个常用操作。</string>
+    <string name="oobe_tut_vd_title">独立屏幕</string>
+    <string name="oobe_tut_vd_desc">任务独立运行，不影响继续使用手机。</string>
+    <string name="oobe_tut_task_title">任务管理</string>
+    <string name="oobe_tut_task_desc">在主页启停任务，运行前检查任务设置。</string>
+    <string name="oobe_tut_overlay_title">悬浮控制</string>
+    <string name="oobe_tut_overlay_desc">点悬浮球打开面板，查看状态或启停任务。</string>
+    <string name="oobe_tut_saver_title">息屏模式</string>
+    <string name="oobe_tut_saver_desc">低亮界面减少误触，拖动滑块即可返回。</string>
+
+    <string name="oobe_ready_title">设置完成</string>
+    <string name="oobe_ready_subtitle">可以开始使用应用。</string>
+    <string name="oobe_ready_summary_title">设置概览</string>
+    <string name="oobe_ready_summary_lang">语言：%1$s</string>
+    <string name="oobe_ready_summary_theme">主题：%1$s</string>
+    <string name="oobe_ready_summary_priv">运行权限：%1$s</string>
+    <string name="oobe_ready_launch_note">若本机还没有运行环境，下一步会下载或解压约 1GB 文件。请保持应用在前台。</string>
+    <string name="oobe_legal_terms">使用协议与免责声明</string>
+    <string name="oobe_legal_privacy">隐私政策</string>
+    <string name="oobe_legal_agpl">AGPL-3.0 开源协议</string>
+    <string name="oobe_legal_agpl_note">以下为 AGPL-3.0 完整英文原文，包含全部条款及末尾的应用说明。软件权利以适用的开源许可证为准。</string>
+    <string name="oobe_legal_risk">自动操作可能导致游戏资源损失、误购买或账号封禁。软件不保证运行结果；法律规定不能免除的责任不受影响。</string>
+</resources>

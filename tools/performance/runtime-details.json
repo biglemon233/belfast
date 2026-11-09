@@ -1,0 +1,116 @@
+[
+  {
+    "prepare": [],
+    "actions": [
+      [
+        "text",
+        "导入配置"
+      ],
+      [
+        "wait",
+        1
+      ],
+      [
+        "swipe",
+        550,
+        1750,
+        550,
+        700,
+        350
+      ],
+      [
+        "wait",
+        0.5
+      ]
+    ],
+    "name": "runtime_import"
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        0.6
+      ]
+    ],
+    "actions": [
+      [
+        "text",
+        "部署设置"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "runtime_deploy"
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        0.6
+      ]
+    ],
+    "actions": [
+      [
+        "text",
+        "运行时更新"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "runtime_updater"
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        0.6
+      ]
+    ],
+    "actions": [
+      [
+        "text",
+        "公告"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "runtime_announcement"
+  },
+  {
+    "prepare": [
+      [
+        "back"
+      ],
+      [
+        "wait",
+        0.6
+      ]
+    ],
+    "actions": [
+      [
+        "text",
+        "指挥喵评分"
+      ],
+      [
+        "wait",
+        1
+      ]
+    ],
+    "name": "runtime_meowfficer"
+  }
+]
