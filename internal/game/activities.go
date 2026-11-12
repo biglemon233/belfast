@@ -318,6 +318,11 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 			return game.activityShopOperation(client, config, req)
 		case activityTypeMetaShop:
 			return game.metaShopOperation(client, config, req)
+		case activityTypeResearchTask:
+			// the manual's research tasks: cmd 1 starts a phase, cmd 2
+			// claims its finished tasks (either cmd, so not the cmd 1 only
+			// switch below)
+			return game.researchTaskOperation(client, config, req)
 		}
 	}
 	activityType := config.Type
