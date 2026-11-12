@@ -53,6 +53,10 @@ const (
 	TaskSubBreakoutStar = 1027 // the furthest breakout a ship has reached
 	// a permanent activity started (活动档案), the only task counting it
 	TaskSubPermanentActivity = 420
+
+	// the commander manual's "join any guild": the commander's guild
+	// membership, true or not (the newbie tasks' 22027)
+	TaskSubJoinGuild = 403
 	// tech packs used (item_data_statistics type 5)
 	TaskSubTechBox = 50
 	// ship breakouts done (UpgradeStarCommand)
@@ -107,6 +111,10 @@ var taskAbsoluteSubTypes = map[uint32]bool{
 	TaskSubLevelCap:     true,
 	TaskSubIntimacy:     true,
 	TaskSubChapterStars: true,
+	// "clear 8-4": a chapter whose boss was beaten, whenever
+	TaskSubClearStage: true,
+	// the manual's "join any guild": the commander's guild membership
+	TaskSubJoinGuild: true,
 	// the auction's: its best lot and its coins
 	TaskSubAuctionLot:      true,
 	TaskSubAuctionLotTotal: true,
@@ -136,6 +144,8 @@ var taskInheritedSubTypes = map[uint32]bool{
 	TaskSubLevelCap:     true,
 	TaskSubIntimacy:     true,
 	TaskSubAuctionGold:  true,
+	// whether the commander is in a guild
+	TaskSubJoinGuild: true,
 }
 
 // item_virtual_data_statistics ids earned from tasks (drop type 8)
@@ -1052,12 +1062,17 @@ func (tx *Tx) syncStateTasks() error {
 	if err != nil {
 		return err
 	}
+	_, inGuild, err := guildMembership(tx.ctx, tx.Queries, tx.commanderID)
+	if err != nil {
+		return err
+	}
 	// the manual's "upgrade the canteen or the merchant to level N": either
 	// building counts (TaskSubAcademyLevel is its sub type), so the higher of
 	// the academy's two fields
 	academy := max(commander.OilFieldLevel, commander.GoldFieldLevel)
 	var stars uint32
 	chapterStars := map[uint32]uint32{}
+	cleared := map[uint32]bool{}
 	for _, row := range progress {
 		count := uint32(0)
 		if row.Progress >= 100 {
@@ -1071,6 +1086,9 @@ func (tx *Tx) syncStateTasks() error {
 		}
 		stars += count
 		chapterStars[row.ChapterID] = count
+		if row.KillBossCount > 0 {
+			cleared[row.ChapterID] = true
+		}
 	}
 	for _, task := range tasks {
 		config, ok := taskConfigs[task.TaskID]
@@ -1096,6 +1114,12 @@ func (tx *Tx) syncStateTasks() error {
 			if need := config.targetID(); need != 0 && chapterStars[need] >= 3 {
 				value = 1
 			}
+		case TaskSubClearStage:
+			// target_id names the chapter: "clear 8-4", a chapter whose boss
+			// was beaten (a task accepted after the clear too)
+			if need := config.targetID(); need != 0 && cleared[need] {
+				value = 1
+			}
 		case TaskSubLevelCap:
 			// target_id the cap: "raise any ship's level cap to 125"
 			if need := config.targetID(); need != 0 && topCap >= need {
@@ -1103,6 +1127,12 @@ func (tx *Tx) syncStateTasks() error {
 			}
 		case TaskSubIntimacy:
 			if topIntimacy >= taskIntimacyFull {
+				value = 1
+			}
+		case TaskSubJoinGuild:
+			// "join any guild": true as soon as the commander is in one,
+			// whenever they joined
+			if inGuild {
 				value = 1
 			}
 		default:
