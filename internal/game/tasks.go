@@ -57,6 +57,15 @@ const (
 	// the commander manual's "join any guild": the commander's guild
 	// membership, true or not (the newbie tasks' 22027)
 	TaskSubJoinGuild = 403
+	// the event tasks' (2026-11 TwoPointFive's 29055-29072) counts: ships
+	// enhanced with material ships, food added to the backyard and tactical
+	// class lessons started (commissions, sub type 80, are counted in
+	// commissions_run.go)
+	TaskSubShipEnhance = 34
+	TaskSubDormFood    = 61
+	TaskSubTactical    = 71
+	// a story read, target: the story id ("完成「剧情模式」", 29068's 8157)
+	TaskSubStoryRead = 1005
 	// tech packs used (item_data_statistics type 5)
 	TaskSubTechBox = 50
 	// ship breakouts done (UpgradeStarCommand)

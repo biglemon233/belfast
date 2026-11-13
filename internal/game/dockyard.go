@@ -568,6 +568,8 @@ func (game *Game) handleModShip(client *connection.Client, req *protobuf.CS_1201
 				return err
 			}
 		}
+		// the event tasks count the enhancement ("舰船强化5次")
+		tx.event(TaskEvent{SubType: TaskSubShipEnhance, Count: 1})
 		return tx.consumeShips(materials)
 	})
 	if err != nil && !refused(err) {

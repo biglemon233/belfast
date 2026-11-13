@@ -57,6 +57,30 @@ func openActivity(id uint32, now time.Time) (activityConfig, bool) {
 	return config, ok && (config.Time.Open(now) || config.Type == activityTypeMilitaryExercise)
 }
 
+// addEventKills adds a battle's kills to the open kill-page activities
+// (activity type 74, the TwoPointFive kill page 51303): their data1 is the
+// count the client shows as "当前击沉" (the phase rewards pay for it).
+func (tx *Tx) addEventKills(kills uint32) error {
+	if kills == 0 {
+		return nil
+	}
+	now := time.Now()
+	for _, config := range activityConfigs {
+		if config.Type != activityTypePTBuff || !config.Time.Open(now) {
+			continue
+		}
+		state, err := activityState(tx.ctx, tx.Queries, tx.commanderID, config)
+		if err != nil {
+			return err
+		}
+		state.Data1 += kills
+		if err := tx.Queries.SaveActivity(tx.ctx, db.SaveActivityParams(state)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // newActivityState is what a new commander's ACTIVITYINFO of an activity
 // holds: Activity.lua reads every missing field as 0, so only the types that
 // start elsewhere set anything.
@@ -302,6 +326,15 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 	if err != nil {
 		return err
 	}
+	logger.WithFields("Activity",
+		logger.FieldValue("id", config.ID),
+		logger.FieldValue("type", config.Type),
+		logger.FieldValue("open", open),
+		logger.FieldValue("cmd", req.GetCmd()),
+		logger.FieldValue("arg1", req.GetArg1()),
+		logger.FieldValue("arg2", req.GetArg2()),
+		logger.FieldValue("args", len(req.GetArgList())),
+	).Debug("operation")
 	if open {
 		switch config.Type {
 		case activityTypeFeast:
@@ -323,6 +356,18 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 			// claims its finished tasks (either cmd, so not the cmd 1 only
 			// switch below)
 			return game.researchTaskOperation(client, config, req)
+		case activityTypeBossSingle:
+			// an event's stage page: the client reports a stage's win with
+			// cmd 2 and the stage's expedition id
+			return game.activityStageClear(client, config, req)
+		case activityTypeTasks:
+			// an event's story page (51301/51306/51307): its stories are the
+			// client's, its tasks the task system's
+			return game.activityStoryOperation(client, config, req)
+		case activityTypePTBuff:
+			// an event's kill page (51303): "当前击沉" is the activity's
+			// data1, the phases' rewards its activity_event_pt row
+			return game.activityKillPageOperation(client, config, req)
 		}
 	}
 	activityType := config.Type

@@ -18,9 +18,21 @@ func (game *Game) handleGuideIndex(client *connection.Client, req *protobuf.CS_1
 }
 
 // handleStoryRead marks a story as seen (UpdateStoryCommand) so it doesn't
-// play again, it comes back in SC_11003.story_list.
+// play again, it comes back in SC_11003.story_list. The event tasks count it
+// ("完成「剧情模式」", sub type 1005 with the story as target).
 func (game *Game) handleStoryRead(client *connection.Client, req *protobuf.CS_11017) error {
-	if err := game.DB.AddStory(context.Background(), db.AddStoryParams{CommanderID: client.CommanderID, StoryID: req.GetStoryId()}); err != nil {
+	ctx := context.Background()
+	err := game.tx(ctx, client, func(tx *Tx) error {
+		if err := tx.AddStory(ctx, db.AddStoryParams{CommanderID: client.CommanderID, StoryID: req.GetStoryId()}); err != nil {
+			return err
+		}
+		tx.event(TaskEvent{SubType: TaskSubStoryRead, Target: req.GetStoryId(), Count: 1})
+		return nil
+	})
+	if refused(err) {
+		return client.Send(&protobuf.SC_11018{Result: result(err)})
+	}
+	if err != nil {
 		return err
 	}
 	return client.Send(&protobuf.SC_11018{Result: result(nil)})
@@ -40,11 +52,13 @@ func (game *Game) handleCommonFlag(client *connection.Client, req *protobuf.CS_1
 // (UpdateStoryListCommand, the stories the client hasn't played yet); they
 // come back in SC_11003.story_list like CS_11017's.
 func (game *Game) handleStoryList(client *connection.Client, req *protobuf.CS_11032) error {
-	err := game.DB.InTx(context.Background(), func(queries *db.Queries) error {
+	ctx := context.Background()
+	err := game.tx(ctx, client, func(tx *Tx) error {
 		for _, id := range req.GetStoryIds() {
-			if err := queries.AddStory(context.Background(), db.AddStoryParams{CommanderID: client.CommanderID, StoryID: id}); err != nil {
+			if err := tx.AddStory(ctx, db.AddStoryParams{CommanderID: client.CommanderID, StoryID: id}); err != nil {
 				return err
 			}
+			tx.event(TaskEvent{SubType: TaskSubStoryRead, Target: id, Count: 1})
 		}
 		return nil
 	})

@@ -494,6 +494,8 @@ func (tx *Tx) useItem(id, count uint32, arg []uint32) ([]*protobuf.DROPINFO, err
 		if err := tx.SpendItem(id, count); err != nil {
 			return nil, err
 		}
+		// the event tasks count the food added ("后宅补充食物5次")
+		tx.event(TaskEvent{SubType: TaskSubDormFood, Count: count})
 		return nil, tx.addDormFood(use.food * count)
 	case usageDormLvUp:
 		// ExtendBackYardAreaCommand: one level per use
