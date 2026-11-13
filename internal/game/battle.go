@@ -271,6 +271,7 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 	}
 
 	reply := &protobuf.SC_40004{Result: result(nil)}
+	battleKills := uint32(len(req.GetKillIdList()))
 	var events []TaskEvent
 	if win {
 		events = append(events, TaskEvent{SubType: TaskSubWin, Count: 1})
@@ -283,8 +284,8 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 		if expedition.isBoss() {
 			events = append(events, TaskEvent{SubType: TaskSubDefeatBoss, Count: 1})
 		}
-		if kills := uint32(len(req.GetKillIdList())); kills > 0 {
-			events = append(events, TaskEvent{SubType: TaskSubDefeatEnemy, Count: kills})
+		if battleKills > 0 {
+			events = append(events, TaskEvent{SubType: TaskSubDefeatEnemy, Count: battleKills})
 		}
 	}
 	mvp := battleMVP(req.GetStatistics(), byID)
@@ -332,6 +333,10 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 		queries := tx.Queries
 		tx.newShipsAfterReply = true
 		tx.event(events...)
+		// the events' kill pages count every battle's kills
+		if err := tx.addEventKills(battleKills); err != nil {
+			return err
+		}
 		if techLevel {
 			tx.techPointsChanged()
 		}

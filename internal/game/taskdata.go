@@ -85,11 +85,12 @@ type weeklyTaskConfig struct {
 
 // activity_template row, only what task activities need
 type activityConfig struct {
-	ID         uint32          `json:"id"`
-	Type       uint32          `json:"type"`
-	ConfigID   uint32          `json:"config_id"`
-	ConfigData json.RawMessage `json:"config_data"`
-	Time       gamedata.Window `json:"time"`
+	ID           uint32          `json:"id"`
+	Type         uint32          `json:"type"`
+	ConfigID     uint32          `json:"config_id"`
+	ConfigData   json.RawMessage `json:"config_data"`
+	ConfigClient json.RawMessage `json:"config_client"`
+	Time         gamedata.Window `json:"time"`
 
 	// for the activities with tasks (taskActivityTypes, task lists)
 	tasks []uint32 // config_data

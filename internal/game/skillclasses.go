@@ -299,6 +299,8 @@ func (game *Game) handleStartLesson(client *connection.Client, req *protobuf.CS_
 			FinishTime:  now + int64(book.time),
 			Exp:         lessonExp(book, skill.SkillID),
 		}
+		// the event tasks count the lessons started ("进行战术训练2次")
+		tx.event(TaskEvent{SubType: TaskSubTactical, Count: 1})
 		return tx.AddSkillClass(ctx, db.AddSkillClassParams(class))
 	})
 	if err != nil && !refused(err) {

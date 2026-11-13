@@ -63,6 +63,10 @@ func virtualItemBalance(ctx context.Context, q *db.Queries, commanderID, itemID 
 type eventPt struct {
 	Pt     uint32   `json:"pt"`
 	Target []uint32 `json:"target"`
+	// the kill page's (type 74) phases: each one's reward at the same index
+	// as its target threshold, and the days (1-based) they open on
+	DropClient [][]uint32 `json:"drop_client"`
+	DayUnlock  []uint32   `json:"day_unlock"`
 }
 
 var eventPts map[uint32]eventPt
