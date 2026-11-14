@@ -418,11 +418,24 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 			return err
 		}
 	}
+	teams.main = nonEmptyTeams(teams.main)
+	teams.submarine = nonEmptyTeams(teams.submarine)
 	if len(teams.main) == 0 {
 		return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
 	}
+	logger.WithFields("Chapter",
+		logger.FieldValue("id", template.id),
+		logger.FieldValue("main_teams", len(teams.main)),
+		logger.FieldValue("sub_teams", len(teams.submarine)),
+		logger.FieldValue("sub_max", template.submarineNum),
+		logger.FieldValue("op_item", req.GetOperationItem()),
+	).Debug("chapter tracking request")
+	// a stage that takes no submarine (8-2's submarine_num is 0) still gets
+	// the fleet select's submarine team from some clients: the map can't use
+	// it, but refusing the sortie (the client then retries in a loop) is
+	// worse than leaving it behind
 	if uint32(len(teams.submarine)) > template.submarineNum {
-		return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
+		teams.submarine = teams.submarine[:template.submarineNum]
 	}
 	// a submarine fleet's torpedoes are its ships' ammo, which the client
 	// adds up too (ChapterLevelData:getFleetAmmo, Ship:getShipAmmo) on top of
@@ -501,6 +514,18 @@ func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.C
 		return err
 	}
 	return client.Send(&protobuf.SC_13102{Result: result(nil), CurrentChapter: session.info})
+}
+
+// nonEmptyTeams keeps the teams that have ships: the fleet select sends an
+// empty team for a slot the commander didn't fill, which must not count.
+func nonEmptyTeams(teams []*protobuf.TEAM_INFO) []*protobuf.TEAM_INFO {
+	kept := teams[:0]
+	for _, team := range teams {
+		if len(team.GetShipList()) > 0 {
+			kept = append(kept, team)
+		}
+	}
+	return kept
 }
 
 // opReply is the SC_13104 every op gets: the capture always sets
