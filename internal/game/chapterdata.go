@@ -152,9 +152,9 @@ type expeditionTemplate struct {
 
 var expeditionTemplates map[uint32]expeditionTemplate
 
-// numericDrops keeps the [type, id, count] entries of an award list: the
-// client tables also give some counts as words ("少量", "46~50"), which the
-// server has no amount for and leaves out.
+// numericDrops keeps the [type, id] or [type, id, count] entries of an award
+// list: the client tables also give some counts as words ("少量", "46~50"),
+// which the server has no amount for and leaves out.
 func numericDrops(raw json.RawMessage) [][]uint32 {
 	var entries []json.RawMessage
 	if json.Unmarshal(raw, &entries) != nil {
@@ -163,7 +163,7 @@ func numericDrops(raw json.RawMessage) [][]uint32 {
 	var drops [][]uint32
 	for _, entry := range entries {
 		var drop []uint32
-		if json.Unmarshal(entry, &drop) == nil && len(drop) >= 3 {
+		if json.Unmarshal(entry, &drop) == nil && len(drop) >= 2 {
 			drops = append(drops, drop)
 		}
 	}
