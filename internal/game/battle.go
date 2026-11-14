@@ -557,7 +557,7 @@ func appendShipDrop(drops []*protobuf.DROPINFO, template *chapterTemplate, pool 
 // entries (a virtual placeholder like the "unknown design" box is opened on
 // receipt, so it stays as it is) and the ships.
 func (expedition expeditionTemplate) pools() (items, ships []dropRef) {
-	for _, award := range expedition.Awards {
+	for _, award := range expedition.awards {
 		if len(award) < 2 {
 			continue
 		}

@@ -141,11 +141,34 @@ type expeditionTemplate struct {
 	Type  uint32 `json:"type"`
 	// award_display is this enemy's own drop list: the client shows it as
 	// the battle's "possible drops", and it is where a normal battle's
-	// items come from (the chapter's awards are the boss's ship table)
-	Awards [][]uint32 `json:"award_display"`
+	// items come from (the chapter's awards are the boss's ship table).
+	// Some entries' counts are localised words ("少量", "46~50"), so the
+	// list is read leniently (numeric drops): the row still loads for its
+	// exp and level.
+	AwardDisplay json.RawMessage `json:"award_display"`
+
+	awards [][]uint32
 }
 
 var expeditionTemplates map[uint32]expeditionTemplate
+
+// numericDrops keeps the [type, id, count] entries of an award list: the
+// client tables also give some counts as words ("少量", "46~50"), which the
+// server has no amount for and leaves out.
+func numericDrops(raw json.RawMessage) [][]uint32 {
+	var entries []json.RawMessage
+	if json.Unmarshal(raw, &entries) != nil {
+		return nil
+	}
+	var drops [][]uint32
+	for _, entry := range entries {
+		var drop []uint32
+		if json.Unmarshal(entry, &drop) == nil && len(drop) >= 3 {
+			drops = append(drops, drop)
+		}
+	}
+	return drops
+}
 
 func (expedition expeditionTemplate) isBoss() bool {
 	return expedition.Type == expeditionTypeBoss || expedition.Type == expeditionTypeMulBoss
@@ -255,6 +278,10 @@ func loadChapterData() error {
 	)
 	if err != nil {
 		return err
+	}
+	for id, expedition := range expeditionTemplates {
+		expedition.awards = numericDrops(expedition.AwardDisplay)
+		expeditionTemplates[id] = expedition
 	}
 	for key, value := range gamesetValues {
 		setting, ok := gameset[key]

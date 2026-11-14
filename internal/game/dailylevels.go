@@ -433,9 +433,14 @@ func battleEndOil(ships map[uint32]db.Ship) uint32 {
 func (game *Game) finishDaily(client *connection.Client, req *protobuf.CS_40003) error {
 	ctx, now := context.Background(), time.Now()
 	stage := dailyStages[req.GetData()]
-	expedition, known := expeditionTemplates[req.GetData()]
-	if stage == nil || !known {
+	if stage == nil {
 		return client.Send(&protobuf.SC_40004{Result: result(errRefused)})
+	}
+	// a daily stage the data has no expedition row for (a newer client's
+	// stage) still clears: its ships just get no exp
+	expedition, known := expeditionTemplates[req.GetData()]
+	if !known {
+		logger.WithFields("DailyLevel", logger.FieldValue("stage", req.GetData())).Warn("no expedition row: the battle gives no ship exp")
 	}
 	score := min(req.GetScore(), scoreS)
 	reply := &protobuf.SC_40004{Result: result(nil)}
