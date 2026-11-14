@@ -2,6 +2,8 @@ package game
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"google.golang.org/protobuf/proto"
 
@@ -109,6 +111,37 @@ func (tx *Tx) AddVirtualItem(itemID, amount uint32) error {
 	}
 	if itemID == VirtualItemWeeklyPt {
 		tx.event(TaskEvent{SubType: TaskSubWeeklyPt, Count: amount})
+	}
+	return nil
+}
+
+// resourceVirtualItems maps a player_resource's itemid (59003, the item the
+// client shows merit as) to its resource. A drop of that item is the
+// resource: the client's resource bar reads resources, not virtitems.
+var resourceVirtualItems map[uint32]uint32
+
+// migrateResourceVirtuals moves the virtual items that are a player_resource
+// item to the resource they stand for: grants used to store them as virtual
+// items, where nothing shows them (a mailed 功勋 stayed 999999 under 59003
+// while the merit stayed as it was).
+func migrateResourceVirtuals(ctx context.Context, queries *db.Queries, commanderID uint32) error {
+	for item, resource := range resourceVirtualItems {
+		amount, err := queries.GetVirtualItem(ctx, db.GetVirtualItemParams{CommanderID: commanderID, ItemID: item})
+		if errors.Is(err, sql.ErrNoRows) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		if amount == 0 {
+			continue
+		}
+		if err := queries.AddResource(ctx, db.AddResourceParams{CommanderID: commanderID, ResourceID: resource, Amount: amount}); err != nil {
+			return err
+		}
+		if err := queries.ClearVirtualItem(ctx, db.ClearVirtualItemParams{CommanderID: commanderID, ItemID: item}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

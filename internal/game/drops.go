@@ -167,6 +167,12 @@ func (tx *Tx) grantDrops(drops []*protobuf.DROPINFO) error {
 			if err := tx.addMetaPt(id, count); err != nil {
 				return err
 			}
+		case kind == dropTypeVItem && resourceVirtualItems[id] != 0:
+			// the itemid of a player_resource (the 59003 of merit): the
+			// drop is that resource, not a virtual item
+			if err := tx.AddResource(resourceVirtualItems[id], count); err != nil {
+				return err
+			}
 		case kind == dropTypeVItem:
 			if err := tx.AddVirtualItem(id, count); err != nil {
 				return err

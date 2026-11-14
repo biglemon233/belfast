@@ -70,7 +70,25 @@ func loadCommissionData() error {
 		}
 	}
 	nightCommissionBegin, nightCommissionEnd = gameset["night_collection_begin"], gameset["night_collection_end"]
+	resourceVirtualItems = resourceItems(resources)
 	return readCommissionAwards(resources)
+}
+
+// resourceItems is the player_resource itemid of each of the core resources
+// (59003 for merit...), for the drops that give the item rather than the
+// resource. The field resources share one placeholder (59099), which tells
+// nothing of the field it is for, so they are left out.
+func resourceItems(resources map[uint32]commissionResourceConfig) map[uint32]uint32 {
+	items := map[uint32]uint32{}
+	for id, row := range resources {
+		if id >= 100 || row.ItemID == 0 || row.ItemID == 59099 {
+			continue
+		}
+		if current, ok := items[row.ItemID]; !ok || id < current {
+			items[row.ItemID] = id
+		}
+	}
+	return items
 }
 
 // grantCommissionsStarter offers a new commander new_commander.json's count
