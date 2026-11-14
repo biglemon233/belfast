@@ -717,6 +717,16 @@ var loginBurst = []loginPush{
 		return equipSkinBox(l.ctx, l.queries, l.commander.ID)
 	},
 	func(game *Game, l *login) (proto.Message, error) { return bag(l.ctx, l.queries, l.commander.ID) },
+	// the new commander carnival's tasks (NewServerTaskPage): handed out
+	// before the task list so SC_20001 carries every one the page lists
+	func(game *Game, l *login) (proto.Message, error) {
+		ids, err := newServerTasks(l.ctx, l.queries, l.commander.ID, l.now)
+		if err != nil || len(ids) == 0 {
+			return nil, err
+		}
+		_, err = acceptTasks(l.ctx, l.queries, l.commander.ID, ids, uint32(l.now.Unix()))
+		return nil, err
+	},
 	func(game *Game, l *login) (proto.Message, error) { return taskList(l.ctx, l.queries, l.commander.ID) },
 	func(game *Game, l *login) (proto.Message, error) {
 		weekly, err := game.weeklyInfo(l.ctx, l.queries, l.commander.ID)

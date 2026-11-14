@@ -464,11 +464,18 @@ func (game *Game) finishDaily(client *connection.Client, req *protobuf.CS_40003)
 		return shipBattleExp(expedition, 1, score, ship, ship.ID == flagship, ship.ID == mvp)
 	}, true, flagship, mvp)
 	reply.ShipExpList = ships.exps
+	killsChanged := false
 	err = game.tx(ctx, client, func(tx *Tx) error {
 		tx.event(ships.events...)
 		tx.event(TaskEvent{SubType: TaskSubDailyStage, Target: stage.id, Count: 1})
 		if kills := uint32(len(req.GetKillIdList())); kills > 0 {
 			tx.event(TaskEvent{SubType: TaskSubDefeatEnemy, Count: kills})
+			// the events' kill pages count the challenge's kills too
+			changed, err := tx.addEventKills(kills)
+			if err != nil {
+				return err
+			}
+			killsChanged = changed
 		}
 		if ships.techLevel {
 			tx.techPointsChanged()
@@ -509,6 +516,20 @@ func (game *Game) finishDaily(client *connection.Client, req *protobuf.CS_40003)
 	})
 	if err != nil {
 		return err
+	}
+	// the kill pages' data1 changed: the client reads it from SC_11200 only
+	if killsChanged {
+		commander, err := game.DB.GetCommander(ctx, client.CommanderID)
+		if err != nil {
+			return err
+		}
+		list, err := game.activityList(ctx, commander)
+		if err != nil {
+			return err
+		}
+		if err := client.Push(list); err != nil {
+			return err
+		}
 	}
 	return client.Send(reply)
 }

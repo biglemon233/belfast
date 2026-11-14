@@ -16,8 +16,9 @@ import (
 // activity_event_pt row's target list and each phase's reward its
 // drop_client at the same index. cmd 1 with the phase's threshold in arg 1
 // claims it once the kills reached it and the phase's day came (day_unlock:
-// one phase a day from the event's first day). data3 keeps the claimed
-// phases, a bit each.
+// one phase a day from the event's first day, data2). data1_list keeps the
+// claimed phases' thresholds, which is what the client's ActivityPtData reads
+// them back from (ActivityNewPtOPCommand adds arg1 to it on success).
 func (game *Game) activityKillPageOperation(client *connection.Client, config activityConfig, req *protobuf.CS_11202) error {
 	pt, ok := eventPts[config.ConfigID]
 	if !ok || len(pt.Target) == 0 || len(pt.DropClient) != len(pt.Target) {
@@ -39,23 +40,37 @@ func (game *Game) activityKillPageOperation(client *connection.Client, config ac
 		if err != nil {
 			return err
 		}
+		if state.Data2 == 0 {
+			// the client counts the phases' days from data2 (ActivityPtData's
+			// startTime); a state stored before this page kept its start would
+			// otherwise look like every phase unlocked
+			state.Data2 = uint32(config.Time.Start.Unix())
+		}
 		if state.Data1 < pt.Target[index] {
 			return errRefused
 		}
-		// a phase opens on its day of the event (1-based)
-		if day := uint32(now.Sub(config.Time.Start).Hours()/24) + 1; index+1 > int(day) {
+		// the phases are claimed in order: the client only offers the next
+		// one (ActivityPtData:GetAward reads dropList[level])
+		if index != len(state.Data1List) {
 			return errRefused
 		}
-		if index < 32 && state.Data3&(1<<uint(index)) != 0 {
-			return errRefused
+		// a phase opens on its day of the event (1-based), unless the row
+		// doesn't say (day_unlock all 0)
+		if index < len(pt.DayUnlock) {
+			start := time.Unix(int64(state.Data2), 0)
+			days := int(startOfDay(now).Sub(startOfDay(start)).Hours() / 24)
+			if days < 0 {
+				days = 0
+			}
+			if pt.DayUnlock[index] > uint32(days)+1 {
+				return errRefused
+			}
 		}
 		drops := configDrops([][]uint32{pt.DropClient[index]})
 		if err := tx.grantDrops(drops); err != nil {
 			return err
 		}
-		if index < 32 {
-			state.Data3 |= 1 << uint(index)
-		}
+		state.Data1List = append(state.Data1List, pt.Target[index])
 		if err := tx.Queries.SaveActivity(ctx, db.SaveActivityParams(state)); err != nil {
 			return err
 		}

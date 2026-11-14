@@ -197,6 +197,27 @@ type TaskEvent struct {
 	Count   uint32 // amount to add, or the new value for absolute sub types
 }
 
+// eventClaimedTasks are the tasks of the event pages running at now that the
+// commander claimed (their TaskProxy ones): the pages read a claimed stage's
+// or day's task back to show its reward (TwoPointFiveStagePage.flushTaskData,
+// CoreLoginTemplatePage.UpdateTask), so TaskProxy needs them with their
+// submit_time after a login.
+func eventClaimedTasks(now time.Time) map[uint32]bool {
+	tasks := map[uint32]bool{}
+	for _, config := range activityConfigs {
+		if !config.Time.Open(now) {
+			continue
+		}
+		switch config.Type {
+		case activityTypeTaskList, activityTypeTasks, activityTypeBossSingle:
+			for _, id := range activityPageTasks(config) {
+				tasks[id] = true
+			}
+		}
+	}
+	return tasks
+}
+
 // taskList is SC_20001, TaskProxy's tasks: the running ones, then the
 // research ships' claimed ones with their submit_time, which TaskProxy
 // keeps as finished (initTaskInfo's finishData): the Dev. Dock reads a
@@ -218,6 +239,7 @@ func taskList(ctx context.Context, queries *db.Queries, commanderID uint32) (*pr
 		return nil, err
 	}
 	maps.Copy(kept, reflux)
+	maps.Copy(kept, eventClaimedTasks(time.Now()))
 	msg := &protobuf.SC_20001{Info: make([]*protobuf.TASKINFO, len(tasks))}
 	for i, task := range tasks {
 		msg.Info[i] = &protobuf.TASKINFO{

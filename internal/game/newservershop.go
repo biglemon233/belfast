@@ -20,7 +20,30 @@ import (
 const (
 	activityTypeNewServerShop   = 83  // newserver_shop_template
 	activityTypeBlackFridayShop = 120 // blackfriday_shop_template
+	// the new commander carnival's task page (NewServerTaskPage): its
+	// activity's config_data are the task groups the page lists
+	activityTypeNewServerTask = 82
 )
+
+// newServerTasks are the new commander carnival's tasks (NewServerTaskPage):
+// the running new-server task activity's config_data groups, flattened. The
+// page holds every one of them in TaskProxy (it asserts on each), so the
+// server hands them all out at login.
+func newServerTasks(ctx context.Context, queries *db.Queries, commanderID uint32, now time.Time) ([]uint32, error) {
+	own, err := newUserActivities(ctx, queries, commanderID, now)
+	if err != nil {
+		return nil, err
+	}
+	var ids []uint32
+	for id := range own {
+		config, ok := activityConfigs[id]
+		if !ok || config.Type != activityTypeNewServerTask {
+			continue
+		}
+		ids = append(ids, gamedata.IDs(config.ConfigData)...)
+	}
+	return ids, nil
+}
 
 // newServerGoods is a newserver_shop_template / blackfriday_shop_template
 // row (NewServerCommodity, BlackFridayCommodity): num of each of goods

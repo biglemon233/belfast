@@ -251,6 +251,7 @@ type CommanderActivity struct {
 	Data3       uint32
 	Data4       uint32
 	Data1List   IDList
+	Data2List   IDList
 	StrData1    string
 }
 

@@ -329,14 +329,17 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 
 	// capture: task progress and archive updates (SC_17002) before the
 	// result, the new ships (SC_12042) after it
+	killsChanged := false
 	err = game.tx(ctx, client, func(tx *Tx) error {
 		queries := tx.Queries
 		tx.newShipsAfterReply = true
 		tx.event(events...)
 		// the events' kill pages count every battle's kills
-		if err := tx.addEventKills(battleKills); err != nil {
+		changed, err := tx.addEventKills(battleKills)
+		if err != nil {
 			return err
 		}
+		killsChanged = changed
 		if techLevel {
 			tx.techPointsChanged()
 		}
@@ -381,6 +384,17 @@ func (game *Game) handleFinishStage(client *connection.Client, req *protobuf.CS_
 	})
 	if err != nil {
 		return err
+	}
+	// the kill pages' data1 changed: the client reads it from SC_11200 only,
+	// so hand it the activities again for the page to show the new count
+	if killsChanged {
+		list, err := game.activityList(ctx, commander)
+		if err != nil {
+			return err
+		}
+		if err := client.Push(list); err != nil {
+			return err
+		}
 	}
 	// capture: the mailbox counts follow the result (mail arrived meanwhile)
 	counts, err := mailCounts(ctx, game.DB.Queries, client.CommanderID)

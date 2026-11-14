@@ -10,7 +10,7 @@ import (
 )
 
 const getActivity = `-- name: GetActivity :one
-SELECT commander_id, activity_id, data1, data2, data3, data4, data1_list, str_data1 FROM commander_activities WHERE commander_id = ? AND activity_id = ?
+SELECT commander_id, activity_id, data1, data2, data3, data4, data1_list, data2_list, str_data1 FROM commander_activities WHERE commander_id = ? AND activity_id = ?
 `
 
 type GetActivityParams struct {
@@ -29,13 +29,14 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (Comma
 		&i.Data3,
 		&i.Data4,
 		&i.Data1List,
+		&i.Data2List,
 		&i.StrData1,
 	)
 	return i, err
 }
 
 const listActivities = `-- name: ListActivities :many
-SELECT commander_id, activity_id, data1, data2, data3, data4, data1_list, str_data1 FROM commander_activities WHERE commander_id = ?
+SELECT commander_id, activity_id, data1, data2, data3, data4, data1_list, data2_list, str_data1 FROM commander_activities WHERE commander_id = ?
 `
 
 func (q *Queries) ListActivities(ctx context.Context, commanderID uint32) ([]CommanderActivity, error) {
@@ -55,6 +56,7 @@ func (q *Queries) ListActivities(ctx context.Context, commanderID uint32) ([]Com
 			&i.Data3,
 			&i.Data4,
 			&i.Data1List,
+			&i.Data2List,
 			&i.StrData1,
 		); err != nil {
 			return nil, err
@@ -71,9 +73,9 @@ func (q *Queries) ListActivities(ctx context.Context, commanderID uint32) ([]Com
 }
 
 const saveActivity = `-- name: SaveActivity :exec
-INSERT INTO commander_activities (commander_id, activity_id, data1, data2, data3, data4, data1_list, str_data1) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO commander_activities (commander_id, activity_id, data1, data2, data3, data4, data1_list, data2_list, str_data1) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (commander_id, activity_id) DO UPDATE SET
-	data1 = excluded.data1, data2 = excluded.data2, data3 = excluded.data3, data4 = excluded.data4, data1_list = excluded.data1_list, str_data1 = excluded.str_data1
+	data1 = excluded.data1, data2 = excluded.data2, data3 = excluded.data3, data4 = excluded.data4, data1_list = excluded.data1_list, data2_list = excluded.data2_list, str_data1 = excluded.str_data1
 `
 
 type SaveActivityParams struct {
@@ -84,6 +86,7 @@ type SaveActivityParams struct {
 	Data3       uint32
 	Data4       uint32
 	Data1List   IDList
+	Data2List   IDList
 	StrData1    string
 }
 
@@ -96,6 +99,7 @@ func (q *Queries) SaveActivity(ctx context.Context, arg SaveActivityParams) erro
 		arg.Data3,
 		arg.Data4,
 		arg.Data1List,
+		arg.Data2List,
 		arg.StrData1,
 	)
 	return err

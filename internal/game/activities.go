@@ -57,28 +57,49 @@ func openActivity(id uint32, now time.Time) (activityConfig, bool) {
 	return config, ok && (config.Time.Open(now) || config.Type == activityTypeMilitaryExercise)
 }
 
+// killPageActivity tells whether a type-74 activity's page counts battle kills
+// in data1 (the kill pages, 51303) rather than event PT: its activity_event_pt
+// row has no PT item and opens its phases by day. Type 74 is also the generic
+// PT buff activity (50261's HelenaPTPage...), whose data1 is its PT.
+func killPageActivity(config activityConfig) bool {
+	pt, ok := eventPts[config.ConfigID]
+	if !ok || pt.Pt != 0 || len(pt.Target) == 0 || len(pt.DropClient) != len(pt.Target) {
+		return false
+	}
+	for _, day := range pt.DayUnlock {
+		if day != 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // addEventKills adds a battle's kills to the open kill-page activities
 // (activity type 74, the TwoPointFive kill page 51303): their data1 is the
-// count the client shows as "当前击沉" (the phase rewards pay for it).
-func (tx *Tx) addEventKills(kills uint32) error {
+// count the client shows as "当前击沉" (the phase rewards pay for it). It tells
+// whether any did, so the caller can push the activities again (the client
+// only reads data1 from SC_11200).
+func (tx *Tx) addEventKills(kills uint32) (bool, error) {
 	if kills == 0 {
-		return nil
+		return false, nil
 	}
+	changed := false
 	now := time.Now()
 	for _, config := range activityConfigs {
-		if config.Type != activityTypePTBuff || !config.Time.Open(now) {
+		if config.Type != activityTypePTBuff || !config.Time.Open(now) || !killPageActivity(config) {
 			continue
 		}
 		state, err := activityState(tx.ctx, tx.Queries, tx.commanderID, config)
 		if err != nil {
-			return err
+			return false, err
 		}
 		state.Data1 += kills
 		if err := tx.Queries.SaveActivity(tx.ctx, db.SaveActivityParams(state)); err != nil {
-			return err
+			return false, err
 		}
+		changed = true
 	}
-	return nil
+	return changed, nil
 }
 
 // newActivityState is what a new commander's ACTIVITYINFO of an activity
@@ -281,6 +302,11 @@ func activityInfo(config activityConfig, state db.CommanderActivity, stopTime ui
 	if config.Type == activityTypeIslandDrawAward || config.Type == activityTypeVirtualBag {
 		info.Date1KeyValueList = []*protobuf.KEYVALUELIST_P11{{Key: proto.Uint32(1)}}
 	}
+	if config.Type == activityTypeBossSingle {
+		// the cleared stages the page unlocks the next ones from
+		// (TwoPointFiveStagePage:GetClearEnemyList)
+		info.Data2List = state.Data2List
+	}
 	if config.Type == activityTypeBossBattleMark2 {
 		// ActivityProxy:InitActivityBossData indexes lists 1 and 2 (the
 		// stages' expedition drops taken, and their counters) unchecked
@@ -368,6 +394,12 @@ func (game *Game) handleActivityOperation(client *connection.Client, req *protob
 			// an event's kill page (51303): "当前击沉" is the activity's
 			// data1, the phases' rewards its activity_event_pt row
 			return game.activityKillPageOperation(client, config, req)
+		case activityTypeLevelAward:
+			// the new commander page's level rewards
+			return game.activityLevelAwardOperation(client, config, req)
+		case activityTypeStoryAward:
+			// the new commander page's chapter clear rewards
+			return game.activityStoryAwardOperation(client, config, req)
 		}
 	}
 	activityType := config.Type

@@ -17,6 +17,7 @@ func loadGameData() error {
 		loadExperienceData,
 		loadSignInData,
 		loadTaskData,
+		loadRewardPageData,
 		loadJuusData,
 		loadLimitChallengeData,
 		loadWorldBossData,
