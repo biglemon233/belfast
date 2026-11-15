@@ -9,6 +9,7 @@ import (
 
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -120,6 +121,19 @@ func bundleLimits(bundle string) []shipLimit {
 // with FleetProxy's fleets, its surface and submarine teams are dropped as
 // the filter does. It returns the fleet to keep, under the formation's id.
 func checkEliteFleet(ctx context.Context, queries *db.Queries, commanderID uint32, template *chapterTemplate, fleet *protobuf.FLEET_INFO) (*protobuf.FLEET_INFO, error) {
+	refuse := func(reason string) error {
+		logger.WithFields("Chapter",
+			logger.FieldValue("id", template.id),
+			logger.FieldValue("reason", reason),
+		).Warn("elite fleet refused")
+		return errRefused
+	}
+	logger.WithFields("Chapter",
+		logger.FieldValue("id", template.id),
+		logger.FieldValue("main", fmt.Sprint(teamShips(fleet.GetMainTeam()))),
+		logger.FieldValue("sub", fmt.Sprint(teamShips(fleet.GetSubmarineTeam()))),
+		logger.FieldValue("support", fmt.Sprint(teamShips(fleet.GetSupportTeam()))),
+	).Debug("elite fleet")
 	kept := &protobuf.FLEET_INFO{
 		Id:            proto.Uint32(template.formation),
 		MainTeam:      fleet.GetMainTeam(),
@@ -136,7 +150,7 @@ func checkEliteFleet(ctx context.Context, queries *db.Queries, commanderID uint3
 		}
 	}
 	if len(slices.Compact(slices.Sorted(slices.Values(ids)))) != len(ids) {
-		return nil, errRefused
+		return nil, refuse("duplicate ships")
 	}
 	var teams []*protobuf.TEAM_INFO
 	for _, kind := range [][]*protobuf.TEAM_INFO{kept.MainTeam, kept.SubmarineTeam, kept.SupportTeam} {
@@ -158,8 +172,19 @@ func checkEliteFleet(ctx context.Context, queries *db.Queries, commanderID uint3
 				return nil, false
 			}
 			// a ship_data_template id is its group and star: the type is
-			// ship_data_statistics' of the group's first star
-			shipType := shipTemplates[ship.TemplateID/10*10+1].Type
+			// ship_data_statistics' of the group's first star (a ship the
+			// table only has at a later star, a retrofit, is its own row)
+			template, ok := shipTemplates[ship.TemplateID/10*10+1]
+			if !ok {
+				template, ok = shipTemplates[ship.TemplateID]
+			}
+			if !ok {
+				// a newer client's ship the data predates: its type is
+				// unknown, so no limit can be checked for it
+				logger.WithFields("Chapter", logger.FieldValue("ship", ship.TemplateID)).Warn("unknown ship type")
+				continue
+			}
+			shipType := template.Type
 			team := shipTeams[shipType]
 			types[team] = append(types[team], shipType)
 		}
@@ -167,15 +192,23 @@ func checkEliteFleet(ctx context.Context, queries *db.Queries, commanderID uint3
 	}
 	for i, team := range kept.MainTeam {
 		types, ok := teamTypes(team)
-		if !ok || len(types) > 0 && uint32(i) >= template.groupNum || len(types[teamSubmarine])+len(types[""]) > 0 {
-			return nil, errRefused
+		if !ok || len(types) > 0 && uint32(i) >= template.groupNum || len(types[teamSubmarine]) > 0 {
+			return nil, refuse("main team type")
 		}
 		limits := [2][]shipLimit{anyLimits(), anyLimits()}
 		if i < len(template.limitation) {
 			limits = template.limitation[i]
 		}
+		// the client enforces the limitation itself (EliteShipTypeFilter);
+		// its tables can name slots differently than shipBundles does, so a
+		// mismatch only warns
 		if !fitsLimits(types[teamMain], limits[0]) || !fitsLimits(types[teamVanguard], limits[1]) {
-			return nil, errRefused
+			logger.WithFields("Chapter",
+				logger.FieldValue("id", template.id),
+				logger.FieldValue("team", i),
+				logger.FieldValue("main", fmt.Sprint(types[teamMain])),
+				logger.FieldValue("vanguard", fmt.Sprint(types[teamVanguard])),
+			).Warn("main team outside the limitation")
 		}
 	}
 	supportLimit := bundleLimits("hang")
@@ -194,21 +227,30 @@ func checkEliteFleet(ctx context.Context, queries *db.Queries, commanderID uint3
 		for i, team := range kind.teams {
 			types, ok := teamTypes(team)
 			if !ok || len(team.GetShipList()) > 0 && uint32(i) >= kind.max {
-				return nil, errRefused
+				return nil, refuse("sub/support team count")
 			}
 			var all []uint32
 			for teamType, list := range types {
 				if kind.team != "" && teamType != kind.team {
-					return nil, errRefused
+					return nil, refuse("sub/support team type")
 				}
 				all = append(all, list...)
 			}
 			if !fitsLimits(all, kind.limits) {
-				return nil, errRefused
+				logger.WithFields("Chapter", logger.FieldValue("id", template.id), logger.FieldValue("team", i)).Warn("sub/support team outside the limitation")
 			}
 		}
 	}
 	return kept, nil
+}
+
+// teamShips is the teams' ship ids, for the tracking logs.
+func teamShips(teams []*protobuf.TEAM_INFO) [][]uint32 {
+	ships := make([][]uint32, len(teams))
+	for i, team := range teams {
+		ships[i] = team.GetShipList()
+	}
+	return ships
 }
 
 func saveEliteFleet(ctx context.Context, queries *db.Queries, commanderID uint32, fleet *protobuf.FLEET_INFO) error {

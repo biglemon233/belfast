@@ -358,6 +358,7 @@ func chapterGroups(teams []*protobuf.TEAM_INFO, born []*protobuf.CHAPTERCELLINFO
 // while an Operational Handover runs (chapterAutoRunning).
 func (game *Game) handleTracking13101(client *connection.Client, req *protobuf.CS_13101) error {
 	ctx := context.Background()
+	logger.WithFields("Chapter", logger.FieldValue("id", req.GetId())).Debug("chapter tracking begin")
 	template := chapterTemplates[req.GetId()]
 	if template == nil {
 		return client.Send(&protobuf.SC_13102{Result: result(errRefused)})
