@@ -40,6 +40,16 @@ const (
 // counts as a day's interaction; a visit (CS_28036) is the first one of any.
 const TaskSubPrivateQuarters = 500
 
+// TaskSubApartmentEnter is the sub type of the "enter the Private Quarters"
+// tasks (20611, 23846, 23920): their awards are the Beach, Café and Workshop
+// construction tickets (15022-15024) that open the real rooms the shop's
+// invitations are for.
+const TaskSubApartmentEnter = 502
+
+// apartmentStarterTasks are the 502 tasks: handed out at login so the first
+// entry into the room selection completes them.
+var apartmentStarterTasks = []uint32{20611, 23846, 23920}
+
 // apartmentState is a commander's Private Quarters, loaded for a request.
 type apartmentState struct {
 	commanderID uint32
@@ -688,6 +698,13 @@ func (game *Game) handleApartmentTalk(client *connection.Client, req *protobuf.C
 //
 //belfast:static
 func (game *Game) handleSelectDorm3dEnter(client *connection.Client, req *protobuf.CS_28017) error {
+	err := game.tx(context.Background(), client, func(tx *Tx) error {
+		tx.event(TaskEvent{SubType: TaskSubApartmentEnter, Count: 1})
+		return nil
+	})
+	if err != nil {
+		return err
+	}
 	return client.Send(&protobuf.SC_28018{Result: proto.Uint32(0)})
 }
 

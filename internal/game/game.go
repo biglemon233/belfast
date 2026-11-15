@@ -727,6 +727,12 @@ var loginBurst = []loginPush{
 		_, err = acceptTasks(l.ctx, l.queries, l.commander.ID, ids, uint32(l.now.Unix()))
 		return nil, err
 	},
+	// the Private Quarters' "enter" tasks, whose construction tickets open
+	// the real rooms its shop invitations are for
+	func(game *Game, l *login) (proto.Message, error) {
+		_, err := acceptTasks(l.ctx, l.queries, l.commander.ID, apartmentStarterTasks, uint32(l.now.Unix()))
+		return nil, err
+	},
 	func(game *Game, l *login) (proto.Message, error) { return taskList(l.ctx, l.queries, l.commander.ID) },
 	func(game *Game, l *login) (proto.Message, error) {
 		weekly, err := game.weeklyInfo(l.ctx, l.queries, l.commander.ID)
