@@ -39,6 +39,11 @@ func (game *Game) connect(ctx context.Context, client *connection.Client) error 
 	if known {
 		return nil
 	}
+	// the day's first login opens the comparison window the back-office
+	// diffs against; a relogin later the same day keeps it.
+	if err := game.CaptureSessionBaseline(ctx, id); err != nil {
+		logger.WithFields("Session", logger.FieldValue("commander", id), logger.FieldValue("error", err)).Warn("login baseline not captured")
+	}
 	game.Live.Publish(live.Event{Kind: live.Online})
 	client.OnClose(func() { game.disconnect(client, id) })
 	if err := game.DB.SetLastOnline(ctx, db.SetLastOnlineParams{LastOnline: time.Now().Unix(), ID: id}); err != nil {

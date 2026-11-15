@@ -31,6 +31,8 @@ type Game struct {
 	playRooms playRooms
 	// who is on which island (the life-sim), see island_enter.go
 	islands islandWorld
+	// the inventory each commander logged in with, see sessionstats.go
+	sessions sessionBaselines
 }
 
 // StartCommander creates what a new commander starts with (CS_10024), in

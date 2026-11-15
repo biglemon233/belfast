@@ -68,6 +68,7 @@ func (server *Server) Run() error {
 	api("GET /api/commanders", server.handleCommanders)
 	api("GET /api/commanders/{id}", server.handleCommander)
 	api("GET /api/commanders/{id}/summary", server.handleSummary)
+	api("GET /api/commanders/{id}/session", server.handleSessionStats)
 	api("POST /api/commanders/{id}/kick", server.handleKick)
 	api("POST /api/commanders/{id}/mail", server.handleMail)
 	api("POST /api/commanders/{id}/grant", server.handleGrant)
