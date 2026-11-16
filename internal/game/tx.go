@@ -33,8 +33,10 @@ type Tx struct {
 	mailSent bool // SendMail queued the SC_30001 push
 
 	// storeChanged is set when oil spilled into the mail storage: its amount
-	// isn't in any reply, so the client gets the resources again (SC_11004)
+	// isn't in any reply, so the client gets the resources again (SC_11004),
+	// after the reply so its own addition of the gain is overwritten
 	storeChanged bool
+	storePush    proto.Message
 
 	techPoints bool // techPointsChanged: count the Fleet Technology points again
 
@@ -52,6 +54,13 @@ func (game *Game) tx(ctx context.Context, client *connection.Client, fn func(tx 
 	}
 	for _, push := range append(progress, tx.pushes...) {
 		if err := client.Push(push); err != nil {
+			return err
+		}
+	}
+	// after the reply: the handler's reply has its own drops, which the client
+	// adds to its copy; this overwrites them with what the server kept
+	if tx.storePush != nil {
+		if err := client.PushAfterReply(tx.storePush); err != nil {
 			return err
 		}
 	}
@@ -98,7 +107,7 @@ func (game *Game) commit(ctx context.Context, commanderID uint32, fn func(tx *Tx
 			if err != nil {
 				return err
 			}
-			tx.pushes = append(tx.pushes, &protobuf.SC_11004{ResourceList: resourceList(rows)})
+			tx.storePush = &protobuf.SC_11004{ResourceList: resourceList(rows)}
 		}
 		return tx.saveOwnIsland()
 	})
