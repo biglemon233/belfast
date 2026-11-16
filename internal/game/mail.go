@@ -69,13 +69,11 @@ const (
 // errArchiveFull is SC_30007 result 6, "mail_moveto_markroom_max".
 var errArchiveFull error = refusal{"archive full", 6}
 
-// user_level row, the Archive's capacity at a commander level and the oil and
-// gold caps the level allows (Player:getOilMax / getGoldMax, the "MAX" the
-// client shows next to them)
+// user_level row, the Archive's capacity at a commander level and the oil cap
+// the level allows (Player:getOilMax, the "MAX" the client shows next to it)
 type mailLevelConfig struct {
 	MaxMarkmail uint32 `json:"max_markmail"`
 	MaxOil      uint32 `json:"max_oil"`
-	MaxGold     uint32 `json:"max_gold"`
 }
 
 // mail_storeroom row: the storage's capacity at a level and what the next
@@ -721,11 +719,20 @@ func (game *Game) handleExtendMailStorage(client *connection.Client, req *protob
 
 // handleMailStorageWithdraw answers GetStoreResCommand (CS_30012): oil and
 // gold out of the mail storage, which the client moves itself on result 0.
-// MailScene:UpdateStore caps each at what keeps the commander under gameset
-// max_gold / max_oil; more than that, or than is stored, is refused.
+// MailScene:UpdateStore caps the oil at what keeps the commander under the
+// level's max_oil (more than that, or than is stored, is refused); gold isn't
+// capped.
 func (game *Game) handleMailStorageWithdraw(client *connection.Client, req *protobuf.CS_30012) error {
 	ctx := context.Background()
 	err := game.tx(ctx, client, func(tx *Tx) error {
+		commander, err := tx.GetCommander(ctx, client.CommanderID)
+		if err != nil {
+			return err
+		}
+		oilCap := mailLevels[commander.Level].MaxOil
+		if oilCap == 0 {
+			oilCap = maxOil
+		}
 		rows, err := tx.ListResources(ctx, client.CommanderID)
 		if err != nil {
 			return err
@@ -735,13 +742,13 @@ func (game *Game) handleMailStorageWithdraw(client *connection.Client, req *prot
 			owned[row.ResourceID] = row.Amount
 		}
 		for _, take := range []struct{ resource, store, amount, cap uint32 }{
-			{ResourceOil, ResourceStoreOil, req.GetOil(), maxOil},
+			{ResourceOil, ResourceStoreOil, req.GetOil(), oilCap},
 			{ResourceGold, ResourceStoreGold, req.GetGold(), maxGold},
 		} {
 			if take.amount == 0 {
 				continue
 			}
-			if owned[take.resource]+take.amount > take.cap {
+			if take.cap != 0 && owned[take.resource]+take.amount > take.cap {
 				return errRefused
 			}
 			if err := tx.SpendResource(take.store, take.amount); err != nil {

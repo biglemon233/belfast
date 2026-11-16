@@ -2,8 +2,8 @@ package game
 
 import "testing"
 
-// TestResourceSpill checks oil and gold stop at their cap and the excess goes
-// into the mail storage, up to its capacity, the rest lost.
+// TestResourceSpill checks oil stops at its cap and the excess goes into the
+// mail storage, up to its capacity, the rest lost.
 func TestResourceSpill(t *testing.T) {
 	cases := []struct {
 		name                              string

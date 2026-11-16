@@ -32,22 +32,13 @@ const (
 // commander.
 const spweaponBagSize = 150
 
-// AddResource gives the commander amount of a player_resource. Oil and gold
-// stop at what the commander's level allows (user_level max_oil / max_gold,
-// the "MAX" the client shows): the excess goes into the mail storage (储藏室),
-// up to its mail_storeroom capacity, and what that can't hold is lost, as the
-// game has it.
+// AddResource gives the commander amount of a player_resource. Oil stops at
+// what the commander's level allows (user_level max_oil, the "MAX" the client
+// shows): the excess goes into the mail storage (储藏室), up to its
+// mail_storeroom oil_store, and what that can't hold is lost, as the game has
+// it. Gold and the other resources aren't capped.
 func (tx *Tx) AddResource(resourceID, amount uint32) error {
-	if amount == 0 {
-		return nil
-	}
-	var store uint32
-	switch resourceID {
-	case ResourceOil:
-		store = ResourceStoreOil
-	case ResourceGold:
-		store = ResourceStoreGold
-	default:
+	if amount == 0 || resourceID != ResourceOil {
 		return tx.addResource(resourceID, amount)
 	}
 	commander, err := tx.GetCommander(tx.ctx, tx.commanderID)
@@ -58,9 +49,6 @@ func (tx *Tx) AddResource(resourceID, amount uint32) error {
 		return err
 	}
 	limit := mailLevels[commander.Level].MaxOil
-	if resourceID == ResourceGold {
-		limit = mailLevels[commander.Level].MaxGold
-	}
 	if limit == 0 {
 		return tx.addResource(resourceID, amount)
 	}
@@ -72,25 +60,21 @@ func (tx *Tx) AddResource(resourceID, amount uint32) error {
 	for _, row := range rows {
 		owned[row.ResourceID] = row.Amount
 	}
-	storeroom := mailStorerooms[commander.MailStoreroomLv]
-	capacity := storeroom.OilStore
-	if resourceID == ResourceGold {
-		capacity = storeroom.GoldStore
-	}
-	added, stored := resourceSpill(limit, owned[resourceID], amount, owned[store], capacity)
+	capacity := mailStorerooms[commander.MailStoreroomLv].OilStore
+	added, stored := resourceSpill(limit, owned[resourceID], amount, owned[ResourceStoreOil], capacity)
 	if added > 0 {
 		if err := tx.addResource(resourceID, added); err != nil {
 			return err
 		}
 	}
 	if stored > 0 {
-		return tx.addResource(store, stored)
+		return tx.addResource(ResourceStoreOil, stored)
 	}
 	return nil
 }
 
-// resourceSpill splits amount of oil or gold between the resource itself (up
-// to limit, its cap) and the mail storage (up to capacity): added is what the
+// resourceSpill splits amount of oil between the resource itself (up to
+// limit, its cap) and the mail storage (up to capacity): added is what the
 // resource takes, stored what the storage takes, and the rest is lost.
 func resourceSpill(limit, owned, amount, storeOwned, storeCapacity uint32) (added, stored uint32) {
 	if limit == 0 {
