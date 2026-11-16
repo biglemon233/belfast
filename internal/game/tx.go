@@ -32,6 +32,10 @@ type Tx struct {
 
 	mailSent bool // SendMail queued the SC_30001 push
 
+	// storeChanged is set when oil spilled into the mail storage: its amount
+	// isn't in any reply, so the client gets the resources again (SC_11004)
+	storeChanged bool
+
 	techPoints bool // techPointsChanged: count the Fleet Technology points again
 
 	ownIsland *islandState // the commander's island once Tx.island loaded it
@@ -87,6 +91,14 @@ func (game *Game) commit(ctx context.Context, commanderID uint32, fn func(tx *Tx
 			if err := fn(); err != nil {
 				return err
 			}
+		}
+		if tx.storeChanged {
+			// the storage's oil and gold aren't in a gain's reply
+			rows, err := queries.ListResources(ctx, commanderID)
+			if err != nil {
+				return err
+			}
+			tx.pushes = append(tx.pushes, &protobuf.SC_11004{ResourceList: resourceList(rows)})
 		}
 		return tx.saveOwnIsland()
 	})

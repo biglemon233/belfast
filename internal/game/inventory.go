@@ -9,6 +9,7 @@ import (
 
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -68,7 +69,18 @@ func (tx *Tx) AddResource(resourceID, amount uint32) error {
 		}
 	}
 	if stored > 0 {
+		// the reply's drops won't mention the storage: have the client read
+		// the resources again
+		logger.WithFields("Inventory",
+			logger.FieldValue("oil", added),
+			logger.FieldValue("stored", stored),
+			logger.FieldValue("lost", amount-added-stored),
+		).Debug("oil over the cap went to the mail storage")
+		tx.storeChanged = true
 		return tx.addResource(ResourceStoreOil, stored)
+	}
+	if amount > added {
+		logger.WithFields("Inventory", logger.FieldValue("lost", amount-added)).Warn("oil over the cap and the mail storage was lost")
 	}
 	return nil
 }
