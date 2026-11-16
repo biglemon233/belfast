@@ -196,7 +196,9 @@ func (game *Game) handleBuildShip(client *connection.Client, req *protobuf.CS_12
 	).Debug("build")
 	var started []db.Build
 	err := errRefused
-	if ok && req.GetCosttype() == 0 && count >= 1 && count <= maxBuilds {
+	// the newbie pool is paid with its ticket instead (costtype 1)
+	ticketed := ok && req.GetCosttype() == 1 && newServerBuilds != nil && newServerBuilds.Pool == req.GetId()
+	if ok && (req.GetCosttype() == 0 || ticketed) && count >= 1 && count <= maxBuilds {
 		err = game.tx(ctx, client, func(tx *Tx) error {
 			builds, err := tx.ListBuilds(ctx, client.CommanderID)
 			if err != nil {
@@ -205,11 +207,17 @@ func (game *Game) handleBuildShip(client *connection.Client, req *protobuf.CS_12
 			if len(builds)+int(count) > maxBuilds {
 				return errRefused
 			}
-			if err := tx.SpendResource(ResourceGold, pool.Gold*count); err != nil {
-				return err
-			}
-			if err := tx.SpendItem(pool.Item, pool.ItemCount*count); err != nil {
-				return err
+			if ticketed {
+				if err := tx.spendNewServerTickets(count); err != nil {
+					return err
+				}
+			} else {
+				if err := tx.SpendResource(ResourceGold, pool.Gold*count); err != nil {
+					return err
+				}
+				if err := tx.SpendItem(pool.Item, pool.ItemCount*count); err != nil {
+					return err
+				}
 			}
 			for range count {
 				template, duration, ok := pickBuildShip(pool)
@@ -232,6 +240,9 @@ func (game *Game) handleBuildShip(client *connection.Client, req *protobuf.CS_12
 			}
 			// capture: the task progress (SC_20102, SC_20202) comes before SC_12003
 			tx.event(TaskEvent{SubType: TaskSubBuild, Count: count})
+			if ticketed {
+				return tx.newServerBuildMilestone(count)
+			}
 			return tx.addBuildPoints(int64(pool.ExchangeCount) * int64(count))
 		})
 	}

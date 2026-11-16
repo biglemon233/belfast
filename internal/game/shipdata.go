@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/ggmolly/belfast/internal/gamedata"
 	"github.com/ggmolly/belfast/internal/logger"
@@ -575,37 +574,44 @@ func loadShipData() error {
 		}
 		// the first rate of each rarity: rate_tip lists the rarities first,
 		// then the rate-up ships
-		tipRates := map[uint32]float64{}
-		for _, tip := range pool.RateTip {
-			match := rateTipLine.FindStringSubmatch(tip)
-			if match == nil {
-				continue
-			}
-			rate, err := strconv.ParseFloat(match[2], 64)
-			rarity, named := uint32(shipRarityGray), true
-			if match[1] != "" {
-				rarity, named = rarityByRateColor[strings.ToLower(match[1])]
-			}
-			if _, seen := tipRates[rarity]; err != nil || !named || seen {
-				continue
-			}
-			tipRates[rarity] = rate
-		}
-		// the Ultra Rare rate of a pool without one goes to Common (the
-		// wiki's Building page, as the pools without URs show in their
-		// rate_tip: Common 30% where those with URs have 28.8%)
-		if len(pool.candidates[shipRarityUR]) == 0 {
-			tipRates[shipRarityGray] += tipRates[shipRarityUR]
-			delete(tipRates, shipRarityUR)
-		}
-		for rarity, rate := range tipRates {
-			if len(pool.candidates[rarity]) > 0 && rate > 0 {
-				pool.rates = append(pool.rates, rarityRate{rarity, rate})
-				pool.total += rate
-			}
-		}
+		pool.rates, pool.total = poolRates(pool)
 		slices.SortFunc(pool.rates, func(a, b rarityRate) int { return cmp.Compare(a.rarity, b.rarity) })
 		buildPools[id] = pool
+	}
+	// the newbie build pool: its roster isn't derivable from ship_data_group,
+	// so server/newserver_build.json lists it
+	if err := loadNewServerBuild(); err != nil {
+		return err
+	}
+	if newServerBuilds != nil {
+		if pool, ok := pools[newServerBuilds.Pool]; ok {
+			pool.candidates = map[uint32][]uint32{}
+			for _, id := range newServerBuilds.Ships {
+				ship, ok := shipTemplates[id]
+				if !ok {
+					continue
+				}
+				if _, timed := buildTimes[id]; !timed {
+					untimed++
+					continue
+				}
+				pool.candidates[ship.Rarity] = append(pool.candidates[ship.Rarity], id)
+			}
+			pool.rates, pool.total = poolRates(pool)
+			if len(newServerBuilds.Rates) > 0 {
+				// the pool's rate_tip has no ultra rare line, yet the roster
+				// has ultra rare ships: the file's own rates
+				pool.rates, pool.total = nil, 0
+				for rarity, rate := range newServerBuilds.Rates {
+					if len(pool.candidates[rarity]) > 0 && rate > 0 {
+						pool.rates = append(pool.rates, rarityRate{rarity, rate})
+						pool.total += rate
+					}
+				}
+			}
+			slices.SortFunc(pool.rates, func(a, b rarityRate) int { return cmp.Compare(a.rarity, b.rarity) })
+			buildPools[newServerBuilds.Pool] = pool
+		}
 	}
 	if untimed > 0 {
 		logger.WithFields("Build", logger.FieldValue("left out", untimed)).Warn("pool ships without a construction time in server/build_times.json")
