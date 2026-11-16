@@ -2,12 +2,14 @@ package game
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -26,6 +28,10 @@ func (game *Game) handleRetireShips(client *connection.Client, req *protobuf.CS_
 	if err != nil && !refused(err) {
 		return err
 	}
+	logger.WithFields("Retire",
+		logger.FieldValue("ids", fmt.Sprint(ids)),
+		logger.FieldValue("refused", refused(err)),
+	).Debug("retire")
 	reply := &protobuf.SC_12005{Result: result(err)}
 	if err == nil {
 		reply.ShipIdList = ids
@@ -46,6 +52,7 @@ func (game *Game) handleRetireShips(client *connection.Client, req *protobuf.CS_
 func (tx *Tx) retireShips(ids []uint32) error {
 	ctx, queries := tx.ctx, tx.Queries
 	if len(ids) == 0 || len(slices.Compact(slices.Sorted(slices.Values(ids)))) != len(ids) {
+		logger.WithFields("Retire", logger.FieldValue("ids", fmt.Sprint(ids))).Warn("retire: empty or duplicate ids")
 		return errRefused
 	}
 	ships, err := shipsByID(ctx, queries, tx.commanderID, ids)
@@ -53,6 +60,7 @@ func (tx *Tx) retireShips(ids []uint32) error {
 		return err
 	}
 	if len(ships) != len(ids) {
+		logger.WithFields("Retire", logger.FieldValue("ids", fmt.Sprint(ids)), logger.FieldValue("found", len(ships))).Warn("retire: ships not found")
 		return errRefused
 	}
 	busy, err := busyShips(ctx, queries, tx.commanderID)
@@ -66,7 +74,20 @@ func (tx *Tx) retireShips(ids []uint32) error {
 		// its current template's type and rarity (Ship:calReturnRes reads
 		// the ship's own config), limit broken and retrofitted ones too
 		template, ok := ownableShips[ship.TemplateID]
-		if !ok || ship.IsLocked || template.unretirable || busy[id] {
+		if !ok {
+			logger.WithFields("Retire", logger.FieldValue("ship", id), logger.FieldValue("template", ship.TemplateID)).Warn("retire: unknown template")
+			return errRefused
+		}
+		if ship.IsLocked {
+			logger.WithFields("Retire", logger.FieldValue("ship", id), logger.FieldValue("template", ship.TemplateID)).Warn("retire: locked")
+			return errRefused
+		}
+		if template.unretirable {
+			logger.WithFields("Retire", logger.FieldValue("ship", id), logger.FieldValue("template", ship.TemplateID)).Warn("retire: unretirable template")
+			return errRefused
+		}
+		if busy[id] {
+			logger.WithFields("Retire", logger.FieldValue("ship", id), logger.FieldValue("template", ship.TemplateID)).Warn("retire: busy (fleet, secretary, sortie or commission)")
 			return errRefused
 		}
 		equips, err := queries.ListShipEquipments(ctx, id)
