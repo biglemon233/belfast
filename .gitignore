@@ -15,6 +15,7 @@ dump
 # Compiled binaries
 /belfast
 /belfast.exe
+/belfast-*
 
 # This folder contains raw protobuf messages, they're not needed in the repo
 # and will be moved later to another location
