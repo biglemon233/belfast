@@ -69,9 +69,13 @@ const (
 // errArchiveFull is SC_30007 result 6, "mail_moveto_markroom_max".
 var errArchiveFull error = refusal{"archive full", 6}
 
-// user_level row, the Archive's capacity at a commander level
+// user_level row, the Archive's capacity at a commander level and the oil and
+// gold caps the level allows (Player:getOilMax / getGoldMax, the "MAX" the
+// client shows next to them)
 type mailLevelConfig struct {
 	MaxMarkmail uint32 `json:"max_markmail"`
+	MaxOil      uint32 `json:"max_oil"`
+	MaxGold     uint32 `json:"max_gold"`
 }
 
 // mail_storeroom row: the storage's capacity at a level and what the next

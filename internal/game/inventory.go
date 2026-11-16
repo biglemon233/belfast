@@ -32,8 +32,82 @@ const (
 // commander.
 const spweaponBagSize = 150
 
-// AddResource gives the commander amount of a player_resource.
+// AddResource gives the commander amount of a player_resource. Oil and gold
+// stop at what the commander's level allows (user_level max_oil / max_gold,
+// the "MAX" the client shows): the excess goes into the mail storage (储藏室),
+// up to its mail_storeroom capacity, and what that can't hold is lost, as the
+// game has it.
 func (tx *Tx) AddResource(resourceID, amount uint32) error {
+	if amount == 0 {
+		return nil
+	}
+	var store uint32
+	switch resourceID {
+	case ResourceOil:
+		store = ResourceStoreOil
+	case ResourceGold:
+		store = ResourceStoreGold
+	default:
+		return tx.addResource(resourceID, amount)
+	}
+	commander, err := tx.GetCommander(tx.ctx, tx.commanderID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return tx.addResource(resourceID, amount)
+	}
+	if err != nil {
+		return err
+	}
+	limit := mailLevels[commander.Level].MaxOil
+	if resourceID == ResourceGold {
+		limit = mailLevels[commander.Level].MaxGold
+	}
+	if limit == 0 {
+		return tx.addResource(resourceID, amount)
+	}
+	rows, err := tx.ListResources(tx.ctx, tx.commanderID)
+	if err != nil {
+		return err
+	}
+	owned := map[uint32]uint32{}
+	for _, row := range rows {
+		owned[row.ResourceID] = row.Amount
+	}
+	storeroom := mailStorerooms[commander.MailStoreroomLv]
+	capacity := storeroom.OilStore
+	if resourceID == ResourceGold {
+		capacity = storeroom.GoldStore
+	}
+	added, stored := resourceSpill(limit, owned[resourceID], amount, owned[store], capacity)
+	if added > 0 {
+		if err := tx.addResource(resourceID, added); err != nil {
+			return err
+		}
+	}
+	if stored > 0 {
+		return tx.addResource(store, stored)
+	}
+	return nil
+}
+
+// resourceSpill splits amount of oil or gold between the resource itself (up
+// to limit, its cap) and the mail storage (up to capacity): added is what the
+// resource takes, stored what the storage takes, and the rest is lost.
+func resourceSpill(limit, owned, amount, storeOwned, storeCapacity uint32) (added, stored uint32) {
+	if limit == 0 {
+		return amount, 0
+	}
+	if owned < limit {
+		added = min(amount, limit-owned)
+	}
+	spill := amount - added
+	if spill > 0 && storeOwned < storeCapacity {
+		stored = min(spill, storeCapacity-storeOwned)
+	}
+	return added, stored
+}
+
+// addResource adds amount of a player_resource without the caps.
+func (tx *Tx) addResource(resourceID, amount uint32) error {
 	return tx.Queries.AddResource(tx.ctx, db.AddResourceParams{CommanderID: tx.commanderID, ResourceID: resourceID, Amount: amount})
 }
 
