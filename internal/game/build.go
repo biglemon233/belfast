@@ -15,6 +15,7 @@ import (
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
 	"github.com/ggmolly/belfast/internal/gamedata"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -185,6 +186,14 @@ func (game *Game) handleBuildShip(client *connection.Client, req *protobuf.CS_12
 	now := time.Now().Unix()
 	pool, ok := buildPools[req.GetId()]
 	count := req.GetCount()
+	// the client sends costtype 1 for a pool paid with a build ticket; that
+	// one has no pool row and is refused, so log what came in
+	logger.WithFields("Build",
+		logger.FieldValue("pool", req.GetId()),
+		logger.FieldValue("count", count),
+		logger.FieldValue("costtype", req.GetCosttype()),
+		logger.FieldValue("known", ok),
+	).Debug("build")
 	var started []db.Build
 	err := errRefused
 	if ok && req.GetCosttype() == 0 && count >= 1 && count <= maxBuilds {
