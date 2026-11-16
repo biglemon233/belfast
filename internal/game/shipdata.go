@@ -584,18 +584,23 @@ func loadShipData() error {
 		return err
 	}
 	if newServerBuilds != nil {
-		if pool, ok := pools[newServerBuilds.Pool]; ok {
+		// the pool itself, plus any permanent pool that draws the same roster
+		for _, id := range append([]uint32{newServerBuilds.Pool}, newServerBuilds.Pools...) {
+			pool, ok := pools[id]
+			if !ok {
+				continue
+			}
 			pool.candidates = map[uint32][]uint32{}
-			for _, id := range newServerBuilds.Ships {
-				ship, ok := shipTemplates[id]
+			for _, shipID := range newServerBuilds.Ships {
+				ship, ok := shipTemplates[shipID]
 				if !ok {
 					continue
 				}
-				if _, timed := buildTimes[id]; !timed {
+				if _, timed := buildTimes[shipID]; !timed {
 					untimed++
 					continue
 				}
-				pool.candidates[ship.Rarity] = append(pool.candidates[ship.Rarity], id)
+				pool.candidates[ship.Rarity] = append(pool.candidates[ship.Rarity], shipID)
 			}
 			pool.rates, pool.total = poolRates(pool)
 			if len(newServerBuilds.Rates) > 0 {
@@ -610,7 +615,7 @@ func loadShipData() error {
 				}
 			}
 			slices.SortFunc(pool.rates, func(a, b rarityRate) int { return cmp.Compare(a.rarity, b.rarity) })
-			buildPools[newServerBuilds.Pool] = pool
+			buildPools[id] = pool
 		}
 	}
 	if untimed > 0 {

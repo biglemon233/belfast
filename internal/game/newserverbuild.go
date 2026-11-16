@@ -20,6 +20,9 @@ type newServerBuild struct {
 	Pool   uint32   `json:"pool"`
 	Ticket uint32   `json:"ticket"`
 	Ships  []uint32 `json:"ships"`
+	// Pools get the same roster as Pool (a permanent pool, so the roster can
+	// be drawn from the build page the client's checks let through)
+	Pools []uint32 `json:"pools"`
 	// the rarity rates in percent (6 = ultra rare, 5 = super rare, 4 = elite,
 	// 3 = rare, 2 = common), by rarity; the pool's own rate_tip when empty
 	Rates map[uint32]float64 `json:"rates"`
