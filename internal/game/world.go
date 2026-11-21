@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"math/rand/v2"
 	"slices"
 	"time"
 
@@ -54,6 +55,11 @@ func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_3
 		changed, err := tx.updateWorldPeriods(state, now)
 		if err != nil {
 			return err
+		}
+		// the story tasks no map event hands out are accepted here too, so
+		// the task panel has them without an operation first
+		if task := tx.acceptStoryGapTask(state, now, rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(tx.commanderID)))); task != nil {
+			changed = true
 		}
 		if changed {
 			if err := tx.saveWorldState(state); err != nil {
@@ -164,6 +170,11 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 		state, err := tx.activateWorld(req, now)
 		if err != nil {
 			return err
+		}
+		if task := tx.acceptStoryGapTask(state, now, rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(tx.commanderID)))); task != nil {
+			if err := tx.saveWorldState(state); err != nil {
+				return err
+			}
 		}
 		reply = &protobuf.SC_33102{
 			Result:          result(nil),

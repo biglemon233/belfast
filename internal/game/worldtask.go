@@ -385,6 +385,45 @@ func (state *worldState) recountWorldTasks(happened *worldHappenings) []uint32 {
 	return changed
 }
 
+// worldStoryGaps are the story tasks whose handing-out events are not on any
+// map in the data: 2010/2110/2210's 20900/21900/22900, 2103's 21202 and
+// 2304's 23301 are in world_event_data but no chapter or map references
+// them, so nothing on the maps ever accepts those tasks. Submitting the task
+// before them hands them out instead, letting the story chain run to the
+// progress 100 that opens the daily task board (world_stage_template 20,
+// WorldConst.SystemDailyTask 22).
+var worldStoryGaps = [][2]uint32{
+	{2004, 2010}, // Chapter1-6 → Chapter1-SP
+	{2102, 2103}, // Chapter2-3 → Chapter2-4
+	{2105, 2110}, // Chapter2-6 → Chapter2-SP
+	{2205, 2210}, // Chapter3-6 → Chapter3-SP
+	{2303, 2304}, // Chapter4-4 → Chapter4-5
+}
+
+// acceptStoryGapTask hands out the story task no event on the maps gives,
+// once the task before it is submitted: nil when none is due.
+func (tx *Tx) acceptStoryGapTask(state *worldState, now time.Time, rng *rand.Rand) *worldTask {
+	if !state.activated() {
+		return nil
+	}
+	for _, pair := range worldStoryGaps {
+		previous := state.task(pair[0])
+		if previous == nil || previous.SubmitTime == 0 {
+			continue
+		}
+		next := state.task(pair[1])
+		if next != nil && (next.SubmitTime != 0 || next.alive()) {
+			continue
+		}
+		config, ok := worldTasks[pair[1]]
+		if !ok || state.TaskFinishCount < config.NeedTaskComplete {
+			continue
+		}
+		return tx.acceptWorldTask(state, pair[1], now, rng)
+	}
+	return nil
+}
+
 // worldTasksUpdated is the world tasks' hook, called once per map operation
 // (CS_33103) and world battle, and after a redeploy: the tasks effects
 // type 5 hand out are accepted, what happened is counted, and the client
@@ -405,6 +444,9 @@ func (tx *Tx) worldTasksUpdated(state *worldState, happened *worldHappenings) er
 		if !slices.Contains(updated, id) {
 			updated = append(updated, id)
 		}
+	}
+	if task := tx.acceptStoryGapTask(state, now, rng); task != nil && !slices.Contains(updated, task.ID) {
+		updated = append(updated, task.ID)
 	}
 	if len(happened.Deleted) > 0 {
 		var deleted []uint32
@@ -557,6 +599,9 @@ func (game *Game) handleWorldSubmitTask(client *connection.Client, req *protobuf
 		}
 		// a next task may be done already (an item task)
 		ids = append(ids, state.recountWorldTasks(&worldHappenings{})...)
+		if task := tx.acceptStoryGapTask(state, now, rng); task != nil {
+			ids = append(ids, task.ID)
+		}
 		if len(ids) > 0 {
 			next = state.taskUpdates(ids)
 		}
