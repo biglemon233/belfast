@@ -393,11 +393,12 @@ func (state *worldState) recountWorldTasks(happened *worldHappenings) []uint32 {
 // progress 100 that opens the daily task board (world_stage_template 20,
 // WorldConst.SystemDailyTask 22).
 var worldStoryGaps = [][2]uint32{
-	{2004, 2010}, // Chapter1-6 → Chapter1-SP
-	{2102, 2103}, // Chapter2-3 → Chapter2-4
-	{2105, 2110}, // Chapter2-6 → Chapter2-SP
-	{2205, 2210}, // Chapter3-6 → Chapter3-SP
-	{2303, 2304}, // Chapter4-4 → Chapter4-5
+	{2004, 2010}, // Chapter1-6 -> Chapter1-SP
+	{2102, 2103}, // Chapter2-3 -> Chapter2-4
+	{2105, 2110}, // Chapter2-6 -> Chapter2-SP
+	{2205, 2210}, // Chapter3-6 -> Chapter3-SP
+	{2303, 2304}, // Chapter4-4 -> Chapter4-5
+	{2305, 2310}, // Chapter4-6 -> Chapter4-SP
 }
 
 // worldTaskFollowups are the tasks a story task hands out through a story
