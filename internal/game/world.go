@@ -60,14 +60,23 @@ func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_3
 		// the story tasks no map event hands out are accepted here too, so
 		// the task panel has them without an operation first; the update is
 		// sent after the full state, which would otherwise replace it
-		if task := tx.acceptStoryGapTask(state, now, rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(tx.commanderID)))); task != nil {
+		rng := rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(tx.commanderID)))
+		var pushIDs []uint32
+		if task := tx.acceptStoryGapTask(state, now, rng); task != nil {
 			changed = true
-			gapPush = state.taskUpdates([]uint32{task.ID})
+			pushIDs = append(pushIDs, task.ID)
+		}
+		if task := tx.acceptFollowupTask(state, now, rng); task != nil {
+			changed = true
+			pushIDs = append(pushIDs, task.ID)
 		}
 		if changed {
 			if err := tx.saveWorldState(state); err != nil {
 				return err
 			}
+		}
+		if len(pushIDs) > 0 {
+			gapPush = state.taskUpdates(pushIDs)
 		}
 		full = state.fullState()
 		return nil
@@ -186,6 +195,16 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 				return err
 			}
 			gapPush = state.taskUpdates([]uint32{task.ID})
+		}
+		if task := tx.acceptFollowupTask(state, now, rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(tx.commanderID)))); task != nil {
+			if err := tx.saveWorldState(state); err != nil {
+				return err
+			}
+			if gapPush == nil {
+				gapPush = state.taskUpdates([]uint32{task.ID})
+			} else {
+				gapPush.UpdateList = append(gapPush.UpdateList, state.taskUpdates([]uint32{task.ID}).UpdateList...)
+			}
 		}
 		reply = &protobuf.SC_33102{
 			Result:          result(nil),

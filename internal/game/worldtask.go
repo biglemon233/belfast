@@ -400,6 +400,39 @@ var worldStoryGaps = [][2]uint32{
 	{2303, 2304}, // Chapter4-4 → Chapter4-5
 }
 
+// worldTaskFollowups are the tasks a story task hands out through a story
+// event chain the maps don't carry: 2100 (Chapter2-1 集结) spawns event
+// 20901 and the 21010/21020 chain accepts 2150 (扩编舰队), but no map has
+// that chain, so 2-1 never completes and its port stays locked. Accept the
+// follow-up once its source is under way.
+var worldTaskFollowups = [][2]uint32{
+	{2100, 2150},
+}
+
+// acceptFollowupTask hands out the follow-up task of a task under way that
+// no event on the maps gives: nil when none is due.
+func (tx *Tx) acceptFollowupTask(state *worldState, now time.Time, rng *rand.Rand) *worldTask {
+	if !state.activated() {
+		return nil
+	}
+	for _, pair := range worldTaskFollowups {
+		source := state.task(pair[0])
+		if source == nil || !source.alive() {
+			continue
+		}
+		next := state.task(pair[1])
+		if next != nil && (next.SubmitTime != 0 || next.alive()) {
+			continue
+		}
+		config, ok := worldTasks[pair[1]]
+		if !ok || state.TaskFinishCount < config.NeedTaskComplete {
+			continue
+		}
+		return tx.acceptWorldTask(state, pair[1], now, rng)
+	}
+	return nil
+}
+
 // acceptStoryGapTask hands out the story task no event on the maps gives,
 // once the task before it is submitted: nil when none is due.
 func (tx *Tx) acceptStoryGapTask(state *worldState, now time.Time, rng *rand.Rand) *worldTask {
@@ -446,6 +479,9 @@ func (tx *Tx) worldTasksUpdated(state *worldState, happened *worldHappenings) er
 		}
 	}
 	if task := tx.acceptStoryGapTask(state, now, rng); task != nil && !slices.Contains(updated, task.ID) {
+		updated = append(updated, task.ID)
+	}
+	if task := tx.acceptFollowupTask(state, now, rng); task != nil && !slices.Contains(updated, task.ID) {
 		updated = append(updated, task.ID)
 	}
 	if len(happened.Deleted) > 0 {
