@@ -13,6 +13,7 @@ import (
 
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -582,6 +583,19 @@ func (op *worldOp) vision() error {
 // adds the buff itself in OpReqPressingMapDone).
 func (op *worldOp) pressing(randomID uint32) error {
 	if randomID != op.m.RandomID || worldRandomMaps[randomID].CompleteEffect == 0 || op.m.infection() > 0 {
+		var infected []uint32
+		for _, a := range op.m.Attachments {
+			if a.Type == worldAttachEvent && worldEvents[a.ID].InfectionValue > 0 {
+				infected = append(infected, a.ID)
+			}
+		}
+		logger.WithFields("World",
+			logger.FieldValue("map", randomID),
+			logger.FieldValue("active", op.m.RandomID),
+			logger.FieldValue("complete_effect", worldRandomMaps[randomID].CompleteEffect),
+			logger.FieldValue("infection", op.m.infection()),
+			logger.FieldValue("infected_events", infected),
+		).Warn("pressing refused")
 		return errRefused
 	}
 	if slices.Contains(op.state.CleanChapters, randomID) {
