@@ -47,6 +47,7 @@ func worldLoginState(l *login) (proto.Message, error) {
 func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_33000) error {
 	now := serverNow()
 	var full *protobuf.SC_33001
+	var gapPush *protobuf.SC_33203
 	err := game.tx(context.Background(), client, func(tx *Tx) error {
 		state, err := tx.worldState(now)
 		if err != nil {
@@ -57,9 +58,11 @@ func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_3
 			return err
 		}
 		// the story tasks no map event hands out are accepted here too, so
-		// the task panel has them without an operation first
+		// the task panel has them without an operation first; the update is
+		// sent after the full state, which would otherwise replace it
 		if task := tx.acceptStoryGapTask(state, now, rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(tx.commanderID)))); task != nil {
 			changed = true
+			gapPush = state.taskUpdates([]uint32{task.ID})
 		}
 		if changed {
 			if err := tx.saveWorldState(state); err != nil {
@@ -72,7 +75,13 @@ func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_3
 	if err != nil {
 		return err
 	}
-	return client.Send(full)
+	if err := client.Send(full); err != nil {
+		return err
+	}
+	if gapPush != nil {
+		return client.PushAfterReply(gapPush)
+	}
+	return nil
 }
 
 // updateWorldPeriods is what time brings an activated world: the month's
@@ -166,6 +175,7 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 	ctx := context.Background()
 	now := serverNow()
 	var reply *protobuf.SC_33102
+	var gapPush *protobuf.SC_33203
 	err := game.tx(ctx, client, func(tx *Tx) error {
 		state, err := tx.activateWorld(req, now)
 		if err != nil {
@@ -175,6 +185,7 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 			if err := tx.saveWorldState(state); err != nil {
 				return err
 			}
+			gapPush = state.taskUpdates([]uint32{task.ID})
 		}
 		reply = &protobuf.SC_33102{
 			Result:          result(nil),
@@ -192,7 +203,13 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 	if err != nil {
 		return err
 	}
-	return client.Send(reply)
+	if err := client.Send(reply); err != nil {
+		return err
+	}
+	if gapPush != nil {
+		return client.PushAfterReply(gapPush)
+	}
+	return nil
 }
 
 // worldFleets checks the fleets of an activation and makes them: the
