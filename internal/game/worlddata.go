@@ -128,6 +128,10 @@ type worldEvent struct {
 	// InfectionValue is the Siren infection the event adds to its map
 	// while on it (WorldMap:GetEventPoisonRate)
 	InfectionValue uint32 `json:"infection_value"`
+	// Icon is what the client draws for the event; empty means it draws
+	// nothing (the intact Siren control devices: they can be neither seen
+	// nor attacked, but still carry an infection)
+	Icon string `json:"icon"`
 }
 
 // worldEffect is a world_effect_data row.

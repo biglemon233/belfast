@@ -366,9 +366,17 @@ func (op *worldOp) move(row, column uint32) error {
 	}
 	path = op.m.slide(path, op.state.Fleets, fleet)
 	end := path[len(path)-1]
+	if err := op.destroyInvisibleDeviceAt(from); err != nil {
+		return err
+	}
 	op.mark(from)
 	fleet.Row, fleet.Column = end[0], end[1]
 	op.mark(end)
+	for _, cell := range path {
+		if err := op.destroyInvisibleDeviceAt(cell); err != nil {
+			return err
+		}
+	}
 	for _, cell := range path {
 		op.reply.MovePath = append(op.reply.MovePath, worldCellPos(cell[0], cell[1]))
 		discoverAround(op.m, cell[0], cell[1])
@@ -853,6 +861,55 @@ func (m *worldMap) infection() uint32 {
 		}
 	}
 	return total
+}
+
+// invisibleInfectionDevice is an event the client draws nothing for (no
+// icon or name) that can only be triggered automatically (no event_op, no
+// interactive effect) and still carries an infection: the intact Siren
+// sea-condition controllers. Moving a fleet next to one destroys it.
+func invisibleInfectionDevice(id uint32) bool {
+	event, ok := worldEvents[id]
+	if !ok || event.InfectionValue == 0 || event.Icon != "" || event.Name != "" || len(event.EventOp) > 0 {
+		return false
+	}
+	for _, eid := range event.Effect {
+		effect, ok := worldEffects[eid]
+		if !ok || effect.AutoActivate != 0 {
+			continue
+		}
+		switch effect.EffectType {
+		case worldEffectTeleport, worldEffectBattle, worldEffectStoryOption, worldEffectCondition:
+			return false
+		}
+	}
+	return true
+}
+
+// destroyInvisibleDeviceAt runs the effects of the invisible infection
+// device on cell (the client draws nothing for it and cannot attack it, so
+// a fleet walking onto or through its cell is the trigger) and removes it:
+// the zone's infection clears and its effects spawn the damaged device.
+func (op *worldOp) destroyInvisibleDeviceAt(cell [2]uint32) error {
+	for _, a := range slices.Clone(op.m.Attachments) {
+		if a.Type != worldAttachEvent || !invisibleInfectionDevice(a.ID) || a.Row != cell[0] || a.Column != cell[1] {
+			continue
+		}
+		ev := a
+		ids := slices.Clone(ev.Effects)
+		ev.Effects = nil
+		for _, id := range ids {
+			if err := op.runEffect(ev, id, 0); err != nil {
+				return err
+			}
+		}
+		op.m.removeAttachment(ev)
+		op.mark([2]uint32{ev.Row, ev.Column})
+		logger.WithFields("World",
+			logger.FieldValue("map", op.m.RandomID),
+			logger.FieldValue("event", ev.ID),
+		).Info("destroyed invisible infection device")
+	}
+	return nil
 }
 
 // needClear is WorldMap:NeedClear: a map that starts over once left (a
