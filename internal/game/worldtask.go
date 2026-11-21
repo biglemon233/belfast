@@ -393,6 +393,7 @@ func (state *worldState) recountWorldTasks(happened *worldHappenings) []uint32 {
 // progress 100 that opens the daily task board (world_stage_template 20,
 // WorldConst.SystemDailyTask 22).
 var worldStoryGaps = [][2]uint32{
+	{2050, 2000}, // Chapter1-1 -> Chapter1-2 (event 20281 grid out of bounds)
 	{2004, 2010}, // Chapter1-6 -> Chapter1-SP
 	{2102, 2103}, // Chapter2-3 -> Chapter2-4
 	{2105, 2110}, // Chapter2-6 -> Chapter2-SP
