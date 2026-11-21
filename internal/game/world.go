@@ -70,6 +70,9 @@ func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_3
 			changed = true
 			pushIDs = append(pushIDs, task.ID)
 		}
+		if reconcileWorldProgress(state) {
+			changed = true
+		}
 		if changed {
 			if err := tx.saveWorldState(state); err != nil {
 				return err
@@ -204,6 +207,11 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 				gapPush = state.taskUpdates([]uint32{task.ID})
 			} else {
 				gapPush.UpdateList = append(gapPush.UpdateList, state.taskUpdates([]uint32{task.ID}).UpdateList...)
+			}
+		}
+		if reconcileWorldProgress(state) {
+			if err := tx.saveWorldState(state); err != nil {
+				return err
 			}
 		}
 		reply = &protobuf.SC_33102{

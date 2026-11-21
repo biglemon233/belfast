@@ -429,9 +429,31 @@ func (tx *Tx) acceptFollowupTask(state *worldState, now time.Time, rng *rand.Ran
 		if !ok || state.TaskFinishCount < config.NeedTaskComplete {
 			continue
 		}
-		return tx.acceptWorldTask(state, pair[1], now, rng)
+		task := tx.acceptWorldTask(state, pair[1], now, rng)
+		if task != nil && pair[1] == 2150 {
+			// the same missing 21010/21020 chain raises the progress 25 -> 30
+			// (effect 210202), the stage that allows a fourth fleet
+			// (world_stage_template 8, fleet_num 4)
+			state.Count.Progress = max(state.Count.Progress, 30)
+		}
+		return task
 	}
 	return nil
+}
+
+// reconcileWorldProgress applies the progress a missing story chain would
+// have raised: 2150's 21010/21020 chain raises 25 -> 30 (effect 210202), the
+// stage that allows a fourth fleet (world_stage_template 8, fleet_num 4).
+// Without it the fleet expansion task can never be done.
+func reconcileWorldProgress(state *worldState) bool {
+	if !state.activated() || state.Count.Progress >= 30 {
+		return false
+	}
+	if task := state.task(2150); task != nil && (task.alive() || task.SubmitTime != 0) {
+		state.Count.Progress = 30
+		return true
+	}
+	return false
 }
 
 // acceptStoryGapTask hands out the story task no event on the maps gives,
@@ -485,6 +507,7 @@ func (tx *Tx) worldTasksUpdated(state *worldState, happened *worldHappenings) er
 	if task := tx.acceptFollowupTask(state, now, rng); task != nil && !slices.Contains(updated, task.ID) {
 		updated = append(updated, task.ID)
 	}
+	reconcileWorldProgress(state)
 	if len(happened.Deleted) > 0 {
 		var deleted []uint32
 		for _, id := range happened.Deleted {
