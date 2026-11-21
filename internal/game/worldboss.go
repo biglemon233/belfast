@@ -8,6 +8,7 @@ import (
 
 	"github.com/ggmolly/belfast/internal/connection"
 	"github.com/ggmolly/belfast/internal/db"
+	"github.com/ggmolly/belfast/internal/logger"
 	"github.com/ggmolly/belfast/internal/protobuf"
 )
 
@@ -232,22 +233,46 @@ func (game *Game) handleActiveWorldBoss(client *connection.Client, req *protobuf
 	err := game.tx(ctx, client, func(tx *Tx) error {
 		return tx.updateWorldBoss(now, func(boss *worldBoss) error {
 			if boss.summoned() && now.Unix() < boss.BossLastTime {
+				logger.WithFields("WorldBoss",
+					logger.FieldValue("template", template),
+					logger.FieldValue("reason", "boss still up"),
+					logger.FieldValue("boss_last_time", boss.BossLastTime),
+				).Warn("active world boss refused")
 				return errRefused
 			}
 			level := boss.SelfBossLv
+			current := currentWorldBoss(now)
 			switch {
-			case template != 0 && template == currentWorldBoss(now):
+			case template != 0 && template == current:
 				if boss.SummonPt < worldBossCurrent.consume {
+					logger.WithFields("WorldBoss",
+						logger.FieldValue("template", template),
+						logger.FieldValue("reason", "not enough META coordinates"),
+						logger.FieldValue("summon_pt", boss.SummonPt),
+						logger.FieldValue("consume", worldBossCurrent.consume),
+					).Warn("active world boss refused")
 					return ErrNotEnough
 				}
 				boss.SummonPt -= worldBossCurrent.consume
 			case archivedWorldBoss(template) && template == boss.ArchivesID:
 				if boss.SummonPtOld < worldBossPast.consume {
+					logger.WithFields("WorldBoss",
+						logger.FieldValue("template", template),
+						logger.FieldValue("reason", "not enough Dossier Coordinate Data"),
+						logger.FieldValue("summon_pt_old", boss.SummonPtOld),
+						logger.FieldValue("consume", worldBossPast.consume),
+					).Warn("active world boss refused")
 					return ErrNotEnough
 				}
 				boss.SummonPtOld -= worldBossPast.consume
 				level = worldBossMaxLevel
 			default:
+				logger.WithFields("WorldBoss",
+					logger.FieldValue("template", template),
+					logger.FieldValue("current", current),
+					logger.FieldValue("archives_id", boss.ArchivesID),
+					logger.FieldValue("archived", archivedWorldBoss(template)),
+				).Warn("active world boss refused")
 				return errRefused
 			}
 			boss.clearSelfBoss()
