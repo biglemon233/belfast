@@ -73,6 +73,9 @@ func (game *Game) handleWorldState(client *connection.Client, req *protobuf.CS_3
 		if reconcileWorldProgress(state) {
 			changed = true
 		}
+		if reconcileStoryUnlocks(state) {
+			changed = true
+		}
 		if changed {
 			if err := tx.saveWorldState(state); err != nil {
 				return err
@@ -210,6 +213,11 @@ func (game *Game) handleWorldActivate(client *connection.Client, req *protobuf.C
 			}
 		}
 		if reconcileWorldProgress(state) {
+			if err := tx.saveWorldState(state); err != nil {
+				return err
+			}
+		}
+		if reconcileStoryUnlocks(state) {
 			if err := tx.saveWorldState(state); err != nil {
 				return err
 			}

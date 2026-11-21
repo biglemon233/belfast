@@ -480,6 +480,24 @@ func (tx *Tx) acceptStoryGapTask(state *worldState, now time.Time, rng *rand.Ran
 	return nil
 }
 
+// reconcileStoryUnlocks applies what the missing 2-1 story chain would have
+// marked: the story happens at 利维浦 (zone 2), and that zone is the only
+// border of 122 (东大陆架B) that leads into NA海域东北. As the chain never
+// ran, 利维浦 stayed unpressed, so 122's border (2) stayed unsuppressed and
+// every chapter 2 map (132 etc.) stayed blocked. Once 2150 is submitted
+// (2-1 done), mark the story's zone pressed.
+func reconcileStoryUnlocks(state *worldState) bool {
+	if !state.activated() {
+		return false
+	}
+	task := state.task(2150)
+	if task == nil || task.SubmitTime == 0 || slices.Contains(state.CleanChapters, 2) {
+		return false
+	}
+	state.CleanChapters = append(state.CleanChapters, 2)
+	return true
+}
+
 // worldTasksUpdated is the world tasks' hook, called once per map operation
 // (CS_33103) and world battle, and after a redeploy: the tasks effects
 // type 5 hand out are accepted, what happened is counted, and the client
