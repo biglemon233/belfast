@@ -74,6 +74,8 @@ type worldTaskConfig struct {
 	Intimacy             uint32     `json:"intimacy"`
 	NeedTaskComplete     uint32     `json:"need_task_complete"`
 	ServerType           uint32     `json:"server_type"` // worldTaskServerPort: offered by the ports
+	TaskTargetMap        []uint32   `json:"task_target_map"` // the map a target_map_lock task is done on
+	TargetMapLock        uint32     `json:"target_map_lock"` // 1: the task only counts on that map
 }
 
 // world_task_data server_type values: worldTaskServerPort the tasks the
@@ -233,6 +235,19 @@ func (state *worldState) pickTaskEntrance(config worldTaskConfig, rng *rand.Rand
 	return open[rng.IntN(len(open))]
 }
 
+// worldRandomForTemplate is the world_chapter_random map played on the
+// chapter template (the first row of its template_id list), 0 for none.
+func worldRandomForTemplate(template uint32) uint32 {
+	for id, random := range worldRandomMaps {
+		for _, entry := range random.Templates {
+			if entry[0] == template {
+				return id
+			}
+		}
+	}
+	return 0
+}
+
 // acceptWorldTask hands task id out (accept_time now), nil when there is no
 // such task or it is already under way. A task submitted before starts
 // over. Its task_event events are added to the map it leads to.
@@ -250,6 +265,16 @@ func (tx *Tx) acceptWorldTask(state *worldState, id uint32, now time.Time, rng *
 		task = &state.Tasks[len(state.Tasks)-1]
 	}
 	*task = worldTask{ID: id, AcceptTime: uint32(now.Unix()), EventMapID: state.pickTaskEntrance(config, rng)}
+	if config.TargetMapLock != 0 && len(config.TaskTargetMap) > 0 {
+		// a task locked to a map leads the player there: make sure the map
+		// exists (stored and in chapter_list) and point the task at it
+		if randomID := worldRandomForTemplate(config.TaskTargetMap[0]); randomID != 0 {
+			if m, err := tx.worldMap(state, randomID); err == nil && m != nil {
+				state.enterMap(m)
+				task.EventMapID = randomID
+			}
+		}
+	}
 	if len(config.TaskEvent) > 0 {
 		tx.spawnTaskEvents(state, config, task.EventMapID, rng, true)
 	}
