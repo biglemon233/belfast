@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -48,6 +49,18 @@ func (gateway *Gateway) handleServerLogin(client *connection.Client, req *protob
 		account = req.GetAccountId()
 	}
 	commander, err := gateway.DB.GetCommanderByAccount(context.Background(), account)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		// a client whose bilibili account has no commander (a fresh emulator
+		// login) can be pointed at an existing one
+		if forced := os.Getenv("BELFAST_FORCE_COMMANDER"); forced != "" {
+			if id, parseErr := strconv.ParseUint(forced, 10, 32); parseErr == nil {
+				if c, findErr := gateway.DB.GetCommander(context.Background(), uint32(id)); findErr == nil {
+					commander = c
+					err = nil
+				}
+			}
+		}
+	}
 	switch {
 	case err == nil:
 		client.CommanderID = commander.ID
