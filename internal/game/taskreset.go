@@ -21,6 +21,44 @@ type weekReset struct {
 	added   *protobuf.SC_20003 // the week's bonus tasks, nil when none
 }
 
+// ensureDailyTasks gives the commander today's daily missions
+// (task_data_template type 3): the ones open at its level, after dropping
+// the ones accepted before today. The server counts their progress from the
+// task events (battles won, ships built, exercises, backyard food).
+func ensureDailyTasks(ctx context.Context, queries *db.Queries, commanderID, level uint32, now time.Time) error {
+	start := periodStart(now, 24*time.Hour)
+	tasks, err := queries.ListTasks(ctx, commanderID)
+	if err != nil {
+		return err
+	}
+	have := map[uint32]bool{}
+	var stale []uint32
+	for _, task := range tasks {
+		if taskConfigs[task.TaskID].Type != taskTypeDaily {
+			continue
+		}
+		if int64(task.AcceptTime) < start.Unix() {
+			stale = append(stale, task.TaskID)
+		} else {
+			have[task.TaskID] = true
+		}
+	}
+	if len(stale) > 0 {
+		if err := queries.DeleteTasks(ctx, db.DeleteTasksParams{CommanderID: commanderID, TaskIds: stale}); err != nil {
+			return err
+		}
+	}
+	var ids []uint32
+	for id, config := range taskConfigs {
+		if config.Type == taskTypeDaily && config.Level <= level && !have[id] {
+			ids = append(ids, id)
+		}
+	}
+	slices.Sort(ids)
+	_, err = acceptTasks(ctx, queries, commanderID, ids, uint32(now.Unix()))
+	return err
+}
+
 // resetWeekIfDue starts the commander's tasks over when a week started
 // (Monday 00:00 server time, periodStart) since they were handed out: the
 // weekly missions from the first step of each chain open at the

@@ -735,6 +735,12 @@ var loginBurst = []loginPush{
 		_, err := acceptTasks(l.ctx, l.queries, l.commander.ID, apartmentStarterTasks, uint32(l.now.Unix()))
 		return nil, err
 	},
+	func(game *Game, l *login) (proto.Message, error) {
+		if err := ensureDailyTasks(l.ctx, l.queries, l.commander.ID, l.commander.Level, l.now); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	},
 	func(game *Game, l *login) (proto.Message, error) { return taskList(l.ctx, l.queries, l.commander.ID) },
 	func(game *Game, l *login) (proto.Message, error) {
 		weekly, err := game.weeklyInfo(l.ctx, l.queries, l.commander.ID)

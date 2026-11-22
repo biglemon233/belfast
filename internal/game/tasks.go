@@ -312,6 +312,7 @@ func (game *Game) weeklyInfo(ctx context.Context, queries *db.Queries, commander
 // Task types (task_data_template type, model/vo/task/task.lua)
 const (
 	taskTypeScenario  = 1  // Task.TYPE_SCENARIO, the main story
+	taskTypeDaily     = 3  // Task.TYPE_DAILY, the daily missions
 	taskTypeNewWeekly = 13 // Task.TYPE_NEW_WEEKLY
 )
 
