@@ -407,6 +407,9 @@ func storableDrop(kind, id uint32) bool {
 		skin, ok := shipSkins[id]
 		_, base := ownableShip(skin.group*10 + 1)
 		return ok && skin.words && base
+	case dropTypeCombatUI:
+		_, ok := combatUIs[id]
+		return ok
 	case dropTypeEquipSkin:
 		_, ok := equipSkins[id]
 		return ok
@@ -440,9 +443,31 @@ func (game *Game) handleUseItem(client *connection.Client, req *protobuf.CS_1500
 	return client.Send(&protobuf.SC_15003{Result: result(err), DropList: drops})
 }
 
+// bundleBoxes are the paid gift boxes that hold a combat UI style and a
+// resource: the 2026 天使舞台 theme packs (40091 basic, 40092 deluxe). Their
+// item_data_statistics display_icon lists the contents; belfast opens them
+// here because the CN data marks them OpenBox rather than an item usage.
+var bundleBoxes = map[uint32][][3]uint32{
+	40091: {{dropTypeCombatUI, 211, 1}, {dropTypeResource, ResourceGold, 1000}},
+	40092: {{dropTypeCombatUI, 211, 1}, {dropTypeResource, ResourceGem, 3060}},
+}
+
 // useItem spends count of an item and gives what it holds, returning the
 // drops given. Nothing is spent when it can't be opened.
 func (tx *Tx) useItem(id, count uint32, arg []uint32) ([]*protobuf.DROPINFO, error) {
+	if contents, ok := bundleBoxes[id]; ok {
+		if count != 1 {
+			return nil, errRefused
+		}
+		var drops []*protobuf.DROPINFO
+		for _, entry := range contents {
+			drops = mergeDrop(drops, entry[0], entry[1], entry[2])
+		}
+		if err := tx.SpendItem(id, count); err != nil {
+			return nil, err
+		}
+		return drops, tx.grantDrops(drops)
+	}
 	use, ok := itemUses[id]
 	if !ok || count == 0 {
 		return nil, errRefused
