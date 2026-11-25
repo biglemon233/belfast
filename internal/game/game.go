@@ -736,10 +736,9 @@ var loginBurst = []loginPush{
 		return nil, err
 	},
 	func(game *Game, l *login) (proto.Message, error) {
-		if err := ensureDailyTasks(l.ctx, l.queries, l.commander.ID, l.commander.Level, l.now); err != nil {
-			return nil, err
-		}
-		return nil, nil
+		// the reply is SC_20001 below, which lists them
+		_, err := ensureDailyTasks(l.ctx, l.queries, l.commander.ID, l.commander.Level, l.now)
+		return nil, err
 	},
 	func(game *Game, l *login) (proto.Message, error) { return taskList(l.ctx, l.queries, l.commander.ID) },
 	func(game *Game, l *login) (proto.Message, error) {

@@ -21,31 +21,60 @@ type weekReset struct {
 	added   *protobuf.SC_20003 // the week's bonus tasks, nil when none
 }
 
+// dailyReset is what a new day changed in the commander's daily missions.
+type dailyReset struct {
+	removed []uint32           // the daily missions dropped (SC_20004)
+	added   *protobuf.SC_20003 // the day's daily missions (SC_20003), nil when none
+}
+
+// splitDailyTasks tells which of the commander's daily missions a day starting
+// at start drops (stale) and which ones it already has (have). tasks are the
+// unclaimed ones (ListTasks) and claimed the submitted ones: a mission claimed
+// once keeps its submit_time and ListTasks, which every progress path reads,
+// skips those rows. A claimed mission that isn't dropped is never offered
+// again, and the client has no task to count the day's events on.
+func splitDailyTasks(tasks []db.ListTasksRow, claimed []db.ListSubmittedTasksRow, start int64) (stale []uint32, have map[uint32]bool) {
+	have = map[uint32]bool{}
+	add := func(id, acceptTime uint32) {
+		config, ok := taskConfigs[id]
+		if !ok || config.Type != taskTypeDaily {
+			return
+		}
+		if int64(acceptTime) < start {
+			stale = append(stale, id)
+			return
+		}
+		have[id] = true
+	}
+	for _, task := range tasks {
+		add(task.TaskID, task.AcceptTime)
+	}
+	for _, task := range claimed {
+		add(task.TaskID, task.AcceptTime)
+	}
+	return stale, have
+}
+
 // ensureDailyTasks gives the commander today's daily missions
 // (task_data_template type 3): the ones open at its level, after dropping
-// the ones accepted before today. The server counts their progress from the
-// task events (battles won, ships built, exercises, backyard food).
-func ensureDailyTasks(ctx context.Context, queries *db.Queries, commanderID, level uint32, now time.Time) error {
+// the ones accepted before today, claimed or not. The server counts their
+// progress from the task events (battles won, ships built, exercises,
+// backyard food). It returns what it changed, nil when nothing.
+func ensureDailyTasks(ctx context.Context, queries *db.Queries, commanderID, level uint32, now time.Time) (*dailyReset, error) {
 	start := periodStart(now, 24*time.Hour)
 	tasks, err := queries.ListTasks(ctx, commanderID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	have := map[uint32]bool{}
-	var stale []uint32
-	for _, task := range tasks {
-		if taskConfigs[task.TaskID].Type != taskTypeDaily {
-			continue
-		}
-		if int64(task.AcceptTime) < start.Unix() {
-			stale = append(stale, task.TaskID)
-		} else {
-			have[task.TaskID] = true
-		}
+	claimed, err := queries.ListSubmittedTasks(ctx, commanderID)
+	if err != nil {
+		return nil, err
 	}
+	stale, have := splitDailyTasks(tasks, claimed, start.Unix())
+	reset := &dailyReset{removed: stale}
 	if len(stale) > 0 {
 		if err := queries.DeleteTasks(ctx, db.DeleteTasksParams{CommanderID: commanderID, TaskIds: stale}); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	var ids []uint32
@@ -55,8 +84,14 @@ func ensureDailyTasks(ctx context.Context, queries *db.Queries, commanderID, lev
 		}
 	}
 	slices.Sort(ids)
-	_, err = acceptTasks(ctx, queries, commanderID, ids, uint32(now.Unix()))
-	return err
+	reset.added, err = acceptTasks(ctx, queries, commanderID, ids, uint32(now.Unix()))
+	if err != nil {
+		return nil, err
+	}
+	if len(reset.removed) == 0 && reset.added == nil {
+		return nil, nil
+	}
+	return reset, nil
 }
 
 // resetWeekIfDue starts the commander's tasks over when a week started
@@ -168,6 +203,8 @@ func (game *Game) scheduleDay(client *connection.Client, watch *dayWatch) {
 }
 
 // newDay is what the server pushes at midnight to a client playing:
+//   - the daily missions the day dropped and the day's own (SC_20004 then
+//     SC_20003), the ones a claim kept from coming back otherwise;
 //   - on Mondays, the tasks resetWeekIfDue started over: the bonus tasks
 //     dropped (SC_20004) and drawn (SC_20003), then the weekly missions
 //     whole (SC_20101: TaskProxy inits them again and sends WEEK_TASK_RESET,
@@ -184,6 +221,26 @@ func (game *Game) scheduleDay(client *connection.Client, watch *dayWatch) {
 // Never captured: built from the Lua alone.
 func (game *Game) newDay(client *connection.Client, day time.Time) error {
 	ctx := context.Background()
+	commander, err := game.DB.GetCommander(ctx, client.CommanderID)
+	if err != nil {
+		return err
+	}
+	daily, err := ensureDailyTasks(ctx, game.DB.Queries, client.CommanderID, commander.Level, day)
+	if err != nil {
+		return err
+	}
+	if daily != nil {
+		if len(daily.removed) > 0 {
+			if err := client.Push(&protobuf.SC_20004{IdList: daily.removed}); err != nil {
+				return err
+			}
+		}
+		if daily.added != nil {
+			if err := client.Push(daily.added); err != nil {
+				return err
+			}
+		}
+	}
 	reset, err := game.resetWeekIfDue(ctx, client.CommanderID, day)
 	if err != nil {
 		return err
