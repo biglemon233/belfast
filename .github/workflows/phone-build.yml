@@ -1,8 +1,9 @@
 name: Phone build (linux/arm64)
 
-# 每次推送 main 就把“手机用得上的那个二进制”编译好，挂到滚动 release `phone-latest` 下。
-# 手机端脚本 /data/local/tmp/phonebelfast/belfast-update.sh 只读这三个 asset：
-#   belfast-arm64 / belfast-arm64.sha256 / VERSION
+# 每次推送 main 就把“手机用得上的东西”编好/打包好，挂到滚动 release `phone-latest` 下：
+#   二进制：belfast-arm64 / belfast-arm64.sha256 / VERSION
+#   数据：  data-CN.tar.gz / data-CN.sha256 / DATA_VERSION（只在 data/CN 变了时更新）
+# 手机端脚本 /data/local/tmp/phonebelfast/belfast-update.sh 读这些 asset。
 # 说明见 F:\azurlane\.scratch\phone-belfast-rooted\notes\02-phone-self-update.md
 
 on:
@@ -48,7 +49,7 @@ jobs:
           tag_name: phone-latest
           name: phone build (linux/arm64)
           body: |
-            滚动构建：`main` 的 linux/arm64 静态二进制，供手机自更新脚本拉取。
+            滚动构建：`main` 的 linux/arm64 静态二进制 + `data/CN` 数据包，供手机自更新脚本拉取。
 
             commit: `${{ github.sha }}`
             run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -59,3 +60,54 @@ jobs:
             build/belfast-arm64
             build/belfast-arm64.sha256
             build/VERSION
+
+  # data/CN 没变就不打包（用 git tree hash 判定），变了才上传，约 86MB 原始 → 十几 MB 压缩
+  data:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether data/CN changed
+        id: ver
+        run: |
+          set -euo pipefail
+          TREE="$(git rev-parse HEAD:data/CN)"
+          BASE="https://github.com/${{ github.repository }}/releases/download/phone-latest"
+          PUB="$(curl -fsSL "$BASE/DATA_VERSION" 2>/dev/null || true)"
+          echo "本地 tree=$TREE 已发布=$PUB"
+          if [ "$PUB" = "$TREE" ] && curl -fsIL "$BASE/data-CN.tar.gz" >/dev/null 2>&1; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pack data/CN
+        if: steps.ver.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD:data/CN > DATA_VERSION
+          # ustar：Android 的 toybox tar 解析 pax/gnu 格式有坑，短路径用 ustar 最稳
+          tar -C data --format=ustar --sort=name --owner=0 --group=0 --numeric-owner -cf - CN | gzip -9 > data-CN.tar.gz
+          sha256sum data-CN.tar.gz > data-CN.sha256
+          ls -lh data-CN.tar.gz
+          cat DATA_VERSION data-CN.sha256
+
+      - name: Publish data assets
+        if: steps.ver.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: phone-latest
+          name: phone build (linux/arm64)
+          body: |
+            滚动构建：`main` 的 linux/arm64 静态二进制 + `data/CN` 数据包，供手机自更新脚本拉取。
+
+            commit: `${{ github.sha }}`
+            run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          prerelease: true
+          make_latest: "false"
+          overwrite_files: true
+          files: |
+            data-CN.tar.gz
+            data-CN.sha256
+            DATA_VERSION
