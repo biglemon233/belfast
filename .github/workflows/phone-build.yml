@@ -4,6 +4,7 @@ name: Phone build (linux/arm64)
 #   二进制：belfast-arm64 / belfast-arm64.sha256 / VERSION
 #   数据：  data-CN.tar.gz / data-CN.sha256 / DATA_VERSION（只在 data/CN 变了时更新）
 # 手机端脚本 /data/local/tmp/phonebelfast/belfast-update.sh 读这些 asset。
+# data job 用 data/CN 的 git tree hash 判断要不要重打包：没变就整段跳过，不产生 8MB 资产。
 # 说明见 F:\azurlane\.scratch\phone-belfast-rooted\notes\02-phone-self-update.md
 
 on:
