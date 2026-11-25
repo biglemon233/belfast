@@ -1,0 +1,61 @@
+name: Phone build (linux/arm64)
+
+# 每次推送 main 就把“手机用得上的那个二进制”编译好，挂到滚动 release `phone-latest` 下。
+# 手机端脚本 /data/local/tmp/phonebelfast/belfast-update.sh 只读这三个 asset：
+#   belfast-arm64 / belfast-arm64.sha256 / VERSION
+# 说明见 F:\azurlane\.scratch\phone-belfast-rooted\notes\02-phone-self-update.md
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phone-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build linux/arm64
+        env:
+          GOOS: linux
+          GOARCH: arm64
+          CGO_ENABLED: "0"
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          go build -trimpath -ldflags="-s -w" -o build/belfast-arm64 ./cmd/belfast
+          ( cd build && sha256sum belfast-arm64 > belfast-arm64.sha256 )
+          printf '%s\n' "${GITHUB_SHA}" > build/VERSION
+          ls -l build
+
+      - name: Publish rolling release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: phone-latest
+          name: phone build (linux/arm64)
+          body: |
+            滚动构建：`main` 的 linux/arm64 静态二进制，供手机自更新脚本拉取。
+
+            commit: `${{ github.sha }}`
+            run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          prerelease: true
+          make_latest: "false"
+          overwrite_files: true
+          files: |
+            build/belfast-arm64
+            build/belfast-arm64.sha256
+            build/VERSION
